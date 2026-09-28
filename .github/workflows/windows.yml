@@ -99,7 +99,10 @@ jobs:
           test -f stage/bin/jtdx.exe
           VER=$(sed -n 's/^set (JTDXVU_VERSION \(.*\))/\1/p' Versions.cmake)
           echo "VER=$VER" >> $GITHUB_ENV
-          windeployqt --release --no-compiler-runtime --dir stage/bin stage/bin/jtdx.exe
+          # CMake's fixup_bundle already copies DLLs + platform plugin; add
+          # the rest of the Qt plugins (MSYS2 names the tool windeployqt-qt5)
+          WDQ="$(command -v windeployqt-qt5 || command -v windeployqt || true)"
+          if [ -n "$WDQ" ]; then "$WDQ" --release --no-compiler-runtime --dir stage/bin stage/bin/jtdx.exe; fi
           # every MinGW DLL the executables and Qt plugins pull in
           for pass in 1 2 3; do
             find stage -name '*.exe' -o -name '*.dll' | while read -r f; do
