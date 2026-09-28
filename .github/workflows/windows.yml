@@ -1,0 +1,91 @@
+# JTDX-VU Windows x64 build (MSYS2 / MinGW-w64, Qt 5).
+# Runs on demand or on a v* tag; on a tag the zip is attached to that
+# tag's GitHub release (created if missing).
+name: windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            zip
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gcc-fortran
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-qt5-base
+            mingw-w64-x86_64-qt5-multimedia
+            mingw-w64-x86_64-qt5-serialport
+            mingw-w64-x86_64-qt5-websockets
+            mingw-w64-x86_64-qt5-tools
+            mingw-w64-x86_64-qt5-svg
+            mingw-w64-x86_64-qt5-activeqt
+            mingw-w64-x86_64-qt5-translations
+            mingw-w64-x86_64-hamlib
+            mingw-w64-x86_64-fftw
+            mingw-w64-x86_64-boost
+            mingw-w64-x86_64-libusb
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DWSJT_GENERATE_DOCS=OFF -DWSJT_SKIP_MANPAGES=ON \
+            -DCMAKE_INSTALL_PREFIX="$PWD/stage"
+
+      - name: Build
+        run: cmake --build build -j 4
+
+      - name: Stage
+        run: |
+          # CMake's own fixup_bundle step may fail on MSYS2; the files it
+          # installs before that are what we need
+          cmake --install build || true
+          test -f stage/bin/jtdx.exe
+          VER=$(sed -n 's/^set (JTDXVU_VERSION \(.*\))/\1/p' Versions.cmake)
+          echo "VER=$VER" >> $GITHUB_ENV
+          windeployqt --release --no-compiler-runtime --dir stage/bin stage/bin/jtdx.exe
+          # every MinGW DLL the executables and Qt plugins pull in
+          for pass in 1 2 3; do
+            find stage -name '*.exe' -o -name '*.dll' | while read -r f; do
+              ldd "$f" | awk '/\/mingw64\/bin\//{print $3}'
+            done | sort -u | while read -r dll; do cp -n "$dll" stage/bin/; done
+          done
+          cp COPYING stage/
+          cp README.md stage/JTDX-VU-README.md
+
+      - name: Package
+        run: |
+          mv stage "JTDX-VU-$VER-windows-x64"
+          zip -qr "JTDX-VU-$VER-windows-x64.zip" "JTDX-VU-$VER-windows-x64"
+          sha256sum "JTDX-VU-$VER-windows-x64.zip" > "JTDX-VU-$VER-windows-x64.zip.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JTDX-VU-windows-x64
+          path: JTDX-VU-*-windows-x64.zip*
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "JTDX-VU $GITHUB_REF_NAME" --notes "Windows build attached by CI."
+          gh release upload "$GITHUB_REF_NAME" JTDX-VU-*-windows-x64.zip JTDX-VU-*-windows-x64.zip.sha256 --clobber
