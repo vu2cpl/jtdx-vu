@@ -60,6 +60,7 @@ jobs:
             mingw-w64-x86_64-fftw
             mingw-w64-x86_64-boost
             mingw-w64-x86_64-libusb
+            mingw-w64-x86_64-openssl
 
       # MSYS2 does not package Hamlib; build the same release the macOS
       # build uses (Homebrew hamlib 4.7.2) into the MinGW prefix
@@ -117,6 +118,14 @@ jobs:
             done
           done
           ls stage/bin | wc -l
+          # Qt 5 does HTTPS (Club Log, Telegram) through OpenSSL, loaded at
+          # run time, so no dependency scan sees it: bundle it explicitly
+          echo "QtNetwork wants:"; strings /mingw64/bin/Qt5Network.dll | grep -iE '^lib(ssl|crypto)[-_0-9a-z]*(\.dll)?$' | sort -u || true
+          for dll in /mingw64/bin/libssl-*.dll /mingw64/bin/libcrypto-*.dll; do
+            [ -e "$dll" ] && cp "$dll" stage/bin/
+          done
+          ls stage/bin | grep -iE 'libssl|libcrypto'
+          test -n "$(ls stage/bin | grep -i libssl)"
           cp COPYING stage/
           cp README.md stage/JTDX-VU-README.md
 
