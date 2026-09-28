@@ -908,9 +908,9 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
     if (show_line) {
         if (actwind) {
             if (windowPopup && window != NULL) {
-                window->showNormal();
-				window->raise();
-				QApplication::setActiveWindow(window);
+                // JTDX-VU: never steal focus from the app being worked in;
+                // ask for attention instead (Dock bounce on macOS)
+                QApplication::alert(window);
 			}
 		}
         if (beep && !once_notified) {

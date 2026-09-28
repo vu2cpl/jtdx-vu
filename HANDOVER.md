@@ -26,6 +26,33 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — Settings dialog layout on macOS; no focus stealing
+
+- **Settings tabs overlapped** (Notifications worst) and the tab bar
+  needed scroll arrows. `Configuration.ui` pins `minimumSize` 686x586,
+  which was sized for Windows fonts. An explicit minimum overrides the
+  layout-derived one, so with the macOS font the dialog shrank below
+  what its layouts need, and a saved geometry of 686x618 kept it there.
+  - `Configuration.cpp` now calls `setMinimumSize (0, 0)` after
+    `setupUi`, and grows the restored geometry to at least
+    `minimumSizeHint()`. It now opens at about 801x871, with all tabs
+    visible and no overlap.
+  - Verified in a throwaway instance with a copy of Manoj's .ini.
+- **JTDX grabbed focus every cycle while monitoring.** "Enable main
+  window popup" (Misc menu; `EnableMainwindowPopup=true`, inherited
+  from stock JTDX) made `displaytext.cpp` and the first-decode beep in
+  `mainwindow.cpp` call `showNormal/raise/setActiveWindow` on
+  new-DXCC/grid/call/my-call lines. Club Log makes those lines more
+  frequent.
+  - Both now call `QApplication::alert()` instead, which bounces the
+    Dock icon and never moves focus.
+  - The UDP "window to front" options, off by default, are unchanged.
+- **Test-instance hygiene:** `pgrep -f` patterns with `\|` don't
+  alternate in BSD pgrep, which gave a false "quit" once and left a
+  test instance running while its folders were deleted. Track the
+  exact PID (`$!`), quit through System Events with a
+  frontmost-PID check, then delete the files.
+
 ### 2026-09-28 — stock JTDX "Unable to create shared memory segment"
 
 - **Cause:** the stock `/Applications/jtdx.app` (2.2.159-32A, x86_64

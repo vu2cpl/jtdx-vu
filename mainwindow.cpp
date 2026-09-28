@@ -3836,11 +3836,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
           }
  
        if (!m_notified && m_config.beepOnFirstMsg () && !m_diskData) {
-          if (m_windowPopup) {
-			 this->showNormal();
-			 this->raise();
-			 QApplication::setActiveWindow(this);
-          }
+          if (m_windowPopup) QApplication::alert (this); // JTDX-VU: attention, not focus
           QApplication::beep();
           m_notified=true;
        }

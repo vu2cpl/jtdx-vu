@@ -1379,6 +1379,10 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
   , default_audio_output_device_selected_ {false}
 {
   ui_->setupUi (this);
+  // JTDX-VU: the .ui pins a 686x586 minimum sized for Windows fonts; with the
+  // larger macOS UI font that lets the dialog shrink below what its layouts
+  // need, so tabs (Notifications worst) overlap.  Let the layouts set it.
+  setMinimumSize (0, 0);
 
   {
     ui_->configuration_dialog_button_box->button(QDialogButtonBox::Ok)->setText(tr("&OK"));
@@ -2177,6 +2181,7 @@ void Configuration::impl::read_settings ()
 {
   SettingsGroup g {settings_, "Configuration"};
   restoreGeometry (settings_->value ("window/geometry").toByteArray ());
+  resize (size ().expandedTo (minimumSizeHint ())); // JTDX-VU: never smaller than the layouts need
 
   my_callsign_ = settings_->value ("MyCall", "").toString ();
   my_grid_ = settings_->value ("MyGrid", "").toString ();
