@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.1.0
+# JTDX-VU for VUCG community — v0.2.0
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -39,7 +39,7 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.1.0"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.2.0"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -64,10 +64,17 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
 - **Show only needed decodes.** The "Show:" selector (All / New DXCC /
   New DXCC or band / New DXCC, band or mode) filters the Band Activity
   pane down to entities you still need, using Club Log when it's
-  enabled. It turns amber while active.
+  enabled. It turns amber while active. Like MSHV it is live: changing
+  it re-filters every decode already on screen, and a station you have
+  just worked drops out.
   - Traffic with your call, and with your current QSO partner, always
     shows.
   - The Rx Frequency pane is never filtered.
+- **CNS (Call Non-Stop):** a button at the end of the row, also in the
+  AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
+  or the next caller instead of halting Tx, and keeps calling a station
+  until it answers. The Tx watchdog is fixed at 10 minutes while CNS is
+  on, so unanswered CQ still stops.
 - **Needed-DXCC alerts** when a decoded station is ATNO, a new band or
   a new band+mode. Alerts go to macOS notifications and/or Telegram,
   with a per-call/band cooldown (5–60 min).

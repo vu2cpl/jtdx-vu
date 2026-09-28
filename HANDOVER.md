@@ -8,8 +8,9 @@ Last updated: 2026-09-28
   secret scan, see below). Default branch `jtdx-vu`. The `upstream`
   remote is `jtdx-project/jtdx`; upstream has been dormant since
   2022-03 at tag 159.
-- **Version:** JTDX-VU **0.1.0** (`JTDXVU_VERSION` in `Versions.cmake`),
-  on JTDX 2.2.159.
+- **Version:** JTDX-VU **0.2.0** (`JTDXVU_VERSION` in `Versions.cmake`),
+  on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
+  live Show filter and the Windows fixes.
 - **Installed app:** `/Applications/JTDX-VU.app` is current: all app
   code up to `4642e1ee`, installed 2026-09-28. It was built locally, so
   it runs on macOS 26+ only. Settings are in
