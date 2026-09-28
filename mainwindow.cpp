@@ -6696,19 +6696,31 @@ void MainWindow::band_changed (Frequency f)
 
 void MainWindow::switch_to_band (QString const& band)
 {
-  // pick this band's first working frequency for the current mode, as if
-  // chosen from the band combo box
+  // pick this band's working frequency for the current mode, as if chosen
+  // from the band combo box: prefer the entry marked default for this mode
+  // (the standard FT8/FT4/... frequency), then any entry for exactly this
+  // mode, then any entry (e.g. an "all modes" one) on the band
   auto const& frequencies = m_config.frequencies ();
+  auto const mode = Modes::value (m_mode);
+  int best_row = -1, best_rank = 0;
   for (int row = 0; row < frequencies->rowCount (); ++row)
     {
       auto source = frequencies->mapToSource (frequencies->index (row, FrequencyList_v2::frequency_column));
       if (!source.isValid ()) continue;
-      if (m_config.bands ()->find (frequencies->frequency_list ()[source.row ()].frequency_) == band)
+      auto const& item = frequencies->frequency_list ()[source.row ()];
+      if (m_config.bands ()->find (item.frequency_) != band) continue;
+      int rank = item.mode_ == mode ? (item.default_ ? 3 : 2) : 1;
+      if (rank > best_rank)
         {
-          ui->bandComboBox->setCurrentIndex (row);
-          on_bandComboBox_activated (row);
-          return;
+          best_rank = rank;
+          best_row = row;
         }
+    }
+  if (best_row >= 0)
+    {
+      ui->bandComboBox->setCurrentIndex (best_row);
+      on_bandComboBox_activated (best_row);
+      return;
     }
   statusBar ()->showMessage (tr ("No %1 working frequency on %2 - add one in Settings > Frequencies").arg (m_mode, band), 8000);
 }
