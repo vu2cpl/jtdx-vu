@@ -76,12 +76,14 @@ jobs:
 
       - name: Configure
         run: |
-          echo "dumpcpp: $(command -v dumpcpp || echo MISSING)"
-          dumpcpp -getfile '{4FE359C5-A58F-459D-BE95-CA559FB4F270}' || echo "dumpcpp -getfile rc=$?"
+          # MSYS2's qt5-activeqt does not put dumpcpp on PATH
+          DUMPCPP="$(command -v dumpcpp || find /mingw64 -iname 'dumpcpp*.exe' | head -1)"
+          echo "dumpcpp: ${DUMPCPP:-MISSING}"; pacman -Ql mingw-w64-x86_64-qt5-activeqt | grep -i '\.exe$' || true
+          test -n "$DUMPCPP"
           OMNIRIG="$(cygpath -m 'C:/Program Files (x86)/Afreet/OmniRig/OmniRig.exe')"
           ls -la "$OMNIRIG"
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-            -DOMNIRIG_TYPELIB="$OMNIRIG" \
+            -DDUMPCPP="$DUMPCPP" -DOMNIRIG_TYPELIB="$OMNIRIG" \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DWSJT_GENERATE_DOCS=OFF -DWSJT_SKIP_MANPAGES=ON \
             -DCMAKE_INSTALL_PREFIX="$PWD/stage"
