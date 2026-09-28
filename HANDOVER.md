@@ -29,8 +29,10 @@ Last updated: 2026-09-28
     a silent station. Its Intel build was cancelled.
   - v0.1.0 remains published.
 - **Branch `jtty`** (pushed): JTTY mode port from WSJT-X 3.2.0-rc1.
-  Phase 1 (Fortran lib) and phase 2 (RX in the GUI) done and verified;
-  TX not started. FT2 is queued after JTTY. Not in any release.
+  Phase 1 (Fortran lib), phase 2 (RX in the GUI) and phase 3 (TX:
+  Send/F1-F8 in the panel, verified only by offline loopback so far)
+  done. **Not yet tested on the air** — sound-card and TCI paths both
+  need a real key-up. FT2 is queued after JTTY. Not in any release.
 - **Website:** vu2cpl.com has a JTDX-VU card (Utilities & Tools, after
   MSHV-Mac) and a project page at `/projects/jtdx-vu/` with screenshots
   and a v0.2.1 downloads table linking all four builds.
@@ -46,6 +48,63 @@ Last updated: 2026-09-28
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-09-28 — JTTY phase 3: transmit (branch `jtty`)
+
+JTTY has no T/R period, so TX could not go through JTDX's slot-timed
+`m_bTxTime` window. Design: the GUI generates the whole 48 kHz wave and
+plays it through the existing pre-generated-wave path (`foxcom_.wave`,
+`toneSpacing<0`) that stock JTDX already uses for FT8 F/H.
+
+- **`jttypanel.{h,cpp}`** rewritten: row 1 F Tol / Lower case / Include
+  time / **Exch** field (`%E`, default `599 001`, `[JTTY]/Exchange`);
+  row 2 **F1-F8** with WSJT-X 3.2's native templates (`CQ %M CQ`,
+  `%H %E`, `%H TU CQ %M CQ`, `%M`, `%H`, `TU NOW %Q %E`, `%H AGN?`,
+  `%E`; `%Q` is treated as `%H`); row 3 free-text entry + Send + Halt.
+  Signals only; MainWindow expands the macros (`jttyMacro`) from
+  `my_callsign`, `dxCallEntry` and Exch, with status-bar guards.
+- **`jtty_tx(QString)`** (`mainwindow_jtty.cpp`): 80-char frame →
+  `genjtty_profile_` (profile 0, `itone[16*59]`) → `gen_jttywave_`
+  (nsps 1536, BT 2.0, 48 kHz, f0 = TxFreq − XIT) into `foxcom_.wave`,
+  then opens a 3 s request window (`m_jttyTxRequestedUntil`). Writes
+  `JTTY Tx <f>  <text>` to ALL.TXT, puts a `Tx: …` line (negative
+  message id) into the Rx Frequency pane, sets the Tx status label.
+  Refuses while a message is still pending or playing (no chaining
+  yet). Halt → `haltTx("JTTY halt ")`.
+- **Keying (guiUpdate):** for JTTY `m_bTxTime = jttyUpdateTxState()`:
+  true from Send until the modulator has come up and gone Idle again
+  (hard stop at wave length + 1 s if it never reports Idle). It is
+  OR-ed into the `m_transmitting or m_enableTx or m_tune` gate, so a
+  JTTY Send keys up **without Enable Tx**, exactly like Tune; the
+  autoseq `process_Auto()` call is skipped in JTTY.
+- **`transmit()`** JTTY branch: `sendMessage`/`transceiver_modulator_
+  start(m_jttyNsym, 384.0, TxFreq−XIT, −4.0, synchronize=false, …)`.
+  384 samples/symbol at 12 kHz — the Modulator scales ×4 — so its
+  loop end `i1 = nsym·4·nsps` lands exactly on the wave's last sample.
+- **Both Modulator copies** (`Modulator.cpp`, and TCITransceiver's
+  private copy) got the same three changes: `synchronize=false` now
+  means "period-free: start at `m_ic=0` now" (`m_periodFree`); a
+  period-free wave sets `m_amp=0` once `m_ic > i1`, so the Idle
+  transition fires (in wave mode the loop pins `m_amp` at full scale
+  and stock FT8 relies on the T/R window to drop PTT — JTTY has none);
+  and the tone block's `itone[isym]` index is clamped to the 162-entry
+  global, which a 944-symbol JTTY wave would otherwise overrun.
+  Periodic modes are unaffected: they always pass `synchronize=true`.
+- **Buffers:** `foxcom_.wave` grew from 606720 to 1450000 floats
+  (`commons.h` + `lib/foxgen.f90`, must match) — 16 frames × 59
+  symbols × 1536 = 1.45 M samples for the longest frame.
+- **Tx audio frequency** set to 1500 on JTTY entry, like Rx.
+
+**Verified offline only:** a scratch Fortran harness calling the exact
+GUI sequence (`genjtty_profile` → `gen_jttywave` at 1536 sps/48 kHz,
+decimated ×4) for `CQ VU2CPL CQ` gives 59 symbols / 1.888 s, and
+`rjtty 0 0 384 1500 100` decodes it back as `1500  CQ VU2CPL CQ`.
+The GUI key-up (PTT, modulator start, self-termination, Halt) has
+**not** been exercised yet — first on-air test should be with Rig=None
++ sound card into a dummy load, then the TCI station. Things to watch:
+PTT dropping ~1 s after the audio ends (the Idle → `m_btxok=false` →
+`stopTx()` chain), Halt mid-message, and a second Send right after the
+first.
 
 ### 2026-09-28 — JTTY phase 2: RX works in the GUI (branch `jtty`)
 

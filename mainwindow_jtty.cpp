@@ -71,6 +71,9 @@ extern "C" {
   void rjtty_sub_ (short int d2[], int * k, int * nsps, int * nfa, int * nfb, float * f0, float * ftol);
   void jtty_get_updates_ (char text_blocks[], qint64 message_ids[], float frequencies[],
                           float start_tsync[], bool eom[], int * count, jtty_charlen_t);
+  void genjtty_profile_ (char * msg, int const * exchange_profile, int itone[], int * nsym, jtty_charlen_t);
+  void gen_jttywave_ (int itone[], int * nsym, int * nsps, float * bt, float * fsample, float * f0,
+                      float xjunk[], float wave[], int * icmplx, int * nwave);
 }
 
 void MainWindow::jttyModeSelected ()
@@ -95,6 +98,7 @@ void MainWindow::jttyModeSelected ()
   // bound on k: 120 s * 12000 / 3456 = 416.7 steps keeps it inside d2.
   m_hsymStop = 417;
   ui->RxFreqSpinBox->setValue (1500);         // JTTY convention, as WSJT-X
+  ui->TxFreqSpinBox->setValue (1500);
   flushJttyDecodeLines ();
   commonActions ();
   enableHoundAccess (false);
@@ -333,4 +337,139 @@ void MainWindow::renderJttyQsoLines ()
   m_jttyQsoGroupEndPosition = cursor.position ();
   ui->decodedTextBrowser2->setTextCursor (cursor);
   ui->decodedTextBrowser2->ensureCursorVisible ();
+}
+
+// ---- transmit ----------------------------------------------------------------
+//
+// JTTY has no T/R period, so nothing here waits for a slot: Send encodes the
+// message, generates its wave into foxcom_.wave and opens a short request
+// window; guiUpdate then keys up exactly as it does for Tune and keeps PTT
+// until the Modulator has played the wave out and gone Idle.
+
+bool MainWindow::jttyModulatorActive () const
+{
+  return m_tci ? m_tci_mod_active : m_modulator->isActive ();
+}
+
+bool MainWindow::jttyTxBusy () const
+{
+  return m_jttyTxRequestedUntil > 0 || m_jttyTxEndMs > 0 || m_transmitting;
+}
+
+// guiUpdate's m_bTxTime for JTTY
+bool MainWindow::jttyUpdateTxState ()
+{
+  if (m_jttyTxRequestedUntil == 0 && m_jttyTxEndMs == 0) return false;
+  qint64 const now = m_jtdxtime->currentMSecsSinceEpoch2 ();
+  bool wanted;
+  if (m_jttyTxEndMs == 0)
+    {
+      // waiting for PTT and the modulator to come up
+      wanted = now < m_jttyTxRequestedUntil;
+      if (jttyModulatorActive ())
+        {
+          qint64 const waveMs = qint64 (m_jttyNsym) * 4 * jttyNsps * 1000 / 48000;
+          m_jttyTxEndMs = now + waveMs + 1000;    // hard stop if the modulator never reports Idle
+          m_jttyTxRequestedUntil = 0;
+        }
+    }
+  else
+    {
+      wanted = jttyModulatorActive () && now < m_jttyTxEndMs;
+    }
+  if (!wanted)
+    {
+      m_jttyTxEndMs = 0;
+      m_jttyTxRequestedUntil = 0;
+      if (m_jttyPanel) m_jttyPanel->setTransmitting (false);
+    }
+  return wanted;
+}
+
+void MainWindow::jttyMacro (int key)
+{
+  auto tpl = JttyPanel::macroTemplate (key);
+  if (tpl.isEmpty () || !m_jttyPanel) return;
+  auto const my = m_config.my_callsign ().trimmed ().toUpper ();
+  auto const his = ui->dxCallEntry->text ().trimmed ().toUpper ();
+  auto const exch = m_jttyPanel->exchange ().trimmed ().toUpper ();
+  if (tpl.contains ("%M") && my.isEmpty ())
+    {
+      statusBar ()->showMessage (tr ("JTTY: set your callsign in Settings first"), 5000);
+      return;
+    }
+  if ((tpl.contains ("%H") || tpl.contains ("%Q")) && his.isEmpty ())
+    {
+      statusBar ()->showMessage (tr ("JTTY: enter the DX call first (double-click a decode)"), 5000);
+      return;
+    }
+  if (tpl.contains ("%E") && exch.isEmpty ())
+    {
+      statusBar ()->showMessage (tr ("JTTY: fill in the Exch field first"), 5000);
+      return;
+    }
+  tpl.replace ("%M", my).replace ("%H", his).replace ("%Q", his).replace ("%E", exch);
+  jtty_tx (tpl);
+}
+
+void MainWindow::jtty_tx (QString message)
+{
+  if (m_mode != "JTTY" || !m_jttyPanel) return;
+  if (jttyTxBusy ())
+    {
+      statusBar ()->showMessage (tr ("JTTY: still transmitting - wait for the message to finish"), 4000);
+      return;
+    }
+  message = message.trimmed ().left (jttyMessageSize);
+  if (message.isEmpty ()) return;
+
+  // genjtty takes a fixed 80-character frame and normalises case and
+  // unsupported characters itself (lib/jtty/jtty_mod.f90)
+  auto frame = message.leftJustified (jttyMessageSize, ' ').toLatin1 ();
+  int itone[16 * 59] {};              // room for the longest possible frame
+  int nsym {0};
+  int const profile {0};              // no contest exchange profile yet
+  genjtty_profile_ (frame.data (), &profile, itone, &nsym, jtty_charlen_t {jttyMessageSize});
+  if (nsym <= 0)
+    {
+      statusBar ()->showMessage (tr ("JTTY: message could not be encoded"), 5000);
+      return;
+    }
+  int nsps4 = 4 * jttyNsps;           // 1536 samples per symbol at 48 kHz
+  float bt = 2.0f;
+  float fsample = 48000.0f;
+  float f0 = ui->TxFreqSpinBox->value () - m_XIT;
+  int icmplx = 0;
+  int nwave = nsps4 * nsym;
+  if (nwave > int (sizeof (foxcom_.wave) / sizeof (foxcom_.wave[0])))
+    {
+      statusBar ()->showMessage (tr ("JTTY: message too long"), 5000);
+      return;
+    }
+  gen_jttywave_ (itone, &nsym, &nsps4, &bt, &fsample, &f0, foxcom_.wave, foxcom_.wave, &icmplx, &nwave);
+  m_jttyNsym = nsym;
+  m_jttyTxEndMs = 0;
+  m_jttyTxRequestedUntil = m_jtdxtime->currentMSecsSinceEpoch2 () + 3000;   // guiUpdate keys up from here
+
+  auto const shown = QString::fromLatin1 (frame).trimmed ().toUpper ();
+  writeToALLTXT ("JTTY Tx " + formatJttyDecodeLine (f0, shown));
+  tx_status_label->setText (tr ("Tx: ") + shown.left (30));
+  // a Tx line in the Rx Frequency pane, in order with the decodes; negative
+  // ids can never collide with the decoder's
+  JttyQsoLine line;
+  line.messageId = -(++m_jttyTxLineSeq);
+  line.frequency = f0;
+  line.text = "Tx: " + shown;
+  line.messageStartUtc = m_jtdxtime->currentDateTimeUtc2 ();
+  m_jttyQsoLines.append (line);
+  renderJttyQsoLines ();
+  m_jttyPanel->setTransmitting (true);
+}
+
+void MainWindow::jttyHalt ()
+{
+  m_jttyTxRequestedUntil = 0;
+  m_jttyTxEndMs = 0;
+  haltTx ("JTTY halt ");
+  if (m_jttyPanel) m_jttyPanel->setTransmitting (false);
 }

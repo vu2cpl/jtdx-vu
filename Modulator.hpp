@@ -85,6 +85,7 @@ private:
   ModulatorState volatile m_state;
 
   bool volatile m_tuning;
+  bool m_periodFree {false};   // JTDX-VU: started with synchronize=false (JTTY); wave ends itself
   bool m_addNoise;
   bool m_bFastMode;
 

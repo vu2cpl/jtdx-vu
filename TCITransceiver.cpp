@@ -1771,6 +1771,11 @@ void TCITransceiver::do_modulator_start (unsigned symbolsLength, double framesPe
     m_ic = mstr2 * (audioSampleRate / 1000);
   }
   m_silentFrames = 0;
+  // JTDX-VU: every periodic mode passes synchronize=true.  A period-free mode
+  // (JTTY) passes false: play from the top of the wave right now instead of
+  // skipping to where this point in the nominal T/R period would be.
+  m_periodFree = !synchronize;
+  if (m_periodFree) m_ic = 0;
   // calculate number of silent frames to send
   if (m_ic == 0 && synchronize && !m_tuning)	{
     m_silentFrames = audioSampleRate / (1000 / delay_ms) - (mstr * (audioSampleRate / 1000));
@@ -1918,12 +1923,12 @@ quint16 TCITransceiver::readAudioData (float * data, qint32 maxSize)
                 m_toneFrequency0=itone[0];
               } else {
                 if(m_toneSpacing==0.0) {
-                  m_toneFrequency0=m_trfrequency + itone[isym]*baud;
+                  m_toneFrequency0=m_trfrequency + itone[isym < NUM_WSPR_SYMBOLS ? isym : NUM_WSPR_SYMBOLS-1]*baud;
                 } else {
-                  m_toneFrequency0=m_trfrequency + itone[isym]*m_toneSpacing;
+                  m_toneFrequency0=m_trfrequency + itone[isym < NUM_WSPR_SYMBOLS ? isym : NUM_WSPR_SYMBOLS-1]*m_toneSpacing;
                 }
               }
-//            qDebug() << "B" << m_ic << numFrames << isym << itone[isym] << toneFrequency0 << m_nsps;
+//            qDebug() << "B" << m_ic << numFrames << isym << itone[isym < NUM_WSPR_SYMBOLS ? isym : NUM_WSPR_SYMBOLS-1] << toneFrequency0 << m_nsps;
               m_dphi = m_twoPi * m_toneFrequency0 / audioSampleRate;
               m_isym0 = isym;
               m_frequency0 = m_trfrequency;         //???
@@ -1958,6 +1963,10 @@ quint16 TCITransceiver::readAudioData (float * data, qint32 maxSize)
           samples = load (postProcessSample (sample), samples);
           ++framesGenerated; ++m_ic;
         }
+        // JTDX-VU: in wave mode the loop above pins m_amp at full scale, so the
+        // Idle transition below never fires and periodic modes rely on the T/R
+        // window to drop PTT.  A period-free wave (JTTY) must end itself.
+        if (m_periodFree and !m_tuning and m_ic > i1) m_amp = 0.0;
 
 //          printf("sample saved %lld %d\n",framesGenerated,m_ic);
         if (m_amp == 0.0) { // TODO G4WJS: compare double with zero might not be wise

@@ -1093,6 +1093,9 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     m_jttyPanel->setVisible (false);
     vbox->addWidget (m_jttyPanel);
     connect (m_jttyPanel, &JttyPanel::displayOptionsChanged, this, &MainWindow::jttyRefreshDisplay);
+    connect (m_jttyPanel, &JttyPanel::transmitRequested, this, &MainWindow::jtty_tx);
+    connect (m_jttyPanel, &JttyPanel::macroRequested, this, &MainWindow::jttyMacro);
+    connect (m_jttyPanel, &JttyPanel::haltRequested, this, &MainWindow::jttyHalt);
     vbox->addWidget (central, 1);
     setCentralWidget (wrap);
     auto action = new QAction {tr ("Band && Mode Buttons..."), this};
@@ -4305,11 +4308,13 @@ void MainWindow::guiUpdate()
 
   } else {
  // For all modes other than WSPR
-    m_bTxTime = (t2p >= tx1) and (t2p < tx2);
+    if(m_mode=="JTTY") m_bTxTime = jttyUpdateTxState ();   // JTDX-VU: period-free, timed from Send
+    else m_bTxTime = (t2p >= tx1) and (t2p < tx2);
   }
   if(m_tune) m_bTxTime=true;                 //"Tune" takes precedence
 
-  if(m_transmitting or m_enableTx or m_tune) {
+  // JTDX-VU: a JTTY Send keys up without Enable Tx, like Tune does
+  if(m_transmitting or m_enableTx or m_tune or (m_mode=="JTTY" and m_bTxTime)) {
 // Check for "txboth" (testing purposes only)
     QFile f(m_appDir + "/txboth");
     if(f.exists() and fmod(tsec,m_TRperiod)<49.96) m_bTxTime=true; //<(1.0 + 85.0*m_nsps/12000.0)
@@ -4372,7 +4377,7 @@ void MainWindow::guiUpdate()
 
     float fTR=float((ms%int(1000.0*m_TRperiod)))/(1000.0*m_TRperiod);
 
-    if (m_bTxTime && iptt0==0 && fTR<99.0 && m_autoseq && !m_processAuto_done && (m_callMode==2 || (m_callMode<=1 && (m_callFirst73 || m_status >= QsoHistory::RRR73)))) {
+    if (m_bTxTime && iptt0==0 && fTR<99.0 && m_autoseq && m_mode!="JTTY" && !m_processAuto_done && (m_callMode==2 || (m_callMode<=1 && (m_callFirst73 || m_status >= QsoHistory::RRR73)))) {
       m_processAuto_done = true;
       process_Auto();
     }
@@ -7502,6 +7507,16 @@ void MainWindow::transmit (double snr)
     if (m_tci) Q_EMIT m_config.transceiver_modulator_start(NUM_T10_SYMBOLS,sps,ui->TxFreqSpinBox->value()-m_XIT,m_toneSpacing,true,snr,m_TRperiod);
     else Q_EMIT sendMessage (NUM_T10_SYMBOLS,sps,ui->TxFreqSpinBox->value()-m_XIT,m_toneSpacing,m_soundOutput,
                         m_config.audio_output_channel(),true,snr,m_TRperiod);
+  }
+  else if (m_modeTx == "JTTY") {
+    // JTDX-VU: 4-GFSK wave already generated into foxcom_.wave by jtty_tx().
+    // 384 samples/symbol at 12 kHz (the Modulator scales x4 for 48 kHz) makes
+    // the playback loop end exactly at nsym*1536; synchronize=false starts at
+    // the top of the wave immediately - JTTY has no T/R period.
+    toneSpacing=-4.0;
+    if (m_tci) Q_EMIT m_config.transceiver_modulator_start(m_jttyNsym,384.0,ui->TxFreqSpinBox->value()-m_XIT,toneSpacing,false,snr,m_TRperiod);
+    else Q_EMIT sendMessage (m_jttyNsym,384.0,ui->TxFreqSpinBox->value()-m_XIT,toneSpacing,m_soundOutput,
+                        m_config.audio_output_channel(),false,snr,m_TRperiod);
   }
   else if (m_mode=="WSPR-2") {
     if (m_tci) Q_EMIT m_config.transceiver_modulator_start(NUM_WSPR_SYMBOLS,8192.0,ui->TxFreqSpinBox->value()-1.5*12000/8192,m_toneSpacing,true,snr,m_TRperiod);

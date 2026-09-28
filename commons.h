@@ -119,7 +119,7 @@ extern "C" {
 #endif
 
 extern struct {
-  float wave[606720];
+  float wave[1450000];   // JTDX-VU: 16-frame JTTY message (1,449,984) + guard; was 606720
 } foxcom_;
 
 #define NUM_JT65_SYMBOLS 126               //63 data + 63 sync

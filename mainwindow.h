@@ -686,6 +686,10 @@ private:
   QTextBlock m_jttyQsoGroupEnd;
   int m_jttyQsoGroupEndPosition {-1};
   int m_jttyLastAllFreqsK {-1};
+  int m_jttyNsym {0};                   // symbols of the wave now in foxcom_.wave
+  qint64 m_jttyTxRequestedUntil {0};    // ms epoch: Send requested, waiting for PTT + modulator
+  qint64 m_jttyTxEndMs {0};             // ms epoch: latest end of the playing wave (0 = not started)
+  int m_jttyTxLineSeq {0};              // negative ids for Tx lines in the Rx Frequency pane
 
   QTimer m_guiTimer;
   QTimer ptt1Timer;                 //StartTx delay
@@ -831,6 +835,12 @@ private:
   void jttyRefreshDisplay ();
   void renderJttyAllFreqLines ();
   void renderJttyQsoLines ();
+  void jtty_tx (QString message);       // encode + generate wave, then let guiUpdate key up
+  void jttyMacro (int key);             // F1..F8: expand %M %H %Q %E, then jtty_tx
+  void jttyHalt ();
+  bool jttyModulatorActive () const;
+  bool jttyTxBusy () const;             // a Send is pending or playing
+  bool jttyUpdateTxState ();            // guiUpdate's m_bTxTime for JTTY
   void switch_mode (Mode);
   void commonActions();
   void WSPR_scheduling ();
