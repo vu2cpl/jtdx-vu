@@ -44,6 +44,18 @@ private build.
     `V`).
   - The log is fetched at start-up when the cached copy is more than
     24 h old, or on demand with "Refresh now".
+- **Band and mode buttons** (after the MSHV switcher by LZ2HV). Two
+  rows above the decode panes: one click changes mode, or moves to a
+  band's working frequency for the current mode. The current band and
+  mode are shown green. Choose which buttons appear in View > Band &
+  Mode Buttons....
+- **Show only needed decodes.** The "Show:" selector (All / New DXCC /
+  New DXCC or band / New DXCC, band or mode) filters the Band Activity
+  pane down to entities you still need, using Club Log when it's
+  enabled. It turns amber while active.
+  - Traffic with your call, and with your current QSO partner, always
+    shows.
+  - The Rx Frequency pane is never filtered.
 - **Needed-DXCC alerts** when a decoded station is ATNO, a new band or
   a new band+mode. Alerts go to macOS notifications and/or Telegram,
   with a per-call/band cooldown (5–60 min).

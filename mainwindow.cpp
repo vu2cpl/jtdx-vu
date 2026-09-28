@@ -54,6 +54,9 @@
 #include "wsprnet.h"
 #include "eqsl.h"
 #include "clublog.h"
+#include "bandmodeswitcher.h"
+#include <QVBoxLayout>
+#include <QHash>
 #include "signalmeter.h"
 #include "HelpTextWindow.hpp"
 #include "SampleDownloader.hpp"
@@ -1067,6 +1070,40 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     connect (action, &QAction::triggered, this, [this] {
         m_clubLog->settings_dialog (this, m_config.my_callsign ());
       });
+  }
+
+  // JTDX-VU: MSHV-style band / mode buttons above the decode panes
+  m_switcher = new BandModeSwitcher {m_settings, m_useDarkStyle};
+  {
+    auto central = takeCentralWidget ();
+    auto wrap = new QWidget;
+    auto vbox = new QVBoxLayout {wrap};
+    vbox->setContentsMargins (2, 1, 2, 0);
+    vbox->setSpacing (1);
+    vbox->addWidget (m_switcher);
+    vbox->addWidget (central, 1);
+    setCentralWidget (wrap);
+    auto action = new QAction {tr ("Band && Mode Buttons..."), this};
+    action->setMenuRole (QAction::NoRole);
+    ui->menuView->addSeparator ();
+    ui->menuView->addAction (action);
+    connect (action, &QAction::triggered, this, [this] {m_switcher->settings_dialog (this);});
+  }
+  connect (m_switcher, &BandModeSwitcher::band_clicked, this, &MainWindow::switch_to_band);
+  ui->decodedTextBrowser->setNewOnly (m_switcher->new_only ());  // Band Activity only
+  connect (m_switcher, &BandModeSwitcher::new_only_changed, ui->decodedTextBrowser, &DisplayText::setNewOnly);
+  connect (m_switcher, &BandModeSwitcher::mode_clicked, this, [this] (QString const& mode) {
+      QHash<QString, QAction *> const actions {
+        {"FT8", ui->actionFT8}, {"FT4", ui->actionFT4}, {"JT9", ui->actionJT9}, {"JT65", ui->actionJT65},
+        {"T10", ui->actionT10}, {"JT9+JT65", ui->actionJT9_JT65}, {"WSPR-2", ui->actionWSPR_2}};
+      if (mode != m_mode && actions.contains (mode) && actions[mode]->isEnabled ()) actions[mode]->trigger ();
+    });
+  {
+    auto timer = new QTimer {this};  // keep the active-button highlight in step with rig and menus
+    connect (timer, &QTimer::timeout, this, [this] {
+        m_switcher->set_active (m_config.bands ()->find (m_freqNominal), m_mode);
+      });
+    timer->start (500);
   }
 
   enable_DXCC_entity ();  // sets text window proportions and (re)inits the logbook
@@ -6655,6 +6692,25 @@ void MainWindow::band_changed (Frequency f)
     m_lastloggedtime=m_lastloggedtime.addSecs(-7*int(m_TRperiod));
     m_lastloggedcall.clear(); setLastLogdLabel();
   }
+}
+
+void MainWindow::switch_to_band (QString const& band)
+{
+  // pick this band's first working frequency for the current mode, as if
+  // chosen from the band combo box
+  auto const& frequencies = m_config.frequencies ();
+  for (int row = 0; row < frequencies->rowCount (); ++row)
+    {
+      auto source = frequencies->mapToSource (frequencies->index (row, FrequencyList_v2::frequency_column));
+      if (!source.isValid ()) continue;
+      if (m_config.bands ()->find (frequencies->frequency_list ()[source.row ()].frequency_) == band)
+        {
+          ui->bandComboBox->setCurrentIndex (row);
+          on_bandComboBox_activated (row);
+          return;
+        }
+    }
+  statusBar ()->showMessage (tr ("No %1 working frequency on %2 - add one in Settings > Frequencies").arg (m_mode, band), 8000);
 }
 
 void MainWindow::init_logbook ()

@@ -26,6 +26,38 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — band/mode buttons and a "show only new" filter
+
+- **`bandmodeswitcher.{h,cpp}`** is modelled on MSHV's
+  `HvWBtSw` (LZ2HV). It adds a mode row (FT8, FT4, JT9, JT65, T10,
+  JT9+JT65, WSPR-2) and a band row (160m–2m), above the decode panes.
+  - MainWindow wraps the .ui central widget with `takeCentralWidget()`
+    rather than editing `mainwindow.ui`.
+  - A mode button triggers the existing `ui->actionXXX`.
+  - A band button (`MainWindow::switch_to_band`) picks that band's
+    first row in the mode-filtered `m_config.frequencies()` and calls
+    `on_bandComboBox_activated`, the same as the band combo. If there's
+    no working frequency, the status bar says so.
+  - The active highlight is refreshed by a 500 ms timer from
+    `m_freqNominal`/`m_mode`, so rig-side changes show too.
+  - Buttons have `Qt::NoFocus`, so they never pull focus from the
+    message fields.
+  - Settings are in `[Switcher]`. The dialog is View > Band & Mode
+    Buttons....
+- **"Show:" filter** at the end of the mode row: `DisplayText::setNewOnly`
+  on `decodedTextBrowser` only, never the Rx Frequency pane.
+  - Levels: 1 = hide unless new DXCC, 2 = also new band, 3 = also new
+    band+mode. Each level is checked with `LogBook::matchDXCC`, so it
+    follows Club Log.
+  - Always shown: `std_type 2` (my call) and the current QSO partner.
+    Unknown entities are hidden.
+  - Applied before the existing bypass flags, which still win.
+  - The selector is amber while filtering. The level is saved in
+    `[Switcher] NewOnly`.
+- Verified: both rows render, the green highlight follows band and
+  mode, and the dialog persists its choices. The filter's hide/show on
+  live decodes is **not yet seen on air**.
+
 ### 2026-09-28 — short title
 
 - `program_title()` now returns only "JTDX-VU for VUCG V<version>", at

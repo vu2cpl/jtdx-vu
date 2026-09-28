@@ -902,6 +902,30 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
     } else if (!lotw.isEmpty ()) {
         servis = "•" + servis.mid(1); // lotw 
     }
+    // JTDX-VU "show only new" filter: hide decodes whose DXCC is already
+    // worked (per Club Log when enabled) at the chosen level.  QSO traffic
+    // with my call (std_type 2) and my current QSO partner always shows.
+    if (show_line && newOnly_ > 0 && std_type != 2 && !jt65bc
+        && (hisCall.isEmpty () || checkCall.isEmpty () || !checkCall.contains (hisCall))) {
+        bool needed = false;
+        if (!checkCall.isEmpty ()) {
+            QString country;
+            bool worked = true, workedSlot = true;
+            logBook.matchDXCC (checkCall, country, worked, workedSlot);
+            if (!country.isEmpty () && !country.startsWith ("  ,?,")) {
+                needed = !worked;
+                if (!needed && newOnly_ >= 2) {
+                    logBook.matchDXCC (checkCall, country, worked, workedSlot, dialFreq);
+                    needed = !workedSlot;
+                }
+                if (!needed && newOnly_ >= 3) {
+                    logBook.matchDXCC (checkCall, country, worked, workedSlot, dialFreq, checkMode.isEmpty () ? app_mode : checkMode);
+                    needed = !workedSlot;
+                }
+            }
+        }
+        if (!needed) show_line = false;
+    }
     if (bypassAllFilters || bypassRxfFilters) {
             show_line = true;
     }

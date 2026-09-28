@@ -61,6 +61,7 @@ class WSPRBandHopping;
 class HelpTextWindow;
 class EQSL;
 class ClubLog;
+class BandModeSwitcher;
 class WSPRNet;
 class SoundOutput;
 class Modulator;
@@ -648,6 +649,7 @@ private:
   WSPRNet *wsprNet;
   EQSL *Eqsl;
   ClubLog *m_clubLog {nullptr};  // JTDX-VU
+  BandModeSwitcher *m_switcher {nullptr};  // JTDX-VU
 
   QTimer m_guiTimer;
   QTimer ptt1Timer;                 //StartTx delay
@@ -783,6 +785,7 @@ private:
   void postWSPRDecode (bool is_new, QStringList message_parts);
   void enable_DXCC_entity ();
   void init_logbook ();  // JTDX-VU: (re)load worked-before data, Club Log aware
+  void switch_to_band (QString const& band);  // JTDX-VU band button
   void switch_mode (Mode);
   void commonActions();
   void WSPR_scheduling ();

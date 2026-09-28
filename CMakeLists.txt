@@ -245,6 +245,7 @@ set (wsjtx_CXXSRCS
   main.cpp
   eqsl.cpp
   clublog.cpp
+  bandmodeswitcher.cpp
   wsprnet.cpp
   WSPRBandHopping.cpp
   JTDXMessageBox.cpp

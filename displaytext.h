@@ -18,6 +18,8 @@ public:
     explicit DisplayText(QWidget *parent = 0);
     void setConfiguration(Configuration const *);
     void setMyContinent (QString const&);
+    // JTDX-VU: 0 = show all, 1 = only new DXCC, 2 = + new band, 3 = + new band+mode
+    void setNewOnly (int level) {newOnly_ = level;}
     void setContentFont (QFont const&);
     void insertLineSpacer(QString const&);
     int displayDecodedText(DecodedText* decodedText, QString myCall, QString hisCall, QString hisGrid,
@@ -39,6 +41,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *e);
 
 private:
+    int newOnly_ = 0;
 
     bool scroll_;
     bool bold_;
