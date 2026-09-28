@@ -15,20 +15,18 @@ Last updated: 2026-09-28
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
-- **Release v0.1.0: IN PROGRESS.** Status of each platform build:
-  - **Pi/Linux arm64:** `jtdx-vu-0.1.0-linux-arm64.deb`, built on
-    meridianpi5, in `~/Desktop/JTDX-VU-release/`.
-  - **macOS arm64:** CI run `36371714068` succeeded.
-  - **macOS Intel:** CI still building.
-  - **Windows:** CI failed 3x; the fourth run, `36373417404`, is in
-    progress.
-
-  Once all are green, `gh release create v0.1.0` creates the tag; the
-  tag push re-runs both workflows, which attach their zips. Then upload
-  the `.deb` and add the download links to the vu2cpl.com project page
-  (Manoj asked for that).
+- **Release v0.1.0: PUBLISHED 2026-09-28.** It's at
+  https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.1.0 with the macOS
+  arm64 zip, the Windows x64 zip and the Pi `.deb`, each with a
+  `.sha256`. **macOS Intel is still building:** it compiles Homebrew
+  deps from source, which can take up to the 6 h limit. The tag-triggered
+  macos run attaches it automatically; the earlier workflow_dispatch run
+  `36376193759` builds the same zip and would need a manual
+  `gh release upload`. Copies of the ready builds are in `~/Desktop/jdxvu/`.
 - **Website:** vu2cpl.com has a JTDX-VU card (Utilities & Tools, after
-  MSHV-Mac) and a project page at `/projects/jtdx-vu/` with screenshots.
+  MSHV-Mac) and a project page at `/projects/jtdx-vu/` with screenshots
+  and a v0.1.0 downloads table. The Intel row should become direct links
+  once that zip lands.
 - **Stock JTDX:** `/Applications/jtdx.app`, with its `JTDX.ini` and
   `Application Support/JTDX`, is still installed and must be left
   alone. JTDX-VU only read it once, for the first-launch migration.
@@ -41,6 +39,29 @@ Last updated: 2026-09-28
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-09-28 — Windows CI green, v0.1.0 released
+
+- It took 12 runs to get Windows green. Each fix is in `windows.yml` or
+  CMake:
+  - MSYS2 has no `hamlib` package, so it's built from 4.7.2 source.
+  - OmniRig has to be installed for `dumpcpp`, plus a `win64` typelib
+    key.
+  - MSYS2 names the tools `dumpcpp-qt5` and `windeployqt-qt5`, so both
+    CMake lookups accept those names. `if (DUMPCPP-NOTFOUND)` never
+    fired, which disguised this as "install OmniRig".
+  - FindFFTW3 skipped the threads library on Windows, but MSYS2 ships
+    `libfftw3f_threads` separately, so it's now added when found.
+  - windeployqt needs `--no-angle --no-opengl-sw`; MSYS2 Qt has no
+    `libGLESv2`.
+  - The ldd DLL sweep is best-effort (`cp -n` exits 1 on skip in
+    coreutils ≥ 9.2).
+- The Windows zip is 55 MB, 127 files: `bin/` holds the exes, Qt, Hamlib,
+  FFTW and gfortran DLLs and plugins, and `share/jtdx/` holds the data.
+  It's not yet run on a real PC.
+- The release was created with `gh release create v0.1.0 --target
+  jtdx-vu`, using the notes plus assets from the green CI runs and the Pi
+  build. All assets were checked with anonymous curl (200).
 
 ### 2026-09-28 — cross-platform builds, public repo, website
 
@@ -319,13 +340,11 @@ Last updated: 2026-09-28
 
 ## Open items
 
-- [ ] **Finish release v0.1.0:**
-      - Windows CI green.
-      - macOS Intel CI green.
-      - `gh release create v0.1.0` with notes, plus the Pi `.deb`.
-      - Check that all assets and `.sha256` files are attached.
-      - Add per-OS download links to `/projects/jtdx-vu/` on
-        vu2cpl.com.
+- [ ] **macOS Intel zip:** once CI finishes, check it's attached to
+      v0.1.0 and swap the Intel row on vu2cpl.com/projects/jtdx-vu/ for
+      direct links. Also copy it into `~/Desktop/jdxvu/`.
+- [ ] **Cache Hamlib in windows.yml.** It rebuilds from source every run
+      and costs about 10 min.
 - [ ] **Windows build untested on a real PC.** Check audio, CAT and
       OmniRig, and that notifications appear as tray toasts.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
