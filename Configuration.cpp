@@ -1310,12 +1310,24 @@ namespace
 #else
   char const * app_root = "/../";
 #endif
+  // Resolve a CMake install path like "jtdx.app/Contents/Resources" against
+  // the running executable.  On macOS go via the bundle we are actually in
+  // rather than the configured bundle name, so a renamed bundle (JTDX-VU.app)
+  // never picks up the data of a stock jtdx.app sitting next to it.
+  QString installed_path (QString const& rel)
+  {
+#if defined (Q_OS_MAC)
+    auto i = rel.indexOf (".app/");
+    if (i >= 0) return QApplication::applicationDirPath () + "/../../" + rel.mid (i + 5);
+#endif
+    return QApplication::applicationDirPath () + app_root + rel;
+  }
   QString doc_path ()
   {
 #if CMAKE_BUILD
     if (QDir::isRelativePath (CMAKE_INSTALL_DOCDIR))
       {
-        return QApplication::applicationDirPath () + app_root + CMAKE_INSTALL_DOCDIR;
+        return installed_path (CMAKE_INSTALL_DOCDIR);
       }
     return CMAKE_INSTALL_DOCDIR;
 #else
@@ -1328,7 +1340,7 @@ namespace
 #if CMAKE_BUILD
     if (QDir::isRelativePath (CMAKE_INSTALL_DATADIR))
       {
-        return QApplication::applicationDirPath () + app_root + CMAKE_INSTALL_DATADIR + QChar {'/'} + CMAKE_PROJECT_NAME;
+        return installed_path (QString {CMAKE_INSTALL_DATADIR} + QChar {'/'} + CMAKE_PROJECT_NAME);
       }
     return CMAKE_INSTALL_DATADIR;
 #else
@@ -1385,12 +1397,12 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
         if (!temp_dir_.mkpath (unique_directory)
             || !temp_dir_.cd (unique_directory))
           {
-            JTDXMessageBox::critical_message (this, "JTDX", tr ("Create temporary directory error: ") + temp_dir_.absolutePath ());
+            JTDXMessageBox::critical_message (this, QCoreApplication::applicationName (), tr ("Create temporary directory error: ") + temp_dir_.absolutePath ());
             throw std::runtime_error {"Failed to create a temporary directory"};
           }
         if (!temp_dir_.isReadable () || !(ok = QTemporaryFile {temp_dir_.absoluteFilePath ("test")}.open ()))
           {
-            if (JTDXMessageBox::Cancel == JTDXMessageBox::critical_message (this, "JTDX",
+            if (JTDXMessageBox::Cancel == JTDXMessageBox::critical_message (this, QCoreApplication::applicationName (),
                                                               tr ("Create temporary directory error:\n%1\n"
                                                                   "Another application may be locking the directory").arg (temp_dir_.absolutePath ()),"","",
                                                               JTDXMessageBox::Retry | JTDXMessageBox::Cancel))
@@ -1408,7 +1420,7 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
     QDir data_dir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)};
     if (!data_dir.mkpath ("."))
       {
-        JTDXMessageBox::critical_message (this, "JTDX", tr ("Create data directory error: ") + data_dir.absolutePath ());
+        JTDXMessageBox::critical_message (this, QCoreApplication::applicationName (), tr ("Create data directory error: ") + data_dir.absolutePath ());
         throw std::runtime_error {"Failed to create data directory"};
       }
 
@@ -1417,7 +1429,7 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
     default_save_directory_ = data_dir;
     if (!default_save_directory_.mkpath (save_dir) || !default_save_directory_.cd (save_dir))
       {
-        JTDXMessageBox::critical_message (this, "JTDX", tr ("Create Directory", "Cannot create directory \"") +
+        JTDXMessageBox::critical_message (this, QCoreApplication::applicationName (), tr ("Create Directory", "Cannot create directory \"") +
                                default_save_directory_.absoluteFilePath (save_dir) + "\".");
         throw std::runtime_error {"Failed to create save directory"};
       }
@@ -1428,7 +1440,7 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
     QString samples_dir {"samples"};
     if (!default_save_directory_.mkpath (samples_dir))
       {
-        JTDXMessageBox::critical_message (this, "JTDX", tr ("Create Directory", "Cannot create directory \"") +
+        JTDXMessageBox::critical_message (this, QCoreApplication::applicationName (), tr ("Create Directory", "Cannot create directory \"") +
                                default_save_directory_.absoluteFilePath (samples_dir) + "\".");
         throw std::runtime_error {"Failed to create save directory"};
       }
@@ -4779,7 +4791,7 @@ void Configuration::impl::on_pbWorkedCall_clicked()
 void Configuration::impl::on_decoded_text_font_push_button_clicked ()
 {
   next_decoded_text_font_ = QFontDialog::getFont (0, decoded_text_font_ , this
-                                                  , tr ("JTDX Decoded Text Font Chooser")
+                                                  , QCoreApplication::applicationName () + " " + tr ("Decoded Text Font Chooser")
                                                   , QFontDialog::MonospacedFonts
                                                   );
 }
@@ -4899,7 +4911,7 @@ void Configuration::impl::on_grid_line_edit_editingFinished ()
 {
   auto text = ui_->grid_line_edit->text (); auto grid_size = text.length();
   if (grid_size == 3 || grid_size == 2 || grid_size == 1) {
-    JTDXMessageBox::critical_message (this, "JTDX", tr ("Enter Grid error: 4/6/8/10 char grid will be accepted"));
+    JTDXMessageBox::critical_message (this, QCoreApplication::applicationName (), tr ("Enter Grid error: 4/6/8/10 char grid will be accepted"));
     ui_->grid_line_edit->setFocus();
     ui_->grid_line_edit->clear ();
   }
@@ -5635,7 +5647,7 @@ bool Configuration::impl::have_rig ()
 {
   if (!open_rig ())
     {
-      JTDXMessageBox::critical_message (this, "JTDX", tr ("Failed to open connection to rig"));
+      JTDXMessageBox::critical_message (this, QCoreApplication::applicationName (), tr ("Failed to open connection to rig"));
     }
   return rig_active_;
 }

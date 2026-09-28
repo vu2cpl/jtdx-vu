@@ -19,6 +19,7 @@
 #include <QStandardPaths>
 #include <QStringList>
 #include <QLockFile>
+#include <QFile>
 
 #if QT_VERSION >= 0x050200
 #include <QCommandLineParser>
@@ -52,6 +53,44 @@ namespace
 #endif
     }
   } seeding;
+
+  // JTDX-VU keeps its own settings and data, apart from a stock JTDX
+  // install.  On the first launch of an instance (no JTDX-VU*.ini yet)
+  // copy the matching stock JTDX state across, repointing any paths
+  // inside the .ini at the new data directory.  The stock JTDX files are
+  // only read, never modified.
+  void copy_tree (QString const& from, QString const& to)
+  {
+    QDir src {from};
+    QDir {}.mkpath (to);
+    for (auto const& e : src.entryInfoList (QDir::AllEntries | QDir::Hidden | QDir::NoDotAndDotDot))
+      {
+        auto target = QDir {to}.absoluteFilePath (e.fileName ());
+        if (e.isDir ()) copy_tree (e.absoluteFilePath (), target);
+        else if (!QFile::exists (target)) QFile::copy (e.absoluteFilePath (), target);
+      }
+  }
+
+  void migrate_legacy_jtdx_state (QDir const& config_path, QString const& settings_file)
+  {
+    auto name = QCoreApplication::applicationName ();          // "JTDX-VU[ - rig]"
+    if (QFile::exists (settings_file) || !name.startsWith ("JTDX-VU")) return;
+    auto legacy_name = QString {name}.replace (0, 7, "JTDX");   // "JTDX[ - rig]"
+    auto legacy_ini = config_path.absoluteFilePath (legacy_name + ".ini");
+    if (!QFile::exists (legacy_ini)) return;
+
+    QDir data_dir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)};
+    auto legacy_data = QDir {data_dir.absoluteFilePath ("..")}.absoluteFilePath (legacy_name);
+    if (QDir {legacy_data}.exists () && !data_dir.exists ())
+      copy_tree (legacy_data, data_dir.absolutePath ());
+
+    QFile in {legacy_ini};
+    QFile out {settings_file};
+    if (!in.open (QIODevice::ReadOnly) || !out.open (QIODevice::WriteOnly)) return;
+    auto text = QString::fromUtf8 (in.readAll ());
+    text.replace (QDir::cleanPath (legacy_data) + '/', data_dir.absolutePath () + '/');
+    out.write (text.toUtf8 ());
+  }
 
   // We  can't use  the GUI  after QApplication::exit()  is called  so
   // uncaught exceptions can  get lost on Windows  systems where there
@@ -119,7 +158,7 @@ int main(int argc, char *argv[])
                                    // that GUI has correct l18n
 
       // Override programs executable basename as application name.
-      a.setApplicationName ("JTDX");
+      a.setApplicationName ("JTDX-VU");
       a.setApplicationVersion (version ());
   if (version().replace("_32A","").indexOf("_") > 1) {
     #include <QDate>
@@ -239,6 +278,7 @@ int main(int argc, char *argv[])
         }
 
       auto settings_file = config_path.absoluteFilePath (a.applicationName () + ".ini");
+      migrate_legacy_jtdx_state (config_path, settings_file);
       QSettings settings(settings_file, QSettings::IniFormat);
       if (!settings.isWritable ())
         {

@@ -678,6 +678,7 @@ C               VELOCITY OF THE SUN.
 C
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      EXTERNAL SPLIT
 
       SAVE
 

@@ -1151,7 +1151,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   ui->genStdMsgsPushButton->click ();
   ui->spotMsgLabel->setTextFormat(Qt::PlainText);
   m_mslastTX = m_jtdxtime->currentMSecsSinceEpoch2();
-  m_multInst=QApplication::applicationName ().length()>4;
+  m_multInst=QApplication::applicationName ().length()>7; // "JTDX-VU" + " - <rig-name>"
   foxgen_(); ui->actionLatvian->setEnabled(false); ui->actionDutch->setEnabled(false);//temporarily disable
 
 // make sure TX hash tables are filled in at first message transmission
@@ -7476,7 +7476,7 @@ void MainWindow::pskSetLocal ()
   QString antenna_description;
   if (!matches.isEmpty ()) antenna_description = stations->index (matches.first ().row (), StationList::description_column).data ().toString ();
   // qDebug() << "To PSKreporter: local station details";
-  psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (), antenna_description, QString {"JTDX v" + version() + (m_tci ? " tci " : " ") + revision()}.simplified ());
+  psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (), antenna_description, QString {"JTDX-VU v" + version() + (m_tci ? " tci " : " ") + revision()}.simplified ());
 }
 
 void MainWindow::transmitDisplay (bool transmitting)

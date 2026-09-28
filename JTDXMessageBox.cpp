@@ -8,29 +8,30 @@
 
 #include <QDialogButtonBox>
 #include <QPushButton>
+#include <QCoreApplication>
 
 #include "revision_utils.hpp"
 
 JTDXMessageBox::JTDXMessageBox (QWidget * parent)
   : QMessageBox {parent}
 {
-  setWindowTitle ("JTDX");
+  setWindowTitle (QCoreApplication::applicationName ());
 }
 
 JTDXMessageBox::JTDXMessageBox (Icon icon, QString const& text, StandardButtons buttons
                         , QWidget * parent, Qt::WindowFlags flags)
-  : QMessageBox {icon, "JTDX", text, buttons, parent, flags}
+  : QMessageBox {icon, QCoreApplication::applicationName (), text, buttons, parent, flags}
 {
 }
 
 void JTDXMessageBox::about_message (QWidget * parent, QString const& text)
 {
-  QMessageBox::about (parent, "JTDX", text);
+  QMessageBox::about (parent, QCoreApplication::applicationName (), text);
 }
 
 void JTDXMessageBox::about_Qt_message (QWidget * parent)
 {
-  QMessageBox::aboutQt (parent, "JTDX");
+  QMessageBox::aboutQt (parent, QCoreApplication::applicationName ());
 }
 
 void JTDXMessageBox::translate_buttons()
