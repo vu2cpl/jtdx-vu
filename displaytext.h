@@ -24,6 +24,7 @@ public:
     void setNewOnly (int level);
     void refilter (LogBook const&);   // re-check lines after the log changed
     void setContentFont (QFont const&);
+    QFont contentFont () const {return m_charFormat.font ();}  // JTDX-VU
     void insertLineSpacer(QString const&);
     int displayDecodedText(DecodedText* decodedText, QString myCall, QString hisCall, QString hisGrid,
                            bool once_notified, LogBook logBook, QsoHistory& qsoHistory,

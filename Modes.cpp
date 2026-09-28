@@ -18,7 +18,8 @@ namespace
     "T10",
     "FT8",
     "FT4",
-    "WSPR"
+    "WSPR",
+    "JTTY"
   };
 }
 

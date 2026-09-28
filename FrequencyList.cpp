@@ -168,8 +168,17 @@ namespace
       {3400065000, Modes::JT65, IARURegions::ALL,true},
       
       {5760065000, Modes::JT65, IARURegions::ALL,true},
-      
-	  
+      // JTDX-VU: JTTY dial frequencies as shipped by WSJT-X 3.2.0-rc1
+      // (conventional RTTY frequency, +10 kHz where the band plan allows)
+      {1838000, Modes::JTTY, IARURegions::ALL,true},
+      {3575000, Modes::JTTY, IARURegions::ALL,true},
+      {7090000, Modes::JTTY, IARURegions::ALL,true},
+      {10140000, Modes::JTTY, IARURegions::ALL,true},
+      {14090000, Modes::JTTY, IARURegions::ALL,true},
+      {18100000, Modes::JTTY, IARURegions::ALL,true},
+      {21090000, Modes::JTTY, IARURegions::ALL,true},
+      {24920000, Modes::JTTY, IARURegions::ALL,true},
+      {28090000, Modes::JTTY, IARURegions::ALL,true},
     };
 }
 

@@ -18,7 +18,7 @@
 
 QStringList const& BandModeSwitcher::all_modes ()
 {
-  static QStringList const modes {"FT8", "FT4", "JT9", "JT65", "T10", "JT9+JT65", "WSPR-2"};
+  static QStringList const modes {"FT8", "FT4", "JTTY", "JT9", "JT65", "T10", "JT9+JT65", "WSPR-2"};
   return modes;
 }
 

@@ -24,6 +24,7 @@ public:
     FT8,
     FT4,
     WSPR,
+    JTTY,   // JTDX-VU
     MODES_END_SENTINAL_AND_COUNT
   };
 

@@ -55,6 +55,7 @@
 #include "eqsl.h"
 #include "clublog.h"
 #include "bandmodeswitcher.h"
+#include "jttypanel.h"
 #include <QSignalBlocker>
 #include <QVBoxLayout>
 #include <QHash>
@@ -618,6 +619,12 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   ui->actionJT9->setActionGroup(modeGroup);
   ui->actionT10->setActionGroup(modeGroup);
   ui->actionWSPR_2->setActionGroup(modeGroup);
+  // JTDX-VU: JTTY mode action, created in code so mainwindow.ui stays upstream-clean
+  m_actionJTTY = new QAction {tr ("JTTY"), this};
+  m_actionJTTY->setCheckable (true);
+  m_actionJTTY->setActionGroup (modeGroup);
+  ui->menuMode->addAction (m_actionJTTY);
+  connect (m_actionJTTY, &QAction::triggered, this, &MainWindow::jttyModeSelected);
 
   QActionGroup* languageGroup = new QActionGroup(this);
   ui->actionEnglish->setActionGroup(languageGroup);
@@ -1082,6 +1089,10 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     vbox->setContentsMargins (2, 1, 2, 0);
     vbox->setSpacing (1);
     vbox->addWidget (m_switcher);
+    m_jttyPanel = new JttyPanel {m_settings};
+    m_jttyPanel->setVisible (false);
+    vbox->addWidget (m_jttyPanel);
+    connect (m_jttyPanel, &JttyPanel::displayOptionsChanged, this, &MainWindow::jttyRefreshDisplay);
     vbox->addWidget (central, 1);
     setCentralWidget (wrap);
     auto action = new QAction {tr ("Band && Mode Buttons..."), this};
@@ -1132,7 +1143,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   connect (m_switcher, &BandModeSwitcher::mode_clicked, this, [this] (QString const& mode) {
       QHash<QString, QAction *> const actions {
         {"FT8", ui->actionFT8}, {"FT4", ui->actionFT4}, {"JT9", ui->actionJT9}, {"JT65", ui->actionJT65},
-        {"T10", ui->actionT10}, {"JT9+JT65", ui->actionJT9_JT65}, {"WSPR-2", ui->actionWSPR_2}};
+        {"T10", ui->actionT10}, {"JT9+JT65", ui->actionJT9_JT65}, {"WSPR-2", ui->actionWSPR_2}, {"JTTY", m_actionJTTY}};
       if (!actions.contains (mode) || !actions[mode]->isEnabled ()) return;
       if (mode != m_mode)
         {
@@ -1182,6 +1193,13 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   else if(m_mode=="JT65") on_actionJT65_triggered();
   else if(m_mode=="T10") on_actionT10_triggered();
   else if(m_mode=="WSPR-2") on_actionWSPR_2_triggered();
+  else if(m_mode=="JTTY") jttyModeSelected();
+  {
+    // JTDX-VU: JTDXVU_OPEN_WAV=<file> opens a wav for decoding once the
+    // window is up - a deterministic hook for decode regression tests
+    auto const wav = QString::fromLocal8Bit (qgetenv ("JTDXVU_OPEN_WAV"));
+    if (!wav.isEmpty ()) QTimer::singleShot (4000, this, [this, wav] {openWavFile (wav);});
+  }
 
   if(m_mode!="FT8") { ui->actionEnable_hound_mode->setChecked(false); ui->actionEnable_hound_mode->setEnabled(false); }
 
@@ -1909,6 +1927,7 @@ void MainWindow::dataSink(qint64 frames)
   int k (frames);
   dec_data.params.nfa=m_wideGraph->nStartFreq();
   dec_data.params.nfb=m_wideGraph->Fmax();
+  if(m_mode=="JTTY") jtty_decode(k);   // JTDX-VU: period-free, runs on every chunk
   int nsps=m_nsps;
   symspec_(&dec_data,&k,&trmin,&nsps,&px,s,&df3,&ihsym,&npts8);
   if(m_mode=="WSPR-2") wspr_downsample_(dec_data.d2,&k);
@@ -1920,6 +1939,7 @@ void MainWindow::dataSink(qint64 frames)
   if(m_monitoring || m_diskData) {
     m_wideGraph->dataSink2(s,df3,ihsym,m_diskData);
   }
+  if(m_mode=="JTTY") return;           // JTDX-VU: no T/R period, nothing for jtdxjt9 to do
   setStopHSym();
   if(ihsym==3*m_hsymStop/4) m_dialFreqRxWSPR=m_freqNominal;
   int nhsymEStopFT8 = m_hsymStop;
@@ -2203,6 +2223,7 @@ void MainWindow::on_actionSettings_triggered()               //Setup Dialog
       else if(m_mode=="JT65") on_actionJT65_triggered();
       else if(m_mode=="T10") on_actionT10_triggered();
       else if(m_mode=="WSPR-2") on_actionWSPR_2_triggered();
+      else if(m_mode=="JTTY") jttyModeSelected();
 
 	  m_config.transceiver_online ();
 	  m_wideGraph->setTopJT65(m_config.ntopfreq65());
@@ -2966,16 +2987,21 @@ void MainWindow::on_actionOpen_triggered()                     //Open File
   QString fname;
   fname=QFileDialog::getOpenFileName(this, "Open File", m_path,
                                      "WSJT Files (*.wav)");
-  if(!fname.isEmpty ()) {
-    m_path=fname;
-    int i1=fname.lastIndexOf("/");
-    QString baseName=fname.mid(i1+1);
-    tx_status_label->setStyleSheet(QString("QLabel{background: %1}").arg(Radio::convert_dark("#99ffff",m_useDarkStyle)));
-    tx_status_label->setText(" " + baseName + " ");
-    on_stopButton_clicked();
-    m_diskData=true;
-    read_wav_file (fname);
-  }
+  if(!fname.isEmpty ()) openWavFile (fname);
+}
+
+// JTDX-VU: open a wav for decoding - File > Open, or JTDXVU_OPEN_WAV at start
+void MainWindow::openWavFile (QString const& fname)
+{
+  monitor (false);
+  m_path=fname;
+  int i1=fname.lastIndexOf("/");
+  QString baseName=fname.mid(i1+1);
+  tx_status_label->setStyleSheet(QString("QLabel{background: %1}").arg(Radio::convert_dark("#99ffff",m_useDarkStyle)));
+  tx_status_label->setText(" " + baseName + " ");
+  on_stopButton_clicked();
+  m_diskData=true;
+  read_wav_file (fname);
 }
 
 void MainWindow::read_wav_file (QString const& fname)
@@ -6403,6 +6429,7 @@ void MainWindow::commonActions ()
   if (m_tci) Q_EMIT m_config.transceiver_blocksize(m_FFTSize);
   else Q_EMIT FFTSize (m_FFTSize);
   m_toneSpacing=0.0;
+  if (m_jttyPanel) m_jttyPanel->setVisible (m_mode == "JTTY");   // JTDX-VU
   m_wideGraph->setMode(m_mode);
   m_wideGraph->setModeTx(m_modeTx);
   m_wideGraph->show();
@@ -7343,6 +7370,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
       else if(m_mode=="JT65") on_actionJT65_triggered();
       else if(m_mode=="T10") on_actionT10_triggered();
       else if(m_mode=="WSPR-2") on_actionWSPR_2_triggered();
+      else if(m_mode=="JTTY") jttyModeSelected();
   }
   if (s.frequency () != old_state.frequency () || s.split () != m_splitMode) {
       m_splitMode = s.split ();

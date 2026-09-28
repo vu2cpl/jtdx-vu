@@ -62,6 +62,31 @@ class HelpTextWindow;
 class EQSL;
 class ClubLog;
 class BandModeSwitcher;
+class JttyPanel;
+class QAction;
+#include <QTextBlock>
+#include <QDateTime>
+#include <QVector>
+
+// JTDX-VU: JTTY decode lines, keyed by the decoder's message id
+struct JttyDecodeLine
+{
+  qint64 messageId {0};
+  float frequency {0.f};
+  QString text;
+  float sequenceStart {0.f};
+  QDateTime messageStartUtc;
+  bool complete {false};
+  bool written {false};
+};
+struct JttyQsoLine
+{
+  qint64 messageId {0};
+  float frequency {0.f};
+  QString text;
+  float sequenceStart {0.f};
+  QDateTime messageStartUtc;
+};
 class WSPRNet;
 class SoundOutput;
 class Modulator;
@@ -131,6 +156,7 @@ private slots:
   void on_spotLineEdit_textChanged(const QString &text);
   void on_propLineEdit_textChanged(const QString &text);
   void on_actionSettings_triggered();
+  void jttyModeSelected();  // JTDX-VU
   void on_monitorButton_clicked (bool);
   void on_swlButton_clicked (bool);
   void on_filterButton_clicked (bool);
@@ -651,6 +677,15 @@ private:
   ClubLog *m_clubLog {nullptr};  // JTDX-VU
   BandModeSwitcher *m_switcher {nullptr};  // JTDX-VU
   bool m_nonstop {false};  // JTDX-VU Non-stop (Tx watchdog still applies)
+  JttyPanel *m_jttyPanel {nullptr};   // JTDX-VU JTTY
+  QAction *m_actionJTTY {nullptr};
+  QVector<JttyDecodeLine> m_jttyAllFreqLines;
+  QVector<JttyQsoLine> m_jttyQsoLines;
+  QTextBlock m_jttyAllFreqsGroupStart;
+  QTextBlock m_jttyQsoGroupStart;
+  QTextBlock m_jttyQsoGroupEnd;
+  int m_jttyQsoGroupEndPosition {-1};
+  int m_jttyLastAllFreqsK {-1};
 
   QTimer m_guiTimer;
   QTimer ptt1Timer;                 //StartTx delay
@@ -789,6 +824,13 @@ private:
   void switch_to_band (QString const& band);  // JTDX-VU band button
   bool nonstop_continue ();  // JTDX-VU Non-stop: keep going after a logged QSO
   int watchdog_minutes () const;  // JTDX-VU: 10 while Non-stop, else Settings
+  // JTDX-VU JTTY (mainwindow_jtty.cpp)
+  bool jtty_decode (int k);
+  void openWavFile (QString const&);   // JTDX-VU: File > Open body, also JTDXVU_OPEN_WAV
+  void flushJttyDecodeLines ();
+  void jttyRefreshDisplay ();
+  void renderJttyAllFreqLines ();
+  void renderJttyQsoLines ();
   void switch_mode (Mode);
   void commonActions();
   void WSPR_scheduling ();

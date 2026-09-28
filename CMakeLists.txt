@@ -246,6 +246,8 @@ set (wsjtx_CXXSRCS
   eqsl.cpp
   clublog.cpp
   bandmodeswitcher.cpp
+  jttypanel.cpp
+  mainwindow_jtty.cpp
   wsprnet.cpp
   WSPRBandHopping.cpp
   JTDXMessageBox.cpp
@@ -1154,6 +1156,11 @@ generate_version_info (jtdxjt9_VERSION_RESOURCES
   ICON ${WSJTX_ICON_FILE}
   FILE_DESCRIPTION "jtdxjt9 - JTDX slow mode decoder"
   )
+
+# JTDX-VU: WSJT-X's standalone JTTY file decoder, built against the vendored
+# library - the reference for checking the GUI's decodes (regression aid)
+add_executable (rjtty lib/jtty/tools/rjtty.f90)
+target_link_libraries (rjtty wsjt_fort wsjt_cxx ${FFTW3_LIBRARIES})
 
 add_executable (jtdxjt9 lib/jt9.f90 lib/jt9a.f90 ${jt9_CXXSRCS} jtdx.rc ${jtdjt9_VERSION_RESOURCES})
 if (${OPENMP_FOUND} OR APPLE)

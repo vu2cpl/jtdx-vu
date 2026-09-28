@@ -28,6 +28,9 @@ Last updated: 2026-09-28
   - v0.2.0's notes say "superseded by v0.2.1": its CNS never gave up on
     a silent station. Its Intel build was cancelled.
   - v0.1.0 remains published.
+- **Branch `jtty`** (pushed): JTTY mode port from WSJT-X 3.2.0-rc1.
+  Phase 1 (Fortran lib) and phase 2 (RX in the GUI) done and verified;
+  TX not started. FT2 is queued after JTTY. Not in any release.
 - **Website:** vu2cpl.com has a JTDX-VU card (Utilities & Tools, after
   MSHV-Mac) and a project page at `/projects/jtdx-vu/` with screenshots
   and a v0.2.1 downloads table linking all four builds.
@@ -43,6 +46,77 @@ Last updated: 2026-09-28
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-09-28 — JTTY phase 2: RX works in the GUI (branch `jtty`)
+
+JTTY is WSJT-X 3.2's period-free, RTTY-style keyboard mode. Phase 1
+(2026-09-28, `081acdf9`) vendored its Fortran library; this phase wires
+RX into JTDX's GUI. **All on branch `jtty`; `jdx-vu` is untouched.**
+
+- **Mode entry:** `Modes::JTTY` (+ name) appended to the enum, so the
+  frequency-list filter works and saved lists keep their numbering.
+  `m_actionJTTY` is created in code into the constructor's `modeGroup`
+  and the Mode menu (no `mainwindow.ui` change); the switcher gets a
+  JTTY button; the three mode-restore sites call `jttyModeSelected()`.
+  Named that way, not `on_actionJTTY_triggered`, so Qt's auto-connect
+  doesn't warn about a code-created action.
+- **No T/R period:** JTTY has none. As WSJT-X does, a nominal
+  `m_TRperiod` keeps the detector ring buffer and waterfall cycling and
+  `rjtty_sub` restarts on each wrap. JTDX's buffer is `NTMAX`=120 s
+  (WSJT-X uses 180 with a larger one), so 120 s fills it exactly.
+  `m_hsymStop=417` because `diskDat()` sweeps a wav in `m_FFTSize`
+  steps up to `m_hsymStop` with its `k > kin` guard commented out;
+  `jtty_decode` clamps `k` to the buffer and to `kin` as well.
+- **Decode hook:** `dataSink()` calls `jtty_decode(k)` before
+  `symspec_` on every audio chunk, keeps the waterfall, then returns
+  before `setStopHSym()` — jtdxjt9 never runs for JTTY. An unchanged
+  `k` returns early (no new samples); only `k` going backwards starts
+  a new display session. (First cut treated the clamped-`k` tail of a
+  file sweep as a wrap and wiped the decodes.)
+- **`mainwindow_jtty.cpp`:** port of WSJT-X's `jtty_decode` — polls
+  `jtty_get_updates_`, merges by message id, re-renders the Band
+  Activity group (tracked start block, remove-to-end, reinsert) and the
+  Rx Frequency group (messages within F Tol of `RxFreqSpinBox`), writes
+  `JTTY Rx <freq>  <text>` to ALL.TXT on end-of-message. Left out:
+  N1MM/MMTTY bridge, transmit evidence, replay, windowed re-decode.
+  `extern dec_data_t dec_data;` — JTDX defines the instance in
+  `mainwindow.cpp` with C++ linkage. Structs use field-by-field init:
+  JTDX is `-std=c++11`, where NSDMI structs aren't aggregates.
+- **`jttypanel.{h,cpp}`:** F Tol ladder (WSJT-X's), Lower case, Include
+  time; `[JTTY]` settings; mounted under the switcher, shown by
+  `commonActions()` only in JTTY. Rx audio frequency set to 1500 on
+  mode entry (JTTY convention).
+- **Default dial frequencies** seeded from WSJT-X 3.2 (1838, 3575,
+  7090, 10140, 14090, 18100, 21090, 24920, 28090 kHz) — defaults only;
+  an existing saved list doesn't pick them up.
+- **`JTDXVU_OPEN_WAV=<file>`** opens a wav 4 s after start (File > Open
+  body refactored into `openWavFile()`), for deterministic decode tests.
+- **`rjtty`** — WSJT-X's standalone JTTY file decoder — is now a build
+  target (`build/rjtty smin ndebug nsps f0 ftol file`), the reference
+  for the GUI's decodes. Keep it for FT2 too.
+
+**Verified** on the rc1 sample `samples/JTTY/260807_134110.wav` (30 s,
+12 kHz) in a throwaway instance with `Mode=JTTY`, `Rig=None`:
+- `1507  RAN ALL NIGHT ON BAND NOISE - NO FALSE DECODES!` in ALL.TXT
+  8 s after start; in-place growth, panel, mode label and mode restore
+  all fine.
+- **Ground-truth correction:** the rc1 integration test synthesises its
+  `CQ TEST DE KA1ABC…` audio with `sjtty`; the sample wav has no
+  published reference. `rjtty 4.6 1 384 1500 50` on the sample gives
+  the identical message at ~1506 Hz over 10 frames (3.1–20.1 s).
+- A second, incomplete line `1696  4>-P'` is a **single false frame**
+  the reference decoder produces too (1695.6 Hz, t 24.4 s, −16 dB,
+  nsync 9, 27 hard errors): inherent to the decoder on this file, not
+  the port. It never reaches ALL.TXT (no EOM). WSJT-X would show it as
+  well; left as a faithful port.
+
+**Open (phase 3, TX):** `genjtty_profile_` → `gen_jttywave_` (nsps 1536
+at 48 kHz, bt 2.0) → PCM; play through the Modulator's pre-generated
+wave path (`m_toneSpacing<0` reads `foxcom_.wave`, 606,720 floats =
+12.6 s; a 16-frame message is 1,449,984 → enlarge). Immediate,
+period-free TX start (JTDX starts TX on period boundaries). **Manoj's
+station uses TCI audio** (`TCIAudio=true`) — the TCI transmit path
+must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ### 2026-09-28 — DXCC colours: New DXCC / on Band / on Mode (MSHV axes)
 
