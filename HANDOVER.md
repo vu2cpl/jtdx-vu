@@ -26,6 +26,11 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — Telegram confirmed
+
+- Manoj ran the Telegram "Send test" from File > Club Log & Alerts...,
+  and it arrived. The token is in the Keychain.
+
 ### 2026-09-28 — Club Log "refused" with an empty reply: FIXED
 
 - **Symptom:** the status line showed "Club Log refused:" with no
@@ -192,8 +197,6 @@ Last updated: 2026-09-28
       Other Macs need right-click > Open on first launch, the
       shared-memory sysctl, and macOS 26 or later.
 
-- [ ] **Telegram is untested.** Enter the bot token and chat ID, then
-      press Send test.
 - [ ] A **real decode alert** hasn't fired yet. Watch for one on air.
 - [ ] **CAT control** with Hamlib 4.7.2 (stock, not the JTDX Hamlib
       fork) is not yet verified on the rig.
