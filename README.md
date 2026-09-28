@@ -1,7 +1,8 @@
 # JTDX-VU for VUCG community — v0.1.0
 
-VU2CPL's build of JTDX 2.2.159 for the VUCG community, for macOS on
-Apple Silicon. It runs as its own app alongside a stock JTDX install,
+VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
+Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
+as its own app alongside a stock JTDX install,
 and it adds Club Log DXCC status and needed-DXCC alerts.
 
 **Versioning:** JTDX-VU has its own version, set as `JTDXVU_VERSION` in
@@ -19,6 +20,17 @@ G4WJS, Steve Franke K9AN, Nico Palermo IV3NWV and others. The original
 
 The Club Log status and alerts design is ported from the MSHV-Mac
 private build.
+
+## Downloads
+
+Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
+
+| Platform | File | Notes |
+|---|---|---|
+| macOS, Apple Silicon | `JTDX-VU-<ver>-macos-arm64.zip` | macOS 14+. Unzip, move to Applications, then right-click > Open the first time (not notarized). Needs the shared-memory step below. |
+| macOS, Intel | `JTDX-VU-<ver>-macos-x86_64.zip` | macOS 15+, same steps. |
+| Windows x64 | `JTDX-VU-<ver>-windows-x64.zip` | Unzip anywhere and run `bin\jtdx.exe`. |
+| Raspberry Pi / Linux arm64 | `jtdx-vu-<ver>-linux-arm64.deb` | Raspberry Pi OS / Debian 12 (bookworm): `sudo apt install ./jtdx-vu-<ver>-linux-arm64.deb`. Conflicts with a stock `jtdx` package. |
 
 ## What's different from stock JTDX
 
@@ -62,7 +74,17 @@ private build.
   - The Club Log app password and the Telegram bot token are stored in
     the macOS Keychain (service `JTDX-VU`), never in the .ini.
 
-## Build (macOS, Apple Silicon)
+## Build on other platforms
+
+- **Windows and macOS release builds** come from GitHub Actions
+  (`.github/workflows/windows.yml`, `macos.yml`). Run them from the
+  Actions tab, or push a `v*` tag to attach the builds to that release.
+- **Raspberry Pi / Debian 12:**
+  `sudo apt install qtbase5-dev qtmultimedia5-dev libqt5websockets5-dev libqt5serialport5-dev libhamlib-dev libhamlib-utils libfftw3-dev gfortran qttools5-dev-tools qttools5-dev libqt5svg5-dev cmake`,
+  then
+  `cmake .. -DCMAKE_BUILD_TYPE=Release -DWSJT_GENERATE_DOCS=OFF -DWSJT_SKIP_MANPAGES=ON -DCMAKE_INSTALL_PREFIX=/usr && make -j3 && cpack -G DEB`.
+
+## Build (macOS, local)
 
 ```bash
 brew install qt@5 hamlib fftw gcc boost libusb cmake
