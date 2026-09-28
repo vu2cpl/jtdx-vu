@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.2.0
+# JTDX-VU for VUCG community — v0.2.1
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -39,7 +39,7 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.2.0"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.2.1"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -72,9 +72,10 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   - The Rx Frequency pane is never filtered.
 - **CNS (Call Non-Stop):** a button at the end of the row, also in the
   AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
-  or the next caller instead of halting Tx, and keeps calling a station
-  until it answers. The Tx watchdog is fixed at 10 minutes while CNS is
-  on, so unanswered CQ still stops.
+  or the next caller instead of halting Tx. A station that doesn't
+  answer is dropped after the AutoSeq counters (Settings > Sequencing),
+  as usual. The Tx watchdog is fixed at 10 minutes while CNS is on, so
+  unanswered CQ still stops.
 - **Needed-DXCC alerts** when a decoded station is ATNO, a new band or
   a new band+mode. Alerts go to macOS notifications and/or Telegram,
   with a per-call/band cooldown (5–60 min).
