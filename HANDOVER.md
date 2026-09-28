@@ -42,6 +42,29 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — logged QSOs not reaching RUMlog: stale DXCA address
+
+- **Cause:** JTDX-VU's Reporting → UDP Server was `192.168.1.169:2334`,
+  copied from stock JTDX's .ini (dated 2026-09-01). DXCA left noderedpi4
+  (.169) for a Docker container on **ubersdr, 192.168.1.109**, on
+  2026-09-22, and the .169 install is stopped. So nothing received
+  JTDX's UDP, and nothing reached DXCA's verbatim passthrough to RUMlog
+  (Mac 192.168.10.226:2237). Not a JTDX-VU bug; the client-ID rename is
+  irrelevant because the passthrough forwards datagrams raw.
+- **Fix (Manoj, in Settings):** UDP Server `192.168.1.109`, port `2334`,
+  which is DXCA's JTDX source. `/api/status` on `.109:7580` had shown no
+  JTDX source; live logging to RUMlog works again.
+- **Backfill:** today's three QSOs logged before the fix (RU3FM,
+  BA7LIP, LY1BZ, 15 m FT8, 09:31–09:34 UTC) were written from JTDX-VU's
+  `wsjtx_log.adi` to an ADIF and imported in RUMlog with No dupes / no
+  Update. **3 added.** EA1CK (09:35) arrived live.
+- **Access note:** RUMlog's database (a sandboxed container) is
+  "Operation not permitted" from the Claude app, so the MSHV-skill checker
+  couldn't read it. The missing set came from Manoj looking in RUMlog.
+  Granting the Claude app Full Disk Access would allow the checker.
+- **Stock JTDX's .ini** still points at .169. Left alone per the
+  keep-stock-JTDX rule; Manoj knows.
+
 ### 2026-09-28 — Windows zip re-issued: TLS and desktop alerts
 
 - **Manoj's first run of the v0.1.0 Windows zip** hit two problems:
@@ -388,6 +411,12 @@ Last updated: 2026-09-28
       through osascript.
 
 ## Known gotchas
+
+- **UDP / logging route:** JTDX-VU → DXCA at `192.168.1.109:2334`
+  (ubersdr) → raw passthrough → RUMlog on the Mac at `:2237`. If QSOs
+  stop reaching RUMlog, check `curl -s http://192.168.1.109:7580/api/status`
+  `spots_per_source` for a JTDX source before anything else. A Windows
+  JTDX-VU has its own settings and needs the same address.
 
 - **Don't use `install/` as the CMake prefix.** On a case-insensitive
   volume it collides with the `INSTALL` file; use `build/dist`, which
