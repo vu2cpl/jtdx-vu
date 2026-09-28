@@ -44,6 +44,20 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — "mode" level is MSHV's new mode (any band)
+
+- Manoj wants the levels exactly as in MSHV: **new DXCC** = never worked;
+  **new band** = not on this band; **new mode** = not in this mode on
+  **any** band. The third level had been JTDX's band+mode slot.
+- In the Show filter (`DisplayText::needed`, level 3) and the third
+  alert (`ClubLog::check_decode`, now `Level::NewMode`), the lookup is
+  now `matchDXCC(call, ..., 0 /*no freq → no band*/, mode)`, which
+  resolves to `matchCountry(country, "", mode)`.
+- The alert checkbox reads "New mode", with the setting key `NewMode`.
+  The old `NewBandMode` value is read once as a fallback, then removed.
+- JTDX's own Settings → Notifications "per band / per mode" colouring is
+  unchanged (JTDX semantics).
+
 ### 2026-09-28 — "Show:" filter is live, like MSHV
 
 - Before, the filter decided at insert time: filtered decodes were never

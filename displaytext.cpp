@@ -1108,7 +1108,9 @@ bool DisplayText::needed (LogBook & logBook, LineMeta const& m, int level)
     }
   if (level >= 3)
     {
-      logBook.matchDXCC (m.call, country, worked, workedSlot, m.dialFreq, m.mode);
+      // MSHV's "new mode": this DXCC never worked in this mode on ANY band
+      // (no frequency -> no band -> mode-only lookup)
+      logBook.matchDXCC (m.call, country, worked, workedSlot, 0, m.mode);
       if (!workedSlot) return true;
     }
   return false;

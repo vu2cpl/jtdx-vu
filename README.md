@@ -63,7 +63,9 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   Mode Buttons....
 - **Show only needed decodes.** The "Show:" selector (All / New DXCC /
   New DXCC or band / New DXCC, band or mode) filters the Band Activity
-  pane down to entities you still need, using Club Log when it's
+  pane down to entities you still need. The levels are MSHV's: *band* =
+  not worked on this band, *mode* = not worked in this mode on any
+  band. It uses using Club Log when it's
   enabled. It turns amber while active. Like MSHV it is live: changing
   it re-filters every decode already on screen, and a station you have
   just worked drops out.
@@ -77,7 +79,7 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   as usual. The Tx watchdog is fixed at 10 minutes while CNS is on, so
   unanswered CQ still stops.
 - **Needed-DXCC alerts** when a decoded station is ATNO, a new band or
-  a new band+mode. Alerts go to macOS notifications and/or Telegram,
+  a new mode (in this mode on no band yet), as in MSHV. Alerts go to macOS notifications and/or Telegram,
   with a per-call/band cooldown (5–60 min).
   - The Club Log app password and the Telegram bot token are stored in
     the macOS Keychain (service `JTDX-VU`), never in the .ini.

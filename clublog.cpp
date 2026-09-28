@@ -163,7 +163,7 @@ void ClubLog::read_settings ()
   settings_->beginGroup ("Alerts");
   alert_atno_ = settings_->value ("ATNO", true).toBool ();
   alert_band_ = settings_->value ("NewBand", true).toBool ();
-  alert_band_mode_ = settings_->value ("NewBandMode", false).toBool ();
+  alert_mode_ = settings_->value ("NewMode", settings_->value ("NewBandMode", false)).toBool ();
   macos_ = settings_->value ("macOS", false).toBool ();
   telegram_ = settings_->value ("Telegram", false).toBool ();
   telegram_chat_ = settings_->value ("TelegramChatId").toString ();
@@ -185,7 +185,8 @@ void ClubLog::write_settings () const
   settings_->beginGroup ("Alerts");
   settings_->setValue ("ATNO", alert_atno_);
   settings_->setValue ("NewBand", alert_band_);
-  settings_->setValue ("NewBandMode", alert_band_mode_);
+  settings_->setValue ("NewMode", alert_mode_);
+  settings_->remove ("NewBandMode");
   settings_->setValue ("macOS", macos_);
   settings_->setValue ("Telegram", telegram_);
   settings_->setValue ("TelegramChatId", telegram_chat_);
@@ -300,7 +301,7 @@ QString ClubLog::status_text () const
 
 void ClubLog::check_decode (LogBook & logbook, QString const& call, double dial_freq, QString const& mode)
 {
-  if (call.isEmpty () || !(macos_ || telegram_) || !(alert_atno_ || alert_band_ || alert_band_mode_)) return;
+  if (call.isEmpty () || !(macos_ || telegram_) || !(alert_atno_ || alert_band_ || alert_mode_)) return;
 
   QString country;
   bool worked {true}, worked_slot {true};
@@ -324,9 +325,10 @@ void ClubLog::check_decode (LogBook & logbook, QString const& call, double dial_
         }
       else
         {
-          logbook.matchDXCC (call, country, worked, worked_slot, dial_freq, mode);
-          if (worked_slot || !alert_band_mode_) return;
-          level = NewBandMode;
+          // MSHV's "new mode": never worked in this mode on any band
+          logbook.matchDXCC (call, country, worked, worked_slot, 0, mode);
+          if (worked_slot || !alert_mode_) return;
+          level = NewMode;
         }
     }
 
@@ -346,7 +348,7 @@ void ClubLog::notify (Level level, QString const& call, QString const& country, 
     {
     case ATNO: label = QString::fromUtf8 ("\xF0\x9F\x94\xB4 ATNO"); break;          // red circle
     case NewBand: label = QString::fromUtf8 ("\xF0\x9F\x9F\xA6 New band"); break;   // blue square
-    case NewBandMode: label = QString::fromUtf8 ("\xF0\x9F\x9F\xA7 New band+mode"); break; // orange square
+    case NewMode: label = QString::fromUtf8 ("\xF0\x9F\x9F\xA7 New mode"); break; // orange square
     }
   auto title = label + ": " + call;
   auto body = country + QString::fromUtf8 (" \xC2\xB7 ") + band + QString::fromUtf8 (" \xC2\xB7 ") + mode;
@@ -462,8 +464,9 @@ void ClubLog::settings_dialog (QWidget * parent, QString const& my_callsign)
   atno->setChecked (alert_atno_);
   auto band = new QCheckBox {tr ("New band")};
   band->setChecked (alert_band_);
-  auto band_mode = new QCheckBox {tr ("New band + mode")};
-  band_mode->setChecked (alert_band_mode_);
+  auto band_mode = new QCheckBox {tr ("New mode")};
+  band_mode->setToolTip (tr ("DXCC never worked in this mode on any band (as in MSHV)"));
+  band_mode->setChecked (alert_mode_);
   auto levels = new QHBoxLayout;
   levels->addWidget (atno);
   levels->addWidget (band);
@@ -527,7 +530,7 @@ void ClubLog::settings_dialog (QWidget * parent, QString const& my_callsign)
       }
     alert_atno_ = atno->isChecked ();
     alert_band_ = band->isChecked ();
-    alert_band_mode_ = band_mode->isChecked ();
+    alert_mode_ = band_mode->isChecked ();
     cooldown_min_ = cooldown->value ();
     macos_ = macos->isChecked ();
     telegram_ = telegram->isChecked ();

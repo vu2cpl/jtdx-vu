@@ -47,7 +47,7 @@ public:
   Q_SIGNAL void status_message (QString const&) const;
 
 private:
-  enum Level {ATNO, NewBand, NewBandMode};
+  enum Level {ATNO, NewBand, NewMode};  // as in MSHV
 
   void read_settings ();
   void write_settings () const;
@@ -72,7 +72,7 @@ private:
   // alerts
   bool alert_atno_ {true};
   bool alert_band_ {true};
-  bool alert_band_mode_ {false};
+  bool alert_mode_ {false};
   bool macos_ {false};
   bool telegram_ {false};
   QString telegram_chat_;
