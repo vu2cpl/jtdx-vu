@@ -91,7 +91,8 @@ void BandModeSwitcher::rebuild ()
     auto b = new QPushButton {text};
     b->setFocusPolicy (Qt::NoFocus);   // never pull keyboard focus off the message fields
     b->setMinimumWidth (b->fontMetrics ().horizontalAdvance (text) + 16);
-    b->setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Fixed);
+    b->setMinimumHeight (b->fontMetrics ().height () + 12);
+    b->setSizePolicy (QSizePolicy::Expanding, QSizePolicy::Fixed);  // share the row's full width
     static_cast<QHBoxLayout *> (row->layout ())->addWidget (b);
     return b;
   };
@@ -103,10 +104,11 @@ void BandModeSwitcher::rebuild ()
     if (bands_.contains (b))
       connect (band_buttons_[b] = add (band_row_, b), &QPushButton::clicked, this, [this, b] {Q_EMIT band_clicked (b);});
   auto mode_layout = static_cast<QHBoxLayout *> (mode_row_->layout ());
-  mode_layout->addStretch ();
+  if (mode_buttons_.isEmpty () || !show_modes_) mode_layout->addStretch ();
+  mode_layout->addSpacing (8);
   mode_layout->addWidget (new QLabel {tr ("Show:")});
+  new_only_combo_->setMinimumHeight (new_only_combo_->fontMetrics ().height () + 12);
   mode_layout->addWidget (new_only_combo_);
-  static_cast<QHBoxLayout *> (band_row_->layout ())->addStretch ();
 
   // the mode row also carries the "show only new" filter, so it always shows
   for (auto b : mode_buttons_) b->setVisible (show_modes_);
