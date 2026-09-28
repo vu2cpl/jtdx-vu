@@ -679,14 +679,20 @@ set_property (SOURCE ${all_C_and_CXXSRCS} APPEND PROPERTY OBJECT_DEPENDS wsjtx_c
 if (WIN32)
   # generate the OmniRig COM interface source
   find_program (DUMPCPP dumpcpp)
-  if (DUMPCPP-NOTFOUND)
+  if (NOT DUMPCPP)
     message (FATAL_ERROR "dumpcpp tool not found")
-  endif (DUMPCPP-NOTFOUND)
+  endif ()
+  # JTDX-VU: OMNIRIG_TYPELIB=<path to OmniRig.exe> skips the registry
+  # lookup (used by CI, where OmniRig is 32-bit and dumpcpp 64-bit)
+  if (OMNIRIG_TYPELIB)
+    set (AXSERVER "${OMNIRIG_TYPELIB}")
+  else ()
   execute_process (
     COMMAND ${DUMPCPP} -getfile {4FE359C5-A58F-459D-BE95-CA559FB4F270}
     OUTPUT_VARIABLE AXSERVER
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+  endif ()
   string (STRIP "${AXSERVER}" AXSERVER)
   if (NOT AXSERVER)
     message (FATAL_ERROR "You need to install OmniRig on this computer")
