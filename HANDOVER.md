@@ -26,6 +26,16 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — short title
+
+- `program_title()` now returns only "JTDX-VU for VUCG V<version>", at
+  Manoj's request that the title not be cluttered.
+- The base version, revision and "derivative work based on JTDX by HF
+  community and WSJT-X by K1JT" credit moved to the About box, which
+  still carries the full JTDX and WSJT-X credit list.
+- The WAV ISFT metadata uses `program_title()` too, so it is now the
+  short form.
+
 ### 2026-09-28 — Telegram confirmed
 
 - Manoj ran the Telegram "Send test" from File > Club Log & Alerts...,

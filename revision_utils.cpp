@@ -92,6 +92,7 @@ QString jtdxvu_version ()
 
 QString program_title (QString const& revision)
 {
-  QString id {QCoreApplication::applicationName () + " for VUCG community   v" + QCoreApplication::applicationVersion ()};
-  return id + " " + revision + ", based on JTDX v" + version () + " by HF community and WSJT-X by K1JT";
+  // JTDX-VU: short title; the JTDX / WSJT-X credits live in Help > About
+  Q_UNUSED (revision);
+  return QCoreApplication::applicationName () + " for VUCG V" + QCoreApplication::applicationVersion ();
 }

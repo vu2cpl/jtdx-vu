@@ -26,9 +26,9 @@ private build.
   Hamlib 4.7 and gfortran 16. `macos-bundle.sh` produces an app that
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
-  Reporter ID all say JTDX-VU. The title bar reads "JTDX-VU for VUCG
-  community v0.1.0, based on JTDX v2.2.159 by HF community and WSJT-X
-  by K1JT". Settings are in
+  Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
+  VUCG V0.1.0"; the JTDX / WSJT-X base and credits are in Help >
+  About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
   - On first launch, JTDX-VU copies the stock JTDX settings and data
