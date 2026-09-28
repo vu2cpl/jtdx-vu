@@ -5,7 +5,7 @@
 if (WIN32)
   include (CMakeParseArguments)
 
-  find_program (DUMPCPP_Executable dumpcpp.exe)
+  find_program (DUMPCPP_Executable NAMES dumpcpp.exe dumpcpp-qt5.exe dumpcpp)  # JTDX-VU: MSYS2 names it dumpcpp-qt5
 
   # wrap_ax_server (outfiles inputfile ...)
 

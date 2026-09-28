@@ -678,7 +678,7 @@ set_property (SOURCE ${all_C_and_CXXSRCS} APPEND PROPERTY OBJECT_DEPENDS wsjtx_c
 
 if (WIN32)
   # generate the OmniRig COM interface source
-  find_program (DUMPCPP dumpcpp)
+  find_program (DUMPCPP NAMES dumpcpp dumpcpp-qt5)  # JTDX-VU: MSYS2 names it dumpcpp-qt5
   if (NOT DUMPCPP)
     message (FATAL_ERROR "dumpcpp tool not found")
   endif ()
