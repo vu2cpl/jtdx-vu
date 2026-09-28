@@ -1590,6 +1590,11 @@ set (CPACK_DEBIAN_PACKAGE_NAME "jtdx-vu")
 set (CPACK_DEBIAN_PACKAGE_VERSION "${JTDXVU_VERSION}")
 set (CPACK_DEBIAN_FILE_NAME "jtdx-vu-${JTDXVU_VERSION}-linux-${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}.deb")
 set (CPACK_DEBIAN_PACKAGE_CONFLICTS "jtdx")
+# the upstream list names a "hamlib" package that current Debian / Pi OS
+# do not have, which makes the .deb uninstallable; take the library
+# dependencies from SHLIBDEPS and add only what it cannot see (the Qt
+# multimedia plugins are loaded at run time)
+set (CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5multimedia5-plugins (>= 5.7)")
 set (CPACK_DEBIAN_PACKAGE_MAINTAINER "VU2CPL <vu2cpl@users.noreply.github.com>")
 
 set (CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
