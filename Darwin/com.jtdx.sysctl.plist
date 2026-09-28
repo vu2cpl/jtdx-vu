@@ -9,8 +9,8 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/sbin/sysctl</string>
-        <string>kern.sysv.shmmax=14680064</string>
-        <string>kern.sysv.shmall=17920</string>
+        <string>kern.sysv.shmmax=33554432</string>
+        <string>kern.sysv.shmall=32768</string>
     </array>
     <key>RunAtLoad</key>
     <true/>

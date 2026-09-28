@@ -67,11 +67,13 @@ cd .. && ./macos-bundle.sh      # -> build/bundle/JTDX-VU.app
 Install with `ditto build/bundle/JTDX-VU.app /Applications/JTDX-VU.app`
 after quitting the running copy.
 
-**Shared-memory limit (one-time).** The decoder needs a 14 MB SysV
+**Shared-memory limit (one-time).** The decoder needs a SysV
 shared-memory segment. Without it, JTDX-VU fails with "Unable to create
-shared memory segment". Raise the limit once:
+shared memory segment". JTDX-VU needs 13.7 MB, and the stock JTDX
+2.2.159-32A build needs 16.6 MB. The macOS default is 4 MB. Raise the
+limit once, sized so both can run side by side:
 
 ```bash
-sudo sysctl -w kern.sysv.shmall=17920 kern.sysv.shmmax=14680064
+sudo sysctl -w kern.sysv.shmall=32768 kern.sysv.shmmax=33554432
 sudo cp Darwin/com.jtdx.sysctl.plist /Library/LaunchDaemons/
 ```

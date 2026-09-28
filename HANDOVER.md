@@ -16,14 +16,32 @@ Last updated: 2026-09-28
 - **Stock JTDX:** `/Applications/jtdx.app`, with its `JTDX.ini` and
   `Application Support/JTDX`, is still installed and must be left
   alone. JTDX-VU only read it once, for the first-launch migration.
-- **Shared-memory sysctl:** installed via
-  `/Library/LaunchDaemons/com.jtdx.sysctl.plist` (shmmax 14680064). It
+- **Shared-memory sysctl:** set by
+  `/Library/LaunchDaemons/com.jtdx.sysctl.plist`. It is now shmmax 32
+  MiB / shmall 32768 pages; see the 2026-09-28 "stock JTDX" entry. It
   may need redoing after a macOS upgrade.
 - **Build and bundle:** see `README.md`. `./macos-bundle.sh` runs the
   CMake install step, then macdeployqt and the fix-ups, and signs the
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-09-28 — stock JTDX "Unable to create shared memory segment"
+
+- **Cause:** the stock `/Applications/jtdx.app` (2.2.159-32A, x86_64
+  under Rosetta) calls `shmget` for **16,572,248 bytes**. It uses newer
+  source than this repo, whose `dec_data` is 13,692,248 bytes. The
+  shmmax of 14,680,064, taken from this repo's 2022 plist, is too small
+  for it, so shmget returns EINVAL.
+  - Measured with a `DYLD_INSERT_LIBRARIES` shmget interposer.
+- **Fix:** `Darwin/com.jtdx.sysctl.plist` now sets shmmax to 33554432
+  and shmall to 32768 (128 MB). That fits both apps side by side with
+  headroom. Manoj applies it with sudo.
+- Also removed two orphaned 13.7 MB segments, plus their semaphores and
+  temp files, left by `--rig-name test`/`vtest` instances killed during
+  testing. **Lesson:** stop JTDX test instances by quitting them, not
+  with `pkill`. SysV segments outlive a killed process and eat the
+  shmall quota.
 
 ### 2026-09-28 — v0.1.0, "for VUCG community"
 
