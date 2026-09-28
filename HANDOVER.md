@@ -64,6 +64,12 @@ Last updated: 2026-09-28
   - **The Tx watchdog is untouched.** It resets when a station calls or
     the Tx message changes, so it only fires after `watchdog` minutes of
     unanswered CQ ("WD 60m" in the status bar).
+- **Watchdog fixed at 10 min while Non-stop is on** (Manoj's choice).
+  `watchdog_minutes()` returns 10 when `m_nonstop` is set, even if the
+  watchdog is disabled in Settings, and the Settings value otherwise.
+  All former `m_config.watchdog()` uses in `mainwindow.cpp` go through
+  it, including the "WD Nm" label. Toggling Non-stop refreshes the
+  label.
 - **Not yet verified on air.**
 
 ### 2026-09-28 — auto-log and next caller; confirmed-only no longer affects dupes

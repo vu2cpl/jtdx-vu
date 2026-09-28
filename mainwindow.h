@@ -788,6 +788,7 @@ private:
   void init_logbook ();  // JTDX-VU: (re)load worked-before data, Club Log aware
   void switch_to_band (QString const& band);  // JTDX-VU band button
   bool nonstop_continue ();  // JTDX-VU Non-stop: keep going after a logged QSO
+  int watchdog_minutes () const;  // JTDX-VU: 10 while Non-stop, else Settings
   void switch_mode (Mode);
   void commonActions();
   void WSPR_scheduling ();

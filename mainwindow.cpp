@@ -1120,6 +1120,8 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
         action->setChecked (on);
         button->setChecked (on);
         style (on);
+        if (m_idleMinutes > watchdog_minutes ()) m_idleMinutes = 0;
+        update_watchdog_label ();
       };
     connect (action, &QAction::toggled, this, set);
     connect (button, &QPushButton::toggled, this, set);
@@ -3533,6 +3535,13 @@ void MainWindow::decode()                                       //decode()
 // call and go back to CQ, so AutoSeq answers the next caller - instead of
 // halting Tx. Only once the QSO is logged, never in single-shot / Hound
 // mode, and the Tx watchdog still applies as usual.
+// JTDX-VU: the Tx watchdog limit in minutes - fixed at 10 while Non-stop
+// is on (even if the watchdog is disabled in Settings), else the setting
+int MainWindow::watchdog_minutes () const
+{
+  return m_nonstop ? 10 : m_config.watchdog ();
+}
+
 bool MainWindow::nonstop_continue ()
 {
   if (!m_nonstop || !m_autoseq || m_singleshot || m_houndMode) return false;
@@ -4567,7 +4576,7 @@ void MainWindow::guiUpdate()
   }
 
   if (g_iptt == 1 && iptt0 == 0) {
-    if(m_config.watchdog () && !m_mode.startsWith ("WSPR")
+    if(watchdog_minutes () && !m_mode.startsWith ("WSPR")
       && m_curMsgTx != m_msgSent0) {
       txwatchdog (false);  // in case we are auto sequencing
       m_msgSent0 = m_curMsgTx;
@@ -4667,8 +4676,8 @@ void MainWindow::guiUpdate()
 
 //Once per second:
   if(nsec != m_sec0) {
-    if (m_config.watchdog() && !m_transmitting && !m_mode.startsWith ("WSPR")
-        && m_idleMinutes >= m_config.watchdog ()) {
+    if (watchdog_minutes () && !m_transmitting && !m_mode.startsWith ("WSPR")
+        && m_idleMinutes >= watchdog_minutes ()) {
       txwatchdog (true);       // switch off Enable Tx button
     }
     if(m_tune && m_config.tunetimer() && !m_tuneup) { //shall not count at WSPR band hopping
@@ -8058,7 +8067,7 @@ void MainWindow::on_the_minute ()
     // keep drift within +-1s
     if (qAbs (ms_error) > 1000) { minuteTimer.setSingleShot (true); minuteTimer.start (ms_error + 60 * 1000); }
     }
-  if(m_config.watchdog () && !m_mode.startsWith ("WSPR")) {
+  if(watchdog_minutes () && !m_mode.startsWith ("WSPR")) {
     qint64 deltasec=(m_jtdxtime->currentMSecsSinceEpoch2()/1000) - m_secTxStopped;
     bool update=true;
     if(!m_txwatchdog) {
@@ -8066,7 +8075,7 @@ void MainWindow::on_the_minute ()
        else if(m_modeTx=="FT4") { if(deltasec > 16) update=false; } //to be checked
        else { if(deltasec > 134) update=false; }
     }
-    if (update && (m_idleMinutes < m_config.watchdog ())) { ++m_idleMinutes; update_watchdog_label (); }
+    if (update && (m_idleMinutes < watchdog_minutes ())) { ++m_idleMinutes; update_watchdog_label (); }
   }
   else { txwatchdog (false); }
   //3...4 minutes to stop AP decoding
@@ -8162,9 +8171,9 @@ void MainWindow::txwatchdog (bool triggered)
 
 void MainWindow::update_watchdog_label ()
 {
-  if (m_config.watchdog () && !m_mode.startsWith ("WSPR"))
+  if (watchdog_minutes () && !m_mode.startsWith ("WSPR"))
     {
-      txwatchdog_label->setText (QString {tr("WD %1m")}.arg (m_config.watchdog () - m_idleMinutes));
+      txwatchdog_label->setText (QString {tr("WD %1m")}.arg (watchdog_minutes () - m_idleMinutes));
       txwatchdog_label->setVisible (true);
     }
   else
