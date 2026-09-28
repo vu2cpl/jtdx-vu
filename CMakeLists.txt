@@ -244,6 +244,7 @@ set (wsjtx_CXXSRCS
   Configuration.cpp
   main.cpp
   eqsl.cpp
+  clublog.cpp
   wsprnet.cpp
   WSPRBandHopping.cpp
   JTDXMessageBox.cpp

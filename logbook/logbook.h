@@ -21,7 +21,9 @@ class QDir;
 class LogBook
 {
 public:
-    void init(const QString mycall,const QString mygrid,const QString mydate);
+    void init(const QString mycall,const QString mygrid,const QString mydate,
+              // JTDX-VU: Club Log ADIF used as the worked-before source when set
+              const QString clublogFile = "", bool clublogConfirmedOnly = false, const QString clublogSince = "");
     void matchCQZ(/*in*/ const QString call,
               /*out*/ QString &countryName,
                       bool &WorkedBefore,

@@ -53,6 +53,7 @@
 #include "MessageClient.hpp"
 #include "wsprnet.h"
 #include "eqsl.h"
+#include "clublog.h"
 #include "signalmeter.h"
 #include "HelpTextWindow.hpp"
 #include "SampleDownloader.hpp"
@@ -1048,7 +1049,27 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
 //  if (m_tci) Q_EMIT m_config.transceiver_trfrequency(ui->TxFreqSpinBox->value () - m_XIT); 
 //  else Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value () - m_XIT);
 
+  // JTDX-VU: Club Log worked-before source and needed-DXCC alerts
+  m_clubLog = new ClubLog {m_settings, network_manager, this};
+  connect (m_clubLog, &ClubLog::log_updated, this, [this] {
+      init_logbook ();
+      if (m_config.write_decoded_debug ()) writeToALLTXT ("Logbook reloaded after Club Log update");
+    });
+  // timed, so JTDX's permanent status-bar fields (Receiving, mode, QSO count) come back
+  connect (m_clubLog, &ClubLog::status_message, this, [this] (QString const& message) {
+      statusBar ()->showMessage (message, 15000);
+    });
+  {
+    auto action = new QAction {tr ("Club Log && Alerts..."), this};
+    action->setMenuRole (QAction::NoRole);
+    ui->menuFile->insertAction (ui->actionSettings, action);
+    connect (action, &QAction::triggered, this, [this] {
+        m_clubLog->settings_dialog (this, m_config.my_callsign ());
+      });
+  }
+
   enable_DXCC_entity ();  // sets text window proportions and (re)inits the logbook
+  QTimer::singleShot (3000, m_clubLog, &ClubLog::refresh_if_stale);
   if(m_config.monitor_off_at_startup()) m_monitoroff=true;
 
   // this must be done before initializing the mode as some modes need
@@ -3841,6 +3862,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
       QString deCall="";
       QString grid="";
       decodedtext.deCallAndGrid(/*out*/deCall,grid);
+      if (!decodedtext.isDebug () && !deCall.isEmpty () && Radio::base_callsign (deCall) != m_baseCall)
+        m_clubLog->check_decode (m_logBook, deCall, m_freqNominal, m_mode);  // JTDX-VU needed-DXCC alert
       if (!m_hisCall.isEmpty() && !deCall.isEmpty() && Radio::base_callsign (m_hisCall) == Radio::base_callsign (deCall)) ui->RxFreqSpinBox->setValue (decodedtext.frequencyOffset());
       if (!deCall.isEmpty() && !m_reply_me && Radio::base_callsign (deCall) == Radio::base_callsign (m_hisCall)) {
           if (mycallinmsg) {
@@ -3995,7 +4018,7 @@ void MainWindow::killFile ()
   if(m_logInitNeeded) {
     printf("%s(%0.1f) Timing Log_init_needed\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset());
     if(m_config.write_decoded_debug()) writeToALLTXT("Log initialization is started: wsjtx_log.adi file was changed");
-    m_logBook.init(m_config.callNotif() ? m_config.my_callsign() : "",m_config.gridNotif() ? m_config.my_grid() : "",m_config.timeFrom());
+    init_logbook ();
     countQSOs ();
     m_logInitNeeded=false;
   }
@@ -6637,12 +6660,18 @@ void MainWindow::band_changed (Frequency f)
   }
 }
 
+void MainWindow::init_logbook ()
+{
+  m_logBook.init(m_config.callNotif() ? m_config.my_callsign() : "",m_config.gridNotif() ? m_config.my_grid() : "",m_config.timeFrom(),
+                 m_clubLog ? m_clubLog->adif_path () : "", m_clubLog && m_clubLog->confirmed_only (), m_clubLog ? m_clubLog->local_since () : "");
+}
+
 void MainWindow::enable_DXCC_entity ()
 {
   if (m_mode.left(4)!="WSPR" && (m_callNotif != m_config.callNotif() || m_callsign != m_config.my_callsign() || m_gridNotif != m_config.gridNotif() || m_grid != m_config.my_grid() || m_timeFrom != m_config.timeFrom() || m_strictdirCQ != m_config.strictdirCQ())) {
     if (m_callNotif != m_config.callNotif() || m_callsign != m_config.my_callsign() || m_gridNotif != m_config.gridNotif() || m_grid != m_config.my_grid() || m_timeFrom != m_config.timeFrom()) {
       m_qsoHistory.init(); if(m_config.write_decoded_debug()) writeToALLTXT("QSO history initialized by enable_DXCC_entity");
-      m_logBook.init(m_config.callNotif() ? m_config.my_callsign() : "",m_config.gridNotif() ? m_config.my_grid() : "",m_config.timeFrom());
+      init_logbook ();
       m_callsign = m_config.my_callsign();
       m_grid = m_config.my_grid();
       m_callNotif = m_config.callNotif();

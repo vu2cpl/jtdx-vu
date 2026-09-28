@@ -15,7 +15,8 @@ namespace
   auto lotwFileName = "lotw-user-activity.csv";
 }
 
-void LogBook::init(const QString mycall,const QString mygrid,const QString mydate)
+void LogBook::init(const QString mycall,const QString mygrid,const QString mydate,
+                   const QString clublogFile, bool clublogConfirmedOnly, const QString clublogSince)
 {
   QDir dataPath {QStandardPaths::writableLocation (QStandardPaths::DataLocation)};
   QString countryDataFilename,lotwDataFilename;
@@ -42,6 +43,7 @@ void LogBook::init(const QString mycall,const QString mygrid,const QString mydat
   _countries.load();
 
   _log.init(dataPath.absoluteFilePath (logFileName), &_countries);
+  _log.setClubLog(clublogFile, clublogConfirmedOnly, clublogSince);
   _log.load(mycall,mygrid,mydate);
 
   /*

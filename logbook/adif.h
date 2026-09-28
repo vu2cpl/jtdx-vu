@@ -28,6 +28,11 @@ class ADIF
         void init(QString filename);
         void init(QString filename, CountryDat* countries);
         void load(const QString mycall,const QString mygrid,const QString mydate);
+        // JTDX-VU: take worked-before data from a Club Log ADIF export instead
+        // of the local log.  Local QSOs from 'since' (yyyyMMddhhmmss) onward are
+        // still added, covering QSOs made after the last Club Log fetch.  With
+        // confirmedOnly, Club Log QSOs not confirmed by QSL/LoTW/eQSL are skipped.
+        void setClubLog(const QString filename, bool confirmedOnly, const QString since);
         void add(const QString call, const QString band, const QString mode, const QString date, const QString gridsquare, const QString name);
         bool match(const QString call, const QString band="", const QString mode="");
         bool matchPx(const QString call, const QString band="", const QString mode="");
@@ -78,7 +83,12 @@ class ADIF
         QHash<QString, int> _pxsbandmodeWorked;
         QHash<QString, int> _callsbandmodeWorked;
         QString _filename;
+        QString _clublogFilename;
+        bool _clublogConfirmedOnly = false;
+        QString _clublogSince;
         CountryDat _countries;
+
+        void _loadFile(const QString filename, const QString mycall, const QString mygrid, const QString mydate, bool confirmedOnly);
 
         QString _extractField(const QString line, const QString fieldName);
 };

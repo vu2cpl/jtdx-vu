@@ -90,8 +90,28 @@ void ADIF::load(const QString mycall,const QString mygrid,const QString mydate)
     _pxsbandmodeWorked.clear();
     _callsbandmodeWorked.clear();
     _counts.clear();
-    
-    QFile inputFile(_filename);
+
+    if (!_clublogFilename.isEmpty () && QFile::exists (_clublogFilename)) {
+        // Club Log holds only this callsign's log, which may carry no
+        // STATION_CALLSIGN/MY_GRIDSQUARE, so those filters are not applied.
+        _loadFile(_clublogFilename, "", "", mydate, _clublogConfirmedOnly);
+        auto since = mydate.toLongLong () > _clublogSince.toLongLong () ? mydate : _clublogSince;
+        _loadFile(_filename, mycall, mygrid, since, false);
+    } else {
+        _loadFile(_filename, mycall, mygrid, mydate, false);
+    }
+}
+
+void ADIF::setClubLog(const QString filename, bool confirmedOnly, const QString since)
+{
+    _clublogFilename = filename;
+    _clublogConfirmedOnly = confirmedOnly;
+    _clublogSince = since;
+}
+
+void ADIF::_loadFile(const QString filename, const QString mycall, const QString mygrid, const QString mydate, bool confirmedOnly)
+{
+    QFile inputFile(filename);
     if (inputFile.open(QIODevice::ReadOnly))
     {
         QTextStream in(&inputFile);
@@ -106,6 +126,13 @@ void ADIF::load(const QString mycall,const QString mygrid,const QString mydate)
             if ((mycall.isEmpty () || _extractField(record,"STATION_CALLSIGN:") == mycall) && 
                 (mygrid.isEmpty () || mygrid.left(4) == _extractField(record,"MY_GRIDSQUARE:").left(4).toUpper()) && 
                 (mydate.isEmpty () || mytime.toLongLong() >= mydate.toLongLong())) {
+                if (confirmedOnly) {
+                    auto confirmed = [&] (QString const& field) {
+                        auto v = _extractField(record, field).toUpper ();
+                        return v == "Y" || v == "V";
+                    };
+                    if (!confirmed ("QSL_RCVD:") && !confirmed ("LOTW_QSL_RCVD:") && !confirmed ("EQSL_QSL_RCVD:")) continue;
+                }
                 QSO q;
                 q.call = _extractField(record,"CALL:");
                 q.band = _extractField(record,"BAND:").toLower();
