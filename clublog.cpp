@@ -31,6 +31,9 @@
 #include <QCoreApplication>
 #include <QApplication>
 #include <QSystemTrayIcon>
+#include <QIcon>
+#include <QStyle>
+#include <QTimer>
 #if defined (Q_OS_WIN)
 # include <windows.h>
 # include <wincred.h>
@@ -371,9 +374,24 @@ void ClubLog::send_desktop (QString const& title, QString const& body) const
   // Windows, or Linux without notify-send: a system-tray balloon/toast
   if (!tray_ && QSystemTrayIcon::isSystemTrayAvailable ())
     {
-      tray_ = new QSystemTrayIcon {QApplication::windowIcon (), const_cast<ClubLog *> (this)};
+      // Qt will not show a tray icon without a picture, and on Windows JTDX
+      // sets its icon only through the .exe resources, so the application
+      // icon is empty; fall back to the main window's, then a stock icon
+      QIcon icon {QApplication::windowIcon ()};
+      if (icon.isNull ())
+        for (auto w : QApplication::topLevelWidgets ())
+          if (!w->windowIcon ().isNull ()) {icon = w->windowIcon (); break;}
+      if (icon.isNull ()) icon = QApplication::style ()->standardIcon (QStyle::SP_MessageBoxInformation);
+      tray_ = new QSystemTrayIcon {icon, const_cast<ClubLog *> (this)};
       tray_->setToolTip (QCoreApplication::applicationName ());
       tray_->show ();
+      // a freshly shown tray icon can drop the first message; let the
+      // shell register it before showing this one
+      auto tray = tray_;
+      QTimer::singleShot (1000, tray, [tray, title, body] {
+          tray->showMessage (title, body, QSystemTrayIcon::Information, 10000);
+        });
+      return;
     }
   if (tray_) tray_->showMessage (title, body, QSystemTrayIcon::Information, 10000);
 #endif
