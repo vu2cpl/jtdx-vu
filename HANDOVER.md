@@ -16,17 +16,16 @@ Last updated: 2026-09-28
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
-- **Release v0.1.0: COMPLETE 2026-09-28.** It's at
-  https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.1.0 with all four
-  builds, each with a `.sha256`: macOS arm64, macOS Intel, Windows x64
-  and the Pi `.deb`. Copies are in `~/Desktop/jdxvu/`.
-  - The Intel zip came from dispatch run `36376193759`, which compiled
-    Homebrew deps from source within the 6 h limit, and was uploaded by
-    hand.
-  - The tag's own macos run was cancelled as a duplicate.
-  - The tag's windows run built fine, but its attach step failed because
-    `gh` isn't on PATH in the MSYS2 shell. It's now fixed with
-    `shell: bash`.
+- **Release v0.2.0: PUBLISHED 2026-09-28.** It's at
+  https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.0.
+  - The tag CI attached the Windows zip (the attach step works now) and
+    the macOS arm64 zip. The Pi `.deb` was built on meridianpi5 and
+    uploaded by hand.
+  - **macOS Intel is still building** in tag run `36411502659` (Homebrew
+    deps from source, a few hours) and attaches itself. Then swap the
+    website's Intel row to direct links.
+  - Copies are in `~/Desktop/jdxvu/v0.2.0/`.
+  - v0.1.0 (first release, all four builds) stays published.
 - **Website:** vu2cpl.com has a JTDX-VU card (Utilities & Tools, after
   MSHV-Mac) and a project page at `/projects/jtdx-vu/` with screenshots
   and a v0.1.0 downloads table linking all four builds.
