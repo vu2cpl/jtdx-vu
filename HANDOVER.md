@@ -17,19 +17,20 @@ Last updated: 2026-09-28
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
-- **Release v0.2.0: PUBLISHED 2026-09-28.** It's at
-  https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.0.
-  - The tag CI attached the Windows zip (the attach step works now) and
-    the macOS arm64 zip. The Pi `.deb` was built on meridianpi5 and
-    uploaded by hand.
-  - **macOS Intel is still building** in tag run `36411502659` (Homebrew
-    deps from source, a few hours) and attaches itself. Then swap the
-    website's Intel row to direct links.
-  - Copies are in `~/Desktop/jdxvu/v0.2.0/`.
-  - v0.1.0 (first release, all four builds) stays published.
+- **Release v0.2.1: COMPLETE 2026-09-28** (current). It's at
+  https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.1 with all four
+  builds plus a `.sha256` for each:
+  - The tag CI attached the Windows, macOS arm64 and macOS Intel zips.
+    The Intel build took about 2.5 h and the attach step now works on
+    Windows too.
+  - The Pi `.deb` was built on meridianpi5 and uploaded by hand.
+  - Copies are in `~/Desktop/jdxvu/v0.2.1/`.
+  - v0.2.0's notes say "superseded by v0.2.1": its CNS never gave up on
+    a silent station. Its Intel build was cancelled.
+  - v0.1.0 remains published.
 - **Website:** vu2cpl.com has a JTDX-VU card (Utilities & Tools, after
   MSHV-Mac) and a project page at `/projects/jtdx-vu/` with screenshots
-  and a v0.1.0 downloads table linking all four builds.
+  and a v0.2.1 downloads table linking all four builds.
 - **Stock JTDX:** `/Applications/jtdx.app`, with its `JTDX.ini` and
   `Application Support/JTDX`, is still installed and must be left
   alone. JTDX-VU only read it once, for the first-launch migration.
