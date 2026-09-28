@@ -103,15 +103,18 @@ jobs:
           # the rest of the Qt plugins (MSYS2 names the tool windeployqt-qt5)
           WDQ="$(command -v windeployqt-qt5 || command -v windeployqt || true)"
           if [ -n "$WDQ" ]; then "$WDQ" --release --no-compiler-runtime --dir stage/bin stage/bin/jtdx.exe; fi
-          # every MinGW DLL the executables and Qt plugins pull in
+          # every MinGW DLL the executables and Qt plugins pull in; a
+          # best-effort sweep, so an ldd failure on one file must not stop it
+          set -x
           for pass in 1 2 3; do
-            find stage -name '*.exe' -o -name '*.dll' | while read -r f; do
-              ldd "$f" | awk '/\/mingw64\/bin\//{print $3}'
+            find stage \( -name '*.exe' -o -name '*.dll' \) -print | while read -r f; do
+              ldd "$f" 2>/dev/null | awk '/\/mingw64\/bin\//{print $3}' || true
             done | sort -u | while read -r dll; do
               # not cp -n: coreutils >= 9.2 exits 1 when it skips a file
-              [ -e "stage/bin/$(basename "$dll")" ] || cp "$dll" stage/bin/
+              [ -e "stage/bin/$(basename "$dll")" ] || cp "$dll" stage/bin/ || true
             done
           done
+          ls stage/bin | wc -l
           cp COPYING stage/
           cp README.md stage/JTDX-VU-README.md
 
