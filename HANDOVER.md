@@ -62,8 +62,8 @@ Last updated: 2026-09-28
 - The v0.1.0 Windows asset and its `.sha256` were replaced (`--clobber`)
   from run `36399210191`, and the release notes carry a re-issue line.
   The mac and Pi assets are unchanged. **Confirmed by Manoj
-  2026-09-28: Club Log refresh works on Windows.** Telegram and Desktop
-  "Send test" on Windows are not yet reported.
+  2026-09-28: on Windows, Club Log refresh, Telegram "Send test" and
+  Desktop "Send test" (tray toast) all work.**
 
 ### 2026-09-28 — Windows CI green, v0.1.0 released
 
@@ -367,8 +367,8 @@ Last updated: 2026-09-28
 
 - [ ] **Cache Hamlib in windows.yml.** It rebuilds from source every run
       and costs about 10 min.
-- [ ] **Windows on Manoj's PC:** Club Log works (TLS fixed). Still to
-      confirm: Telegram and Desktop "Send test", audio, CAT and OmniRig.
+- [ ] **Windows on Manoj's PC:** Club Log, Telegram and Desktop alerts
+      are confirmed. Still to check: audio, CAT and OmniRig on air.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
       headless start have been done so far.
 - [ ] **Other Macs:**
