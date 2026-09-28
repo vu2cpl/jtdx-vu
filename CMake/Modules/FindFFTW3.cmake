@@ -72,6 +72,20 @@ if (NOT WIN32 AND _use_threads)
   set (_libraries ${_thread_libs} ${_libraries})
 endif (NOT WIN32 AND _use_threads)
 
+# JTDX-VU: the fftw.org Windows DLLs have the thread API built in, but
+# MSYS2/MinGW packages it separately (libfftw3f_threads); add it when found
+if (WIN32 AND _use_threads)
+  foreach (_lib ${_libraries})
+    string (TOUPPER ${_lib}_threads _TLIB)
+    find_library (${_TLIB}_LIBRARY NAMES ${_lib}_threads
+      HINTS ${FFTW3_ROOT_DIR} PATH_SUFFIXES lib)
+    mark_as_advanced (${_TLIB}_LIBRARY)
+    if (${_TLIB}_LIBRARY)
+      list (APPEND FFTW3_LIBRARIES ${${_TLIB}_LIBRARY})
+    endif ()
+  endforeach ()
+endif ()
+
 # Keep a list of variable names that we need to pass on to
 # find_package_handle_standard_args().
 set (_check_list)
