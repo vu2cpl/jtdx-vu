@@ -20,6 +20,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # JTDX generates its OmniRig COM interface from the registered type
+      # library at configure time (dumpcpp), so OmniRig must be installed
+      - name: OmniRig
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://www.dxatlas.com/OmniRig/Files/OmniRig.zip -OutFile OmniRig.zip
+          Expand-Archive OmniRig.zip -DestinationPath omnirig
+          $setup = Get-ChildItem omnirig -Recurse -Filter *.exe | Select-Object -First 1
+          Start-Process -Wait -FilePath $setup.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART'
+          Get-ChildItem 'HKLM:\SOFTWARE\Classes\TypeLib\{4FE359C5-A58F-459D-BE95-CA559FB4F270}' -Recurse | Select-Object -First 3
+
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
