@@ -4,15 +4,31 @@ Last updated: 2026-09-28
 
 ## Current state
 
-- **Repo:** `vu2cpl/jtdx-vu` (private), default branch `jtdx-vu`. The
-  `upstream` remote is `jtdx-project/jtdx`; upstream has been dormant
-  since 2022-03 at tag 159.
-- **Installed app:** `/Applications/JTDX-VU.app` has the rename but
-  **not yet Club Log/alerts**: it was running, so it wasn't replaced. The
-  current build is `build/bundle/JTDX-VU.app`. Quit JTDX-VU, then
-  `ditto build/bundle/JTDX-VU.app /Applications/JTDX-VU.app`.
-  Settings are in `~/Library/Preferences/JTDX-VU.ini` and data in
+- **Repo:** `vu2cpl/jtdx-vu`, **PUBLIC since 2026-09-28** (after a
+  secret scan, see below). Default branch `jtdx-vu`. The `upstream`
+  remote is `jtdx-project/jtdx`; upstream has been dormant since
+  2022-03 at tag 159.
+- **Version:** JTDX-VU **0.1.0** (`JTDXVU_VERSION` in `Versions.cmake`),
+  on JTDX 2.2.159.
+- **Installed app:** `/Applications/JTDX-VU.app` is current: all app
+  code up to `4642e1ee`, installed 2026-09-28. It was built locally, so
+  it runs on macOS 26+ only. Settings are in
+  `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
+- **Release v0.1.0: IN PROGRESS.** Status of each platform build:
+  - **Pi/Linux arm64:** `jtdx-vu-0.1.0-linux-arm64.deb`, built on
+    meridianpi5, in `~/Desktop/JTDX-VU-release/`.
+  - **macOS arm64:** CI run `36371714068` succeeded.
+  - **macOS Intel:** CI still building.
+  - **Windows:** CI failed 3x; the fourth run, `36373417404`, is in
+    progress.
+
+  Once all are green, `gh release create v0.1.0` creates the tag; the
+  tag push re-runs both workflows, which attach their zips. Then upload
+  the `.deb` and add the download links to the vu2cpl.com project page
+  (Manoj asked for that).
+- **Website:** vu2cpl.com has a JTDX-VU card (Utilities & Tools, after
+  MSHV-Mac) and a project page at `/projects/jtdx-vu/` with screenshots.
 - **Stock JTDX:** `/Applications/jtdx.app`, with its `JTDX.ini` and
   `Application Support/JTDX`, is still installed and must be left
   alone. JTDX-VU only read it once, for the first-launch migration.
@@ -25,6 +41,70 @@ Last updated: 2026-09-28
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-09-28 — cross-platform builds, public repo, website
+
+- **Portable code** (`bce19552`):
+  - Secrets go to the macOS Keychain, the Windows Credential Manager
+    (`CredReadW`/`CredWriteW`), or the `.ini` `[Secrets]` group on
+    Linux.
+  - Desktop alerts use osascript on macOS, `notify-send` on Linux, and
+    a `QSystemTrayIcon` toast on Windows (also the Linux fallback).
+  - The settings key is still `macOS`; the label is now "Desktop
+    notification".
+- **Pi / Linux arm64:** built natively on **meridianpi5**
+  (`pi@192.168.1.164`; the `.local` name isn't in known_hosts), Raspberry
+  Pi OS Bookworm, with apt Qt 5.15.8, Hamlib 4.5.4 and gfortran 12.
+  - Source in `~/src/jtdx-vu` (rsync'd, not cloned), built with
+    `nice make -j3` so Meridian keeps a core.
+  - `cpack -G DEB` produces `jtdx-vu-<ver>-linux-arm64.deb`: package
+    `jtdx-vu`, `Conflicts: jtdx`.
+  - Dependencies come from SHLIBDEPS plus
+    `libqt5multimedia5-plugins`. The upstream list named a nonexistent
+    `hamlib` package.
+  - Checked with `apt-get install -s` and a headless offscreen start.
+  - The Pi needed `libhamlib-utils` installed for the `rigctl*-jtdx`
+    install rules.
+- **CI** (`.github/workflows/`):
+  - `windows.yml`: MSYS2 MINGW64 on windows-latest. It installs
+    OmniRig and adds a `win64` typelib key (OmniRig registers `win32`
+    only). It builds Hamlib 4.7.2 from source (MSYS2 doesn't package
+    it), then `windeployqt` plus ldd-collected MinGW DLLs go into a zip.
+  - `macos.yml`: arm64 on macos-14 (runs on macOS 14+), Intel on
+    macos-15-intel (runs on 15+). Both use `macos-bundle.sh` and
+    produce `ditto` zips.
+  - Both run on `workflow_dispatch` or `v*` tags. A tag attaches the
+    zips to the release with `gh release upload --clobber`.
+- **Why CI rather than local, for Intel and Windows:**
+  - An Intel Homebrew does exist in `/usr/local`, left from MSHV. It
+    already has qt@5, fftw, boost, cmake, hamlib 4.7.2 and libusb, but
+    on macOS 27 it's **Tier 3**: `brew install gcc` compiles from
+    source, and the result only runs on 27+. I stopped that build
+    part-way.
+  - The .170 Windows box has only the MSVC/Rust toolchain and runs the
+    Meridian station, so it was left alone.
+- **Repo made public** at Manoj's instruction, after a scan:
+  - Pattern-scanned all 14 JTDX-VU commits.
+  - Checked the real Keychain password, the Telegram token and the chat
+    ID against the full history: no hits.
+  - No private IPs, host names or emails were found. The author email
+    vu2cpl@gmail.com is already public via other repos.
+  - The `.deb` maintainer field uses
+    `vu2cpl@users.noreply.github.com`.
+- **Website:** card plus `/projects/jtdx-vu/` page, both in the
+  vu2cpl.github.io repo; see that repo's HANDOVER. The Club Log dialog
+  screenshot has the email and chat ID painted over.
+
+### 2026-09-28 — compact switcher row, band default frequency
+
+- The two switcher rows took about 70 px and crushed the right-hand
+  panel in Manoj's 1088x546 window. They are now **one row**: modes |
+  bands | Show filter. Buttons expand to fill the row and never take
+  focus.
+- A band button now prefers the frequency-list row flagged `default_`
+  for the current mode (14.074 FT8, 14.080 FT4), then any row for that
+  exact mode, then any row on the band. Before, it took whichever row
+  came first.
 
 ### 2026-09-28 — app icon with "VU"
 
@@ -239,15 +319,24 @@ Last updated: 2026-09-28
 
 ## Open items
 
-- [ ] **Distributing to VUCG members needs the source to be
-      available.** JTDX is GPL v3, and handing the app to other people
-      means offering them the source. The repo is private right now, so
-      either make it public or give recipients access, before
-      distributing. Also decide whether the Club Log and alerts features
-      go into the community build.
-- [ ] **Stranger Macs.** The bundle is ad-hoc signed, not notarized.
-      Other Macs need right-click > Open on first launch, the
-      shared-memory sysctl, and macOS 26 or later.
+- [ ] **Finish release v0.1.0:**
+      - Windows CI green.
+      - macOS Intel CI green.
+      - `gh release create v0.1.0` with notes, plus the Pi `.deb`.
+      - Check that all assets and `.sha256` files are attached.
+      - Add per-OS download links to `/projects/jtdx-vu/` on
+        vu2cpl.com.
+- [ ] **Windows build untested on a real PC.** Check audio, CAT and
+      OmniRig, and that notifications appear as tray toasts.
+- [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
+      headless start have been done so far.
+- [ ] **Other Macs:**
+      - The CI zips are ad-hoc signed, not notarized, so they need
+        right-click > Open on first launch.
+      - Every Mac also needs the shared-memory sysctl (README).
+      - A notarized build would need the Developer ID used for MSHV.
+- [x] ~~GPL: source must be available before distributing~~ — the repo
+      went public 2026-09-28.
 
 - [ ] A **real decode alert** hasn't fired yet. Watch for one on air.
 - [ ] **CAT control** with Hamlib 4.7.2 (stock, not the JTDX Hamlib
