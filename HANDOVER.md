@@ -42,6 +42,28 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — "Show:" filter is live, like MSHV
+
+- Before, the filter decided at insert time: filtered decodes were never
+  added, so changing the selection only affected later cycles.
+- Now every decode line is inserted and **tagged**: `LineMeta :
+  QTextBlockUserData` holds the call, dial freq and mode, plus
+  `alwaysShow` for my-call traffic, the current QSO partner, JT65
+  broadcasts and bypass. Filtered lines are **hidden** with
+  `QTextBlock::setVisible(false)`, not dropped. A standalone Qt test
+  confirmed QTextEdit's layout collapses hidden blocks (68 → 48 px).
+- `DisplayText::setNewOnly` re-walks every tagged line at once.
+  `refilter(LogBook)` runs from `MainWindow::init_logbook` (start,
+  Club Log refresh, log reload) and after `addAsWorked`, so a
+  just-worked station drops out of the "New ..." views. Neededness
+  uses `LogBook::matchDXCC` at levels 1–3, as before.
+- Alerts, beeps, popups and the `inotified` "shown" bit (UDP filter)
+  apply to visible lines only. The filter is **display-only** now, as
+  in MSHV: hidden callers still reach `qsoHistory`/AutoSeq, and
+  AnsB4/worked-before decides whom AutoSeq answers.
+- **Not yet verified on air.** The release is on hold until Manoj has
+  tested (his instruction).
+
 ### 2026-09-28 — Non-stop option (keep calling, watchdog-limited)
 
 - **Why auto-continue never happened:** in stock JTDX, with **auto-log

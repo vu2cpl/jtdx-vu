@@ -4,6 +4,7 @@
 #define DISPLAYTEXT_H
 
 #include <QTextEdit>
+#include <QTextBlock>
 #include "logbook/logbook.h"
 #include "decodedtext.h"
 #include "qsohistory.h"
@@ -18,8 +19,10 @@ public:
     explicit DisplayText(QWidget *parent = 0);
     void setConfiguration(Configuration const *);
     void setMyContinent (QString const&);
-    // JTDX-VU: 0 = show all, 1 = only new DXCC, 2 = + new band, 3 = + new band+mode
-    void setNewOnly (int level) {newOnly_ = level;}
+    // JTDX-VU: 0 = show all, 1 = only new DXCC, 2 = + new band, 3 = + new band+mode.
+    // Applies at once to every line already shown (lines are hidden, not dropped).
+    void setNewOnly (int level);
+    void refilter (LogBook const&);   // re-check lines after the log changed
     void setContentFont (QFont const&);
     void insertLineSpacer(QString const&);
     int displayDecodedText(DecodedText* decodedText, QString myCall, QString hisCall, QString hisGrid,
@@ -42,6 +45,20 @@ protected:
 
 private:
     int newOnly_ = 0;
+    // JTDX-VU: per-line data kept on each decode's text block
+    struct LineMeta : QTextBlockUserData
+    {
+      QString call;
+      double dialFreq = 0;
+      QString mode;
+      bool alwaysShow = false;
+    };
+    static bool needed (LogBook &, LineMeta const&, int level);
+    void refilter ();
+    void hide_last_block ();
+    LineMeta * pendingMeta_ = nullptr;
+    QTextBlock lastBlock_;
+    LogBook lastLogBook_;
 
     bool scroll_;
     bool bold_;

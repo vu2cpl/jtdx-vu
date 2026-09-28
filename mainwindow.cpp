@@ -6171,6 +6171,7 @@ void MainWindow::acceptQSO2(QDateTime const& QSO_date_off, QString const& call, 
   QString date = QSO_date_on.toString("yyyyMMdd");
   m_qsoLogged=true;
   m_logBook.addAsWorked (call, m_config.bands ()->find (dial_freq), mode, date, grid, name);
+  ui->decodedTextBrowser->refilter (m_logBook);  // JTDX-VU: a just-worked station drops out of "New ..." views
   QString operator_call = m_config.my_callsign(); QString my_call = m_config.my_callsign(); QString my_grid = m_config.my_grid();
   m_messageClient->qso_logged (QSO_date_off, call, grid, dial_freq, mode, rpt_sent, rpt_received, tx_power, comments, name, QSO_date_on, operator_call, my_call, my_grid);
   if(m_config.enable_udp1_adif_sending()) m_messageClient->logged_ADIF(myadif2);
@@ -6790,6 +6791,7 @@ void MainWindow::init_logbook ()
 {
   m_logBook.init(m_config.callNotif() ? m_config.my_callsign() : "",m_config.gridNotif() ? m_config.my_grid() : "",m_config.timeFrom(),
                  m_clubLog ? m_clubLog->adif_path () : "", m_clubLog && m_clubLog->confirmed_only (), m_clubLog ? m_clubLog->local_since () : "");
+  ui->decodedTextBrowser->refilter (m_logBook);  // JTDX-VU: live Show filter follows the log
 }
 
 void MainWindow::enable_DXCC_entity ()

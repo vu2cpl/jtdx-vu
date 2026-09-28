@@ -212,6 +212,11 @@ void DisplayText::appendText(QString const& text, QString const& bg, QString con
     } else {
         cursor.insertText (text.trimmed(),m_charFormat);
     }
+    lastBlock_ = cursor.block ();
+    if (pendingMeta_) {                 // JTDX-VU: tag decode lines for re-filtering
+        lastBlock_.setUserData (pendingMeta_);
+        pendingMeta_ = nullptr;
+    }
     if (scroll_ && !overwrite) cursor.insertText ("\n");
     else cursor.movePosition (QTextCursor::StartOfLine);
     setTextCursor (cursor);
@@ -905,31 +910,22 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
     // JTDX-VU "show only new" filter: hide decodes whose DXCC is already
     // worked (per Club Log when enabled) at the chosen level.  QSO traffic
     // with my call (std_type 2) and my current QSO partner always shows.
-    if (show_line && newOnly_ > 0 && std_type != 2 && !jt65bc
-        && (hisCall.isEmpty () || checkCall.isEmpty () || !checkCall.contains (hisCall))) {
-        bool needed = false;
-        if (!checkCall.isEmpty ()) {
-            QString country;
-            bool worked = true, workedSlot = true;
-            logBook.matchDXCC (checkCall, country, worked, workedSlot);
-            if (!country.isEmpty () && !country.startsWith ("  ,?,")) {
-                needed = !worked;
-                if (!needed && newOnly_ >= 2) {
-                    logBook.matchDXCC (checkCall, country, worked, workedSlot, dialFreq);
-                    needed = !workedSlot;
-                }
-                if (!needed && newOnly_ >= 3) {
-                    logBook.matchDXCC (checkCall, country, worked, workedSlot, dialFreq, checkMode.isEmpty () ? app_mode : checkMode);
-                    needed = !workedSlot;
-                }
-            }
-        }
-        if (!needed) show_line = false;
-    }
+    // Like MSHV the line is always kept, tagged, and only HIDDEN, so
+    // changing the filter re-applies to everything already on screen
+    // (setNewOnly / refilter).  QSO traffic with my call (std_type 2) and
+    // my current QSO partner always shows.
+    lastLogBook_ = logBook;
+    LineMeta meta;
+    meta.call = checkCall;
+    meta.dialFreq = dialFreq;
+    meta.mode = checkMode.isEmpty () ? app_mode : checkMode;
+    meta.alwaysShow = std_type == 2 || jt65bc || bypassAllFilters || bypassRxfFilters
+      || (!hisCall.isEmpty () && !checkCall.isEmpty () && checkCall.contains (hisCall));
+    bool vu_hidden = newOnly_ > 0 && !meta.alwaysShow && !needed (logBook, meta, newOnly_);
     if (bypassAllFilters || bypassRxfFilters) {
             show_line = true;
     }
-    if (show_line) {
+    if (show_line && !vu_hidden) {
         if (actwind) {
             if (windowPopup && window != NULL) {
                 // JTDX-VU: never steal focus from the app being worked in;
@@ -954,11 +950,13 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
             if(!redMarker_) std_type = 0;
             else if(blueMarker_ && !hisCall.isEmpty () && checkCall.contains(hisCall)) std_type = 5;
         }
+        pendingMeta_ = new LineMeta {meta};
         appendText(messageText, bgColor, txtColor, std_type, servis, servisColor, cntry, forceBold, strikethrough, underlined, decodedText->isDXped(), false, bwantedCall||bwantedGrid||bwantedPrefix||bwantedCountry);
+        if (vu_hidden) hide_last_block ();
         wastx_ = false;
     }
         if (notified) inotified |= 1;
-        if (show_line) inotified |= 2;
+        if (show_line && !vu_hidden) inotified |= 2;
         if (bwantedCall) inotified |= 8;
         if (bwantedPrefix) inotified |= 16;
         if (bwantedGrid) inotified |= 32;
@@ -1093,3 +1091,70 @@ void DisplayText::displayQSY(QString text)
   appendText(t,bg,Radio::convert_dark("#000000",useDarkStyle_),0," ",Radio::convert_dark("#000000",useDarkStyle_));
 }
 
+// ---- JTDX-VU: live "show only new" filter --------------------------------
+
+bool DisplayText::needed (LogBook & logBook, LineMeta const& m, int level)
+{
+  if (m.call.isEmpty ()) return false;
+  QString country;
+  bool worked = true, workedSlot = true;
+  logBook.matchDXCC (m.call, country, worked, workedSlot);
+  if (country.isEmpty () || country.startsWith ("  ,?,")) return false;   // unknown entity
+  if (!worked) return true;
+  if (level >= 2)
+    {
+      logBook.matchDXCC (m.call, country, worked, workedSlot, m.dialFreq);
+      if (!workedSlot) return true;
+    }
+  if (level >= 3)
+    {
+      logBook.matchDXCC (m.call, country, worked, workedSlot, m.dialFreq, m.mode);
+      if (!workedSlot) return true;
+    }
+  return false;
+}
+
+void DisplayText::hide_last_block ()
+{
+  if (!lastBlock_.isValid ()) return;
+  lastBlock_.setVisible (false);
+  document ()->markContentsDirty (lastBlock_.position (), lastBlock_.length ());
+}
+
+void DisplayText::setNewOnly (int level)
+{
+  newOnly_ = level;
+  refilter ();
+}
+
+void DisplayText::refilter (LogBook const& logBook)
+{
+  lastLogBook_ = logBook;
+  refilter ();
+}
+
+// Re-apply the filter to every decode line already in the pane, against the
+// latest worked-before data - instant when the selection changes, and after
+// a QSO is logged or Club Log is refreshed.
+void DisplayText::refilter ()
+{
+  auto doc = document ();
+  bool changed = false;
+  for (auto b = doc->begin (); b != doc->end (); b = b.next ())
+    {
+      auto meta = dynamic_cast<LineMeta *> (b.userData ());
+      if (!meta) continue;                                  // spacers, Tx lines
+      bool visible = newOnly_ == 0 || meta->alwaysShow || needed (lastLogBook_, *meta, newOnly_);
+      if (b.isVisible () != visible)
+        {
+          b.setVisible (visible);
+          changed = true;
+        }
+    }
+  if (changed)
+    {
+      doc->markContentsDirty (0, doc->characterCount ());
+      viewport ()->update ();
+      ensureCursorVisible ();
+    }
+}
