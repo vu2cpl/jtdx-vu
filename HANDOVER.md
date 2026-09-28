@@ -26,6 +26,24 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — Club Log "refused" with an empty reply: FIXED
+
+- **Symptom:** the status line showed "Club Log refused:" with no
+  text, and nothing had ever downloaded.
+- **Cause:** `eqsl.cpp` (and `wsprnet.cpp`/`DisplayManual`) connect to
+  the **shared** `QNetworkAccessManager::finished` and `readAll()`
+  every reply. The manager's `finished` fires before the reply's own,
+  so eQSL drained the 10 MB body and `on_adif_reply` saw an empty one.
+  The credentials were fine: curl and a standalone Qt program both got
+  the full log.
+- **Fix:** `ClubLog` owns its own `QNetworkAccessManager`, which also
+  serves Telegram. An empty reply now reports "empty reply (HTTP n)".
+  The QSO count label is refreshed after a Club Log reload.
+- **Verified** with a throwaway instance and a copy of Manoj's .ini: a
+  real fetch returned 57,648 QSOs, and the FT8 count with
+  confirmed-only showed 11,883, exactly matching the confirmed FT8
+  QSOs in the file.
+
 ### 2026-09-28 — Settings dialog layout on macOS; no focus stealing
 
 - **Settings tabs overlapped** (Notifications worst) and the tab bar
@@ -174,9 +192,6 @@ Last updated: 2026-09-28
       Other Macs need right-click > Open on first launch, the
       shared-memory sysctl, and macOS 26 or later.
 
-- [ ] **Not yet tested against real Club Log.** Enter the email and app
-      password in File > Club Log & Alerts..., press Refresh now, and
-      check the status line QSO count against Club Log.
 - [ ] **Telegram is untested.** Enter the bot token and chat ID, then
       press Send test.
 - [ ] A **real decode alert** hasn't fired yet. Watch for one on air.

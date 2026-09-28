@@ -1053,6 +1053,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   m_clubLog = new ClubLog {m_settings, network_manager, this};
   connect (m_clubLog, &ClubLog::log_updated, this, [this] {
       init_logbook ();
+      countQSOs ();
       if (m_config.write_decoded_debug ()) writeToALLTXT ("Logbook reloaded after Club Log update");
     });
   // timed, so JTDX's permanent status-bar fields (Receiving, mode, QSO count) come back

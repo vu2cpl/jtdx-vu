@@ -77,8 +77,12 @@ namespace
 ClubLog::ClubLog (QSettings * settings, QNetworkAccessManager * network_manager, QObject * parent)
   : QObject {parent}
   , settings_ {settings}
-  , network_manager_ {network_manager}
+    // Own manager, not the shared one: EQSL (and others) connect to the
+    // shared QNetworkAccessManager::finished and readAll() every reply,
+    // which emptied the Club Log body before on_adif_reply saw it.
+  , network_manager_ {new QNetworkAccessManager {this}}
 {
+  Q_UNUSED (network_manager);
   read_settings ();
 }
 
@@ -186,7 +190,10 @@ void ClubLog::on_adif_reply (QNetworkReply * reply)
   auto upper = body.toUpper ();
   if (body.size () < 32 || !upper.contains ("<EOR>"))
     {
-      Q_EMIT status_message (tr ("Club Log refused: %1").arg (QString::fromUtf8 (body.left (200)).trimmed ()));
+      auto detail = QString::fromUtf8 (body.left (200)).trimmed ();
+      Q_EMIT status_message (tr ("Club Log refused: %1").arg (detail.isEmpty () ? tr ("empty reply (HTTP %1)")
+                                                                .arg (reply->attribute (QNetworkRequest::HttpStatusCodeAttribute).toInt ())
+                                                              : detail));
       return;
     }
 
