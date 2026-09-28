@@ -107,7 +107,10 @@ jobs:
           for pass in 1 2 3; do
             find stage -name '*.exe' -o -name '*.dll' | while read -r f; do
               ldd "$f" | awk '/\/mingw64\/bin\//{print $3}'
-            done | sort -u | while read -r dll; do cp -n "$dll" stage/bin/; done
+            done | sort -u | while read -r dll; do
+              # not cp -n: coreutils >= 9.2 exits 1 when it skips a file
+              [ -e "stage/bin/$(basename "$dll")" ] || cp "$dll" stage/bin/
+            done
           done
           cp COPYING stage/
           cp README.md stage/JTDX-VU-README.md
