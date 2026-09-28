@@ -44,6 +44,31 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — band/mode buttons re-assert DIGU; band press retry
+
+- **TCI exit restore:** a change to stop JTDX restoring the start mode
+  (LSB) on exit was made, then **reverted** at Manoj's request. Restoring
+  on exit is fine; he wants DIGU back on use.
+- **Why a same-band press didn't fix the mode:**
+  `Configuration::transceiver_frequency` only sends when the frequency
+  differs or its *cached* mode ≠ the configured one. The cache says
+  DIG_U even after the radio went to LSB, and `sync_transceiver` is a
+  stub in JTDX. New `Configuration::force_rig_mode(f)` sets the cached
+  mode to UNK and re-sends frequency plus mode. TCI's `do_frequency` then
+  sends `digu` whenever the radio reports anything else.
+- **Band button:**
+  - Current band: re-tune to the mode's default frequency plus
+    `force_rig_mode`.
+  - Other band: switch, and if the band still hasn't changed after
+    3 s, press it once more. TCI `do_frequency` returns early while
+    `busy_rx_frequency_`, which dropped presses.
+- **Mode button:**
+  - Mode change: trigger the mode, then `force_rig_mode` after 1.5 s.
+  - Same mode: `force_rig_mode` straight away.
+- The cause of LSB after restart isn't pinned down (JTDX does ask for
+  `digu` at connect; the TCI server on :7374 is RUMlogNG). The buttons
+  are the practical fix. **Not yet verified on air.**
+
 ### 2026-09-28 — "mode" level is MSHV's new mode (any band)
 
 - Manoj wants the levels exactly as in MSHV: **new DXCC** = never worked;

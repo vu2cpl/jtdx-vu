@@ -311,6 +311,9 @@ public:
   //
   // Rationalise means ensure TX uses same mode as RX.
   Q_SLOT void transceiver_mode (MODE);
+  // JTDX-VU: re-send frequency AND the configured rig mode even if the cache
+  // thinks the rig already has them (e.g. the radio was put back to LSB)
+  void force_rig_mode (Frequency);
 
   // Set/unset PTT.
   //

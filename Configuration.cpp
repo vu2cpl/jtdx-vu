@@ -1283,6 +1283,12 @@ void Configuration::transceiver_txvolume (qreal txvolume)
   m_->transceiver_txvolume (txvolume);
 }
 
+void Configuration::force_rig_mode (Frequency f)
+{
+  m_->cached_rig_state_.mode (Transceiver::UNK);  // make transceiver_frequency see a mode change
+  m_->transceiver_frequency (f);
+}
+
 void Configuration::sync_transceiver (bool force_signal, bool enforce_mode_and_split)
 {
 #if WSJT_TRACE_CAT

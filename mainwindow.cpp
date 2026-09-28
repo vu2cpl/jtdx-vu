@@ -1133,7 +1133,18 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
       QHash<QString, QAction *> const actions {
         {"FT8", ui->actionFT8}, {"FT4", ui->actionFT4}, {"JT9", ui->actionJT9}, {"JT65", ui->actionJT65},
         {"T10", ui->actionT10}, {"JT9+JT65", ui->actionJT9_JT65}, {"WSPR-2", ui->actionWSPR_2}};
-      if (mode != m_mode && actions.contains (mode) && actions[mode]->isEnabled ()) actions[mode]->trigger ();
+      if (!actions.contains (mode) || !actions[mode]->isEnabled ()) return;
+      if (mode != m_mode)
+        {
+          actions[mode]->trigger ();
+          // let the mode switch re-tune first, then re-assert the rig mode (DIGU)
+          QTimer::singleShot (1500, this, [this] {m_config.force_rig_mode (m_freqNominal);});
+        }
+      else
+        {
+          m_config.force_rig_mode (m_freqNominal);
+          statusBar ()->showMessage (tr ("%1: rig mode re-sent").arg (mode), 5000);
+        }
     });
   {
     auto timer = new QTimer {this};  // keep the active-button highlight in step with rig and menus
@@ -6781,8 +6792,28 @@ void MainWindow::switch_to_band (QString const& band)
     }
   if (best_row >= 0)
     {
+      bool same_band = m_config.bands ()->find (m_freqNominal) == band;
       ui->bandComboBox->setCurrentIndex (best_row);
       on_bandComboBox_activated (best_row);
+      if (same_band)
+        {
+          // pressing the current band re-tunes and re-asserts the rig mode
+          // (DIGU for Data/Pkt), e.g. after the radio was left in LSB
+          m_config.force_rig_mode (m_freqNominal);
+          statusBar ()->showMessage (tr ("%1 re-tuned, rig mode re-sent").arg (band), 5000);
+        }
+      else
+        {
+          // the TCI/CAT layer drops a request while it is still busy with the
+          // previous one: if the band hasn't changed shortly, press it again
+          QTimer::singleShot (3000, this, [this, band, best_row] {
+              if (m_config.bands ()->find (m_freqNominal) != band && ui->bandComboBox->count () > best_row)
+                {
+                  ui->bandComboBox->setCurrentIndex (best_row);
+                  on_bandComboBox_activated (best_row);
+                }
+            });
+        }
       return;
     }
   statusBar ()->showMessage (tr ("No %1 working frequency on %2 - add one in Settings > Frequencies").arg (m_mode, band), 8000);
