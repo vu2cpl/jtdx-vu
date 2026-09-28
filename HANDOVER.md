@@ -72,7 +72,7 @@ Last updated: 2026-09-28
   clear DX → next caller" branch in `process_Auto()` runs only when
   logging is manual (`!m_config.autolog()`). So auto-log and
   auto-continue were mutually exclusive, whatever 1 QSO/AnsB4 were set to.
-- **Non-stop** (`m_nonstop`; the "Non-stop" button at the end of the
+- **Non-stop**, button labelled **CNS** (Call Non-Stop) (`m_nonstop`; the button at the end of the
   switcher row and AutoSeq menu → "Non-stop (until Tx watchdog)";
   saved as `JTDXVU/NonStop`):
   - The continue branch also runs with auto-log once the QSO is logged.
