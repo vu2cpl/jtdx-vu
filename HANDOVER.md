@@ -42,6 +42,28 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — Windows zip re-issued: TLS and desktop alerts
+
+- **Manoj's first run of the v0.1.0 Windows zip** hit two problems:
+  - Club Log refresh gave "TLS initialization failed", and Telegram
+    also failed.
+  - Desktop alerts never appeared.
+- **TLS:** Qt 5 loads OpenSSL at run time (`libssl-3-x64.dll` and
+  `libcrypto-3-x64.dll` on MSYS2), so neither fixup_bundle nor the ldd
+  sweep copied it. `windows.yml` now installs `mingw-w64-x86_64-openssl`,
+  copies both DLLs into `bin/`, logs the names QtNetwork asks for, and
+  fails if libssl is missing.
+- **Alerts** (`clublog.cpp`): `QSystemTrayIcon` was built from
+  `QApplication::windowIcon()`, which is empty on Windows because JTDX
+  sets its icon only via the .exe resources. Qt won't show an icon-less
+  tray entry. It now falls back to a top-level window's icon, then
+  `SP_MessageBoxInformation`, and delays the first message by 1 s so a
+  new tray icon isn't dropped.
+- The v0.1.0 Windows asset and its `.sha256` were replaced (`--clobber`)
+  from run `36399210191`, and the release notes carry a re-issue line.
+  The mac and Pi assets are unchanged. **Still to confirm on Manoj's
+  PC:** Refresh now, and Telegram and Desktop "Send test".
+
 ### 2026-09-28 — Windows CI green, v0.1.0 released
 
 - It took 12 runs to get Windows green. Each fix is in `windows.yml` or
@@ -344,8 +366,9 @@ Last updated: 2026-09-28
 
 - [ ] **Cache Hamlib in windows.yml.** It rebuilds from source every run
       and costs about 10 min.
-- [ ] **Windows build untested on a real PC.** Check audio, CAT and
-      OmniRig, and that notifications appear as tray toasts.
+- [ ] **Windows on Manoj's PC:** confirm the re-issued zip fixes Club
+      Log/Telegram TLS and desktop alerts. Audio, CAT and OmniRig are
+      still to check.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
       headless start have been done so far.
 - [ ] **Other Macs:**
