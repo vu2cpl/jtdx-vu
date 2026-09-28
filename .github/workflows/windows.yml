@@ -102,7 +102,9 @@ jobs:
           # CMake's fixup_bundle already copies DLLs + platform plugin; add
           # the rest of the Qt plugins (MSYS2 names the tool windeployqt-qt5)
           WDQ="$(command -v windeployqt-qt5 || command -v windeployqt || true)"
-          if [ -n "$WDQ" ]; then "$WDQ" --release --no-compiler-runtime --dir stage/bin stage/bin/jtdx.exe; fi
+          # MSYS2's Qt has no ANGLE (libGLESv2.dll) - skip it, and don't let a
+          # windeployqt complaint fail the build: fixup_bundle already verified
+          if [ -n "$WDQ" ]; then "$WDQ" --release --no-compiler-runtime --no-angle --no-opengl-sw --dir stage/bin stage/bin/jtdx.exe || echo "windeployqt rc=$? (continuing)"; fi
           # every MinGW DLL the executables and Qt plugins pull in; a
           # best-effort sweep, so an ldd failure on one file must not stop it
           set -x
