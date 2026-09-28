@@ -29,6 +29,13 @@
 #include <QPushButton>
 #include <QMessageBox>
 #include <QCoreApplication>
+#include <QApplication>
+#include <QSystemTrayIcon>
+#if defined (Q_OS_WIN)
+# include <windows.h>
+# include <wincred.h>
+# include <string>
+#endif
 
 #include "logbook/logbook.h"
 #include "logbook/adif.h"
@@ -42,14 +49,18 @@ namespace
   int const stale_hours = 24;
   int const local_overlap_days = 7;     // local QSOs this long before a fetch are also counted
 
-  // Secrets live in the macOS Keychain, never in JTDX-VU.ini.  The
-  // security tool is driven through stdin so they never appear in argv.
+  // Secrets (Club Log app password, Telegram bot token) are kept out of
+  // JTDX-VU.ini where the OS has a credential store: the macOS Keychain
+  // (security tool driven through stdin, so they never appear in argv)
+  // and the Windows Credential Manager.  Linux has no store we can rely
+  // on (a Pi often has no desktop keyring), so they go in the .ini there.
+#if defined (Q_OS_MAC)
   QString keychain_quote (QString s)
   {
     return '"' + s.replace ('\\', "\\\\").replace ('"', "\\\"") + '"';
   }
 
-  QString keychain_read (QString const& account)
+  QString secret_read (QSettings *, QString const& account)
   {
     QProcess p;
     p.start ("/usr/bin/security", {"find-generic-password", "-s", keychain_service, "-a", account, "-w"});
@@ -57,7 +68,7 @@ namespace
     return QString::fromUtf8 (p.readAllStandardOutput ()).trimmed ();
   }
 
-  bool keychain_write (QString const& account, QString const& secret)
+  bool secret_write (QSettings *, QString const& account, QString const& secret)
   {
     QProcess p;
     p.start ("/usr/bin/security", {"-i"});
@@ -67,6 +78,54 @@ namespace
     p.closeWriteChannel ();
     return p.waitForFinished (5000) && p.exitCode () == 0;
   }
+
+  QString const secret_store_name = QObject::tr ("Keychain");
+#elif defined (Q_OS_WIN)
+  std::wstring credential_target (QString const& account)
+  {
+    return (QString {keychain_service} + '/' + account).toStdWString ();
+  }
+
+  QString secret_read (QSettings *, QString const& account)
+  {
+    PCREDENTIALW cred {nullptr};
+    auto target = credential_target (account);
+    if (!CredReadW (target.c_str (), CRED_TYPE_GENERIC, 0, &cred)) return {};
+    auto value = QString::fromUtf8 (reinterpret_cast<char const *> (cred->CredentialBlob), cred->CredentialBlobSize);
+    CredFree (cred);
+    return value;
+  }
+
+  bool secret_write (QSettings *, QString const& account, QString const& secret)
+  {
+    auto target = credential_target (account);
+    auto user = QString {keychain_service}.toStdWString ();
+    auto blob = secret.toUtf8 ();
+    CREDENTIALW cred {};
+    cred.Type = CRED_TYPE_GENERIC;
+    cred.TargetName = const_cast<LPWSTR> (target.c_str ());
+    cred.UserName = const_cast<LPWSTR> (user.c_str ());
+    cred.CredentialBlobSize = static_cast<DWORD> (blob.size ());
+    cred.CredentialBlob = reinterpret_cast<LPBYTE> (blob.data ());
+    cred.Persist = CRED_PERSIST_LOCAL_MACHINE;
+    return CredWriteW (&cred, 0);
+  }
+
+  QString const secret_store_name = QObject::tr ("Credential Manager");
+#else
+  QString secret_read (QSettings * settings, QString const& account)
+  {
+    return settings->value ("Secrets/" + account).toString ();
+  }
+
+  bool secret_write (QSettings * settings, QString const& account, QString const& secret)
+  {
+    settings->setValue ("Secrets/" + account, secret);
+    return true;
+  }
+
+  QString const secret_store_name = QObject::tr ("settings file");
+#endif
 
   QString data_dir ()
   {
@@ -156,7 +215,7 @@ void ClubLog::refresh_if_stale ()
 void ClubLog::refresh ()
 {
   if (pending_) return;
-  auto password = keychain_read (clublog_password_account);
+  auto password = secret_read (settings_, clublog_password_account);
   if (email_.isEmpty () || callsign_.isEmpty () || password.isEmpty ())
     {
       Q_EMIT status_message (tr ("Club Log: email, callsign and app password are required"));
@@ -288,21 +347,41 @@ void ClubLog::notify (Level level, QString const& call, QString const& country, 
     }
   auto title = label + ": " + call;
   auto body = country + QString::fromUtf8 (" \xC2\xB7 ") + band + QString::fromUtf8 (" \xC2\xB7 ") + mode;
-  if (macos_) send_macos (title, body);
+  if (macos_) send_desktop (title, body);
   if (telegram_) send_telegram (title, body);
 }
 
-void ClubLog::send_macos (QString const& title, QString const& body) const
+void ClubLog::send_desktop (QString const& title, QString const& body) const
 {
+#if defined (Q_OS_MAC)
   auto quote = [] (QString s) {return '"' + s.replace ('\\', "\\\\").replace ('"', "\\\"") + '"';};
   QProcess::startDetached ("/usr/bin/osascript",
                            {"-e", "display notification " + quote (body) + " with title " + quote (title)
                                   + " subtitle " + quote (QCoreApplication::applicationName ())});
+#else
+# if !defined (Q_OS_WIN)
+  // Linux desktops (incl. Raspberry Pi OS): freedesktop notification
+  auto notify_send = QStandardPaths::findExecutable ("notify-send");
+  if (!notify_send.isEmpty ())
+    {
+      QProcess::startDetached (notify_send, {"-a", QCoreApplication::applicationName (), title, body});
+      return;
+    }
+# endif
+  // Windows, or Linux without notify-send: a system-tray balloon/toast
+  if (!tray_ && QSystemTrayIcon::isSystemTrayAvailable ())
+    {
+      tray_ = new QSystemTrayIcon {QApplication::windowIcon (), const_cast<ClubLog *> (this)};
+      tray_->setToolTip (QCoreApplication::applicationName ());
+      tray_->show ();
+    }
+  if (tray_) tray_->showMessage (title, body, QSystemTrayIcon::Information, 10000);
+#endif
 }
 
 void ClubLog::send_telegram (QString const& title, QString const& body, QWidget * report_to) const
 {
-  auto token = keychain_read (telegram_token_account);
+  auto token = secret_read (settings_, telegram_token_account);
   if (token.isEmpty () || telegram_chat_.isEmpty ())
     {
       if (report_to) QMessageBox::warning (report_to, QCoreApplication::applicationName (), tr ("Telegram bot token and chat ID are required."));
@@ -340,8 +419,8 @@ void ClubLog::settings_dialog (QWidget * parent, QString const& my_callsign)
   auto callsign = new QLineEdit {callsign_.isEmpty () ? my_callsign : callsign_};
   auto password = new QLineEdit;
   password->setEchoMode (QLineEdit::Password);
-  bool have_password = !keychain_read (clublog_password_account).isEmpty ();
-  password->setPlaceholderText (have_password ? tr ("(saved in Keychain; type to replace)") : tr ("Club Log application password"));
+  bool have_password = !secret_read (settings_, clublog_password_account).isEmpty ();
+  password->setPlaceholderText (have_password ? tr ("(saved in %1; type to replace)").arg (secret_store_name) : tr ("Club Log application password"));
   auto confirmed = new QCheckBox {tr ("Count only confirmed QSOs (QSL / LoTW / eQSL) as worked")};
   confirmed->setChecked (confirmed_only_);
   auto status = new QLabel {status_text ()};
@@ -376,7 +455,7 @@ void ClubLog::settings_dialog (QWidget * parent, QString const& my_callsign)
   cooldown->setRange (5, 60);
   cooldown->setSuffix (tr (" min"));
   cooldown->setValue (cooldown_min_);
-  auto macos = new QCheckBox {tr ("macOS notification")};
+  auto macos = new QCheckBox {tr ("Desktop notification")};
   macos->setChecked (macos_);
   auto macos_test = new QPushButton {tr ("Send test")};
   auto macos_row = new QHBoxLayout;
@@ -386,8 +465,8 @@ void ClubLog::settings_dialog (QWidget * parent, QString const& my_callsign)
   telegram->setChecked (telegram_);
   auto token = new QLineEdit;
   token->setEchoMode (QLineEdit::Password);
-  bool have_token = !keychain_read (telegram_token_account).isEmpty ();
-  token->setPlaceholderText (have_token ? tr ("(saved in Keychain; type to replace)") : tr ("bot token from @BotFather"));
+  bool have_token = !secret_read (settings_, telegram_token_account).isEmpty ();
+  token->setPlaceholderText (have_token ? tr ("(saved in %1; type to replace)").arg (secret_store_name) : tr ("bot token from @BotFather"));
   auto chat = new QLineEdit {telegram_chat_};
   auto telegram_test = new QPushButton {tr ("Send test")};
   auto telegram_row = new QHBoxLayout;
@@ -418,15 +497,15 @@ void ClubLog::settings_dialog (QWidget * parent, QString const& my_callsign)
     confirmed_only_ = confirmed->isChecked ();
     email_ = email->text ().trimmed ();
     callsign_ = callsign->text ().trimmed ().toUpper ();
-    if (!password->text ().isEmpty () && keychain_write (clublog_password_account, password->text ()))
+    if (!password->text ().isEmpty () && secret_write (settings_, clublog_password_account, password->text ()))
       {
         password->clear ();
-        password->setPlaceholderText (tr ("(saved in Keychain; type to replace)"));
+        password->setPlaceholderText (tr ("(saved in %1; type to replace)").arg (secret_store_name));
       }
-    if (!token->text ().isEmpty () && keychain_write (telegram_token_account, token->text ()))
+    if (!token->text ().isEmpty () && secret_write (settings_, telegram_token_account, token->text ()))
       {
         token->clear ();
-        token->setPlaceholderText (tr ("(saved in Keychain; type to replace)"));
+        token->setPlaceholderText (tr ("(saved in %1; type to replace)").arg (secret_store_name));
       }
     alert_atno_ = atno->isChecked ();
     alert_band_ = band->isChecked ();
@@ -443,7 +522,7 @@ void ClubLog::settings_dialog (QWidget * parent, QString const& my_callsign)
   auto status_connection = connect (this, &ClubLog::status_message, status, &QLabel::setText);
   connect (refresh_button, &QPushButton::clicked, &dialog, [&] {apply (); refresh ();});
   connect (macos_test, &QPushButton::clicked, &dialog, [&] {
-      send_macos (QString::fromUtf8 ("\xF0\x9F\x94\xB4 ATNO: TEST"), tr ("Test alert from %1").arg (QCoreApplication::applicationName ()));
+      send_desktop (QString::fromUtf8 ("\xF0\x9F\x94\xB4 ATNO: TEST"), tr ("Test alert from %1").arg (QCoreApplication::applicationName ()));
     });
   connect (telegram_test, &QPushButton::clicked, &dialog, [&] {
       apply ();

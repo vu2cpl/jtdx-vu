@@ -19,6 +19,7 @@ class QNetworkAccessManager;
 class QNetworkReply;
 class QWidget;
 class LogBook;
+class QSystemTrayIcon;
 
 class ClubLog final
   : public QObject
@@ -52,7 +53,7 @@ private:
   void write_settings () const;
   void on_adif_reply (QNetworkReply *);
   void notify (Level, QString const& call, QString const& country, QString const& band, QString const& mode);
-  void send_macos (QString const& title, QString const& body) const;
+  void send_desktop (QString const& title, QString const& body) const;  // macOS banner / Windows tray / Linux notify-send
   void send_telegram (QString const& title, QString const& body, QWidget * report_to = nullptr) const;
   QString status_text () const;
 
@@ -77,6 +78,7 @@ private:
   QString telegram_chat_;
   int cooldown_min_ {15};
   QHash<QString, QDateTime> last_alert_;
+  mutable QSystemTrayIcon * tray_ {nullptr};  // Windows / Linux fallback
 };
 
 #endif
