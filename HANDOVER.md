@@ -94,6 +94,14 @@ plays it through the existing pre-generated-wave path (`foxcom_.wave`,
   (`commons.h` + `lib/foxgen.f90`, must match) — 16 frames × 59
   symbols × 1536 = 1.45 M samples for the longest frame.
 - **Tx audio frequency** set to 1500 on JTTY entry, like Rx.
+- **Band buttons did nothing in JTTY** (first on-air attempt): the band
+  combo is filtered to the current mode and Manoj's saved frequency
+  list predates JTTY, so it had no JTTY rows and `switch_to_band` found
+  nothing. `FrequencyList_v2::add_defaults_for_mode()` /
+  `Configuration::seed_default_frequencies()` now append the shipped
+  JTTY defaults on JTTY entry when the list has none for that mode —
+  into both `frequencies_` and the dialog's `next_frequencies_`, or the
+  next Settings > OK would write the stale list back. Reuse for FT2.
 
 **Verified offline only:** a scratch Fortran harness calling the exact
 GUI sequence (`genjtty_profile` → `gen_jttywave` at 1536 sps/48 kHz,

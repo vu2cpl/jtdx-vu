@@ -121,6 +121,10 @@ public:
   // Reset
   Q_SLOT void reset_to_defaults ();
 
+  // JTDX-VU: append the shipped default rows for one mode if the list has
+  // none for it - a saved list predating a new mode (JTTY) never sees them
+  bool add_defaults_for_mode (Mode);
+
   // Model API
   QModelIndex add (Item);
   bool remove (Item);

@@ -349,6 +349,22 @@ void FrequencyList_v2::reset_to_defaults ()
   m_->frequency_list (default_frequency_list);
 }
 
+bool FrequencyList_v2::add_defaults_for_mode (Mode mode)
+{
+  for (auto const& item : m_->frequency_list_)
+    {
+      if (item.mode_ == mode) return false;
+    }
+  FrequencyItems items;
+  for (auto const& item : default_frequency_list)
+    {
+      if (item.mode_ == mode) items << item;
+    }
+  if (items.isEmpty ()) return false;
+  m_->add (items);
+  return true;
+}
+
 QModelIndex FrequencyList_v2::add (Item f)
 {
   return mapFromSource (m_->add (f));

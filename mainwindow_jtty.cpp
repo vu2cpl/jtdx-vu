@@ -97,6 +97,10 @@ void MainWindow::jttyModeSelected ()
   // diskDat() sweeps a wav in m_FFTSize (3456) steps up to m_hsymStop with no
   // bound on k: 120 s * 12000 / 3456 = 416.7 steps keeps it inside d2.
   m_hsymStop = 417;
+  // a frequency list saved before JTTY existed has no JTTY rows, so the band
+  // combo and the band buttons would have nothing to pick
+  if (m_config.seed_default_frequencies (Modes::JTTY))
+    statusBar ()->showMessage (tr ("JTTY dial frequencies added to Settings > Frequencies"), 8000);
   ui->RxFreqSpinBox->setValue (1500);         // JTTY convention, as WSJT-X
   ui->TxFreqSpinBox->setValue (1500);
   flushJttyDecodeLines ();

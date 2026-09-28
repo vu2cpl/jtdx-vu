@@ -1108,6 +1108,15 @@ StationList const * Configuration::stations () const {return &m_->stations_;}
 IARURegions::Region Configuration::region () const {return m_->region_;}
 FrequencyList_v2 * Configuration::frequencies () {return &m_->frequencies_;}
 FrequencyList_v2 const * Configuration::frequencies () const {return &m_->frequencies_;}
+
+bool Configuration::seed_default_frequencies (Modes::Mode mode)
+{
+  // both copies, or the next Settings > OK would write the dialog's stale
+  // list back over the seeded rows
+  bool const added = m_->frequencies_.add_defaults_for_mode (mode);
+  m_->next_frequencies_.add_defaults_for_mode (mode);
+  return added;
+}
 QStringListModel * Configuration::macros () {return &m_->macros_;}
 QStringListModel const * Configuration::macros () const {return &m_->macros_;}
 QDir Configuration::save_directory () const {return m_->save_directory_;}

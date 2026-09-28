@@ -6,6 +6,7 @@
 
 #include "Radio.hpp"
 #include "IARURegions.hpp"
+#include "Modes.hpp"
 #include "AudioDevice.hpp"
 #include "TransceiverFactory.hpp"
 #include "Transceiver.hpp"
@@ -246,6 +247,7 @@ public:
   Bands const * bands () const;
   IARURegions::Region region () const;
   FrequencyList_v2 * frequencies ();
+  bool seed_default_frequencies (Modes::Mode);   // JTDX-VU: see FrequencyList_v2::add_defaults_for_mode
   FrequencyList_v2 const * frequencies () const;
   StationList * stations ();
   StationList const * stations () const;
