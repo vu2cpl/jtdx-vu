@@ -62,8 +62,11 @@ Last updated: 2026-09-28
   "Operation not permitted" from the Claude app, so the MSHV-skill checker
   couldn't read it. The missing set came from Manoj looking in RUMlog.
   Granting the Claude app Full Disk Access would allow the checker.
-- **Stock JTDX's .ini** still points at .169. Left alone per the
-  keep-stock-JTDX rule; Manoj knows.
+- **Stock JTDX and WSJT-X updated too, at Manoj's request, the same
+  day:** `JTDX.ini` → `UDPServer=192.168.1.109` (port 2334) and
+  `WSJT-X.ini` → `192.168.1.109` (port 2335, DXCA's WSJT-X source). Both
+  apps were closed at the time. Only that line changed; backups are
+  `~/Library/Preferences/{JTDX,WSJT-X}.ini.bak-20260928-151629`.
 
 ### 2026-09-28 — Windows zip re-issued: TLS and desktop alerts
 
