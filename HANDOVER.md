@@ -15,18 +15,20 @@ Last updated: 2026-09-28
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
-- **Release v0.1.0: PUBLISHED 2026-09-28.** It's at
-  https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.1.0 with the macOS
-  arm64 zip, the Windows x64 zip and the Pi `.deb`, each with a
-  `.sha256`. **macOS Intel is still building:** it compiles Homebrew
-  deps from source, which can take up to the 6 h limit. The tag-triggered
-  macos run attaches it automatically; the earlier workflow_dispatch run
-  `36376193759` builds the same zip and would need a manual
-  `gh release upload`. Copies of the ready builds are in `~/Desktop/jdxvu/`.
+- **Release v0.1.0: COMPLETE 2026-09-28.** It's at
+  https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.1.0 with all four
+  builds, each with a `.sha256`: macOS arm64, macOS Intel, Windows x64
+  and the Pi `.deb`. Copies are in `~/Desktop/jdxvu/`.
+  - The Intel zip came from dispatch run `36376193759`, which compiled
+    Homebrew deps from source within the 6 h limit, and was uploaded by
+    hand.
+  - The tag's own macos run was cancelled as a duplicate.
+  - The tag's windows run built fine, but its attach step failed because
+    `gh` isn't on PATH in the MSYS2 shell. It's now fixed with
+    `shell: bash`.
 - **Website:** vu2cpl.com has a JTDX-VU card (Utilities & Tools, after
   MSHV-Mac) and a project page at `/projects/jtdx-vu/` with screenshots
-  and a v0.1.0 downloads table. The Intel row should become direct links
-  once that zip lands.
+  and a v0.1.0 downloads table linking all four builds.
 - **Stock JTDX:** `/Applications/jtdx.app`, with its `JTDX.ini` and
   `Application Support/JTDX`, is still installed and must be left
   alone. JTDX-VU only read it once, for the first-launch migration.
@@ -340,9 +342,6 @@ Last updated: 2026-09-28
 
 ## Open items
 
-- [ ] **macOS Intel zip:** once CI finishes, check it's attached to
-      v0.1.0 and swap the Intel row on vu2cpl.com/projects/jtdx-vu/ for
-      direct links. Also copy it into `~/Desktop/jdxvu/`.
 - [ ] **Cache Hamlib in windows.yml.** It rebuilds from source every run
       and costs about 10 min.
 - [ ] **Windows build untested on a real PC.** Check audio, CAT and

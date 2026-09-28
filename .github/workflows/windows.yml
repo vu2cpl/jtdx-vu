@@ -133,6 +133,7 @@ jobs:
 
       - name: Attach to release
         if: startsWith(github.ref, 'refs/tags/')
+        shell: bash   # Git Bash has gh; the MSYS2 shell does not
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
