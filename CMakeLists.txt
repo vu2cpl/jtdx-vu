@@ -443,6 +443,27 @@ set (wsjt_FSRCS
   lib/wsprd/osdwspr.f90
   lib/packjt.f90
   lib/ft8v2/packjt77.f90
+  # JTDX-VU: JTTY mode, vendored from WSJT-X 3.2.0-rc1 lib/jtty (GPL v3)
+  lib/jtty/jtty_sections.f90
+  lib/jtty/jtty_source_codec.f90
+  lib/jtty/jtty_mod.f90
+  lib/jtty/jtty_tbcc_code_profile.f90
+  lib/jtty/jtty_tbcc_list_decoder.f90
+  lib/jtty/tbcc.f90
+  lib/jtty/jtty_tbcc_decoder.f90
+  lib/jtty/jtty_payload_correlators.f90
+  lib/jtty/jtty_fec_mod.f90
+  lib/jtty/jttycom.f90
+  lib/jtty/jtty_mdecode.f90
+  lib/jtty/jtty_decode.f90
+  lib/jtty/rjtty_sub.f90
+  lib/jtty/jtty_peakup.f90
+  lib/jtty/jtty_block_pow.f90
+  lib/jtty/ana64a.f90
+  lib/jtty/genjtty.f90
+  lib/jtty/gen_jttywave.f90
+  lib/jtty/gen_syncwave.f90
+  lib/jtty/subtract_jtty.f90
   lib/ft8v2/packjt77sd.f90
   lib/partint.f90
   lib/ft4/partintft4.f90
