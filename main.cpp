@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 
       // Override programs executable basename as application name.
       a.setApplicationName ("JTDX-VU");
-      a.setApplicationVersion (version ());
+      a.setApplicationVersion (jtdxvu_version ());
   if (version().replace("_32A","").indexOf("_") > 1) {
     #include <QDate>
     auto expire_date = QLocale(QLocale::English).toDate(QString(__DATE__).replace("  "," "),"MMM d yyyy").addMonths(3);

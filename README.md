@@ -1,8 +1,14 @@
-# JTDX-VU
+# JTDX-VU for VUCG community — v0.1.0
 
-VU2CPL's private build of JTDX 2.2.159 for macOS on Apple Silicon. It
-runs as its own app alongside a stock JTDX install, and it adds Club Log
-DXCC status and needed-DXCC alerts.
+VU2CPL's build of JTDX 2.2.159 for the VUCG community, for macOS on
+Apple Silicon. It runs as its own app alongside a stock JTDX install,
+and it adds Club Log DXCC status and needed-DXCC alerts.
+
+**Versioning:** JTDX-VU has its own version, set as `JTDXVU_VERSION` in
+`Versions.cmake`. That version appears in the title, the About box,
+Info.plist, PSK Reporter, ALL.TXT and UDP messages. The upstream base,
+JTDX 2.2.159 (`version()`), is still shown in the title and About box,
+and is still reported to WSPRnet.
 
 JTDX is by Igor Chernikov UA3DJY, Arvo Järve ES1JA and the HF community,
 upstream at [jtdx-project/jtdx](https://github.com/jtdx-project/jtdx).
@@ -20,7 +26,9 @@ private build.
   Hamlib 4.7 and gfortran 16. `macos-bundle.sh` produces an app that
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
-  Reporter ID all say JTDX-VU. Settings are in
+  Reporter ID all say JTDX-VU. The title bar reads "JTDX-VU for VUCG
+  community v0.1.0, based on JTDX v2.2.159 by HF community and WSJT-X
+  by K1JT". Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
   - On first launch, JTDX-VU copies the stock JTDX settings and data

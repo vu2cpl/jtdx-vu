@@ -16,7 +16,8 @@ CAboutDlg::CAboutDlg(QWidget *parent) :
 
   ui->labelTxt->setText ("<html><h2>"
                          + QCoreApplication::applicationName () + " v"
-                         + QCoreApplication::applicationVersion () + "  HF software" + "</h2>\n\n"
+                         + QCoreApplication::applicationVersion () + "  for VUCG community" + "</h2>\n\n"
+                         "Built by VU2CPL on JTDX v" + version () + ".<br><br>"
                          "It is modified WSJT-X software forked from WSJT-X v1.7 r6462, <br>"
                          "FT8 code is forked from WSJT-X v1.8 and v2.0, <br>"
                          "FT4 code is forked from WSJT-X v2.1, <br>"

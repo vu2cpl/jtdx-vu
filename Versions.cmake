@@ -1,4 +1,7 @@
-# Version number components
+# JTDX-VU release version (what the operator sees: title, About, Info.plist, PSK Reporter)
+set (JTDXVU_VERSION 0.1.0)
+
+# Version number components (upstream JTDX base, left as released)
 set (WSJTX_VERSION_MAJOR 2)
 set (WSJTX_VERSION_MINOR 2)
 set (WSJTX_VERSION_32A 0)

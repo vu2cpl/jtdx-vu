@@ -25,6 +25,27 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — v0.1.0, "for VUCG community"
+
+- `Versions.cmake` gains `JTDXVU_VERSION 0.1.0`, passed to the code as
+  `JTDXVU_VERSION` through `wsjtx_config.h.in` and read with
+  `jtdxvu_version()` in `revision_utils`.
+- `applicationVersion()` now returns the JTDX-VU version. That version
+  is used in the title, About, the Log QSO title, the ALL.TXT
+  Transmitting/Tune lines, PSK Reporter and UDP MessageClient.
+- `version()` stays at the upstream 2.2.159 and is still used for the
+  manual file names, the WSPRnet upload and the release-candidate
+  check.
+- The title reads "JTDX-VU for VUCG community v0.1.0, based on JTDX
+  v2.2.159 by HF community and WSJT-X by K1JT". The About box adds a
+  "Built by VU2CPL on JTDX v2.2.159" line, and the full JTDX and
+  WSJT-X credits are unchanged.
+- In Info.plist, CFBundleShortVersionString and CFBundleVersion are
+  0.1.0, and CFBundleLongVersionString is "JTDX-VU 0.1.0 (based on
+  JTDX 2.2.159)".
+- **To release a new version:** bump `JTDXVU_VERSION`, re-run cmake,
+  build, then run `./macos-bundle.sh`.
+
 ### 2026-09-28 — native build, JTDX-VU identity, Club Log and alerts
 
 - **Build fixes for current toolchains.**
@@ -97,6 +118,16 @@ Last updated: 2026-09-28
 - The dialog renders, and a macOS notification arrives.
 
 ## Open items
+
+- [ ] **Distributing to VUCG members needs the source to be
+      available.** JTDX is GPL v3, and handing the app to other people
+      means offering them the source. The repo is private right now, so
+      either make it public or give recipients access, before
+      distributing. Also decide whether the Club Log and alerts features
+      go into the community build.
+- [ ] **Stranger Macs.** The bundle is ad-hoc signed, not notarized.
+      Other Macs need right-click > Open on first launch, the
+      shared-memory sysctl, and macOS 26 or later.
 
 - [ ] **Not yet tested against real Club Log.** Enter the email and app
       password in File > Club Log & Alerts..., press Refresh now, and

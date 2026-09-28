@@ -81,8 +81,17 @@ QString version (bool include_patch)
   return v;
 }
 
+QString jtdxvu_version ()
+{
+#if defined (CMAKE_BUILD)
+  return JTDXVU_VERSION;
+#else
+  return "Not for Release";
+#endif
+}
+
 QString program_title (QString const& revision)
 {
-  QString id {QCoreApplication::applicationName () + "  by HF community                                         v" + QCoreApplication::applicationVersion ()};
-  return id + " " + revision + ", derivative work based on WSJT-X by K1JT";
+  QString id {QCoreApplication::applicationName () + " for VUCG community   v" + QCoreApplication::applicationVersion ()};
+  return id + " " + revision + ", based on JTDX v" + version () + " by HF community and WSJT-X by K1JT";
 }
