@@ -1584,6 +1584,13 @@ set (CPACK_DEBIAN_PACKAGE_DESCRIPTION "${PROJECT_DESCRIPTION}")
 set (CPACK_DEBIAN_PACKAGE_HOMEPAGE "${PROJECT_HOMEPAGE}")
 set (CPACK_DEBIAN_PACKAGE_DEPENDS "libgfortran5 (>=8.3) | libgfortran4 (>=7.3) | libgfortran3 (>=6.3), libfftw3-single3 (>=3.3), libgomp1 (>=6), libqt5serialport5 (>=5.7), libqt5multimedia5-plugins (>=5.7), libqt5widgets5 (>=5.7), libqt5network5 (>=5.7), libqt5printsupport5 (>=5.7), libqt5websockets5 (>=5.7), libusb-1.0-0 (>=1.0.21), hamlib (>=4.5~git.20211220)")
 set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+# JTDX-VU: its own package name and version; installs the same files as a
+# stock jtdx package, so the two cannot be installed together
+set (CPACK_DEBIAN_PACKAGE_NAME "jtdx-vu")
+set (CPACK_DEBIAN_PACKAGE_VERSION "${JTDXVU_VERSION}")
+set (CPACK_DEBIAN_FILE_NAME "jtdx-vu-${JTDXVU_VERSION}-linux-${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}.deb")
+set (CPACK_DEBIAN_PACKAGE_CONFLICTS "jtdx")
+set (CPACK_DEBIAN_PACKAGE_MAINTAINER "VU2CPL <vu2cpl@users.noreply.github.com>")
 
 set (CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
 set (CPACK_RPM_PACKAGE_REQUIRES "qt5-qtbase >= 5.9, qt5-qtserialport >= 5.9, qt5-qtmultimedia >= 5.9, qt5-qtwebsockets >= 5.9, qt5-qtsvg >= 5.9, libusbx >= 1.0.22, libgfortran >= 7, libgomp >= 7, fftw-libs-single >= 3.3, hamlib >= 4.5~git-1")

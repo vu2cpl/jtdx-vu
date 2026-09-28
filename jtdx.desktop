@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=1.0
-Name=jtdx
-Comment=Amateur Radio Weak Signal Operating
+Name=JTDX-VU
+Comment=JTDX-VU for VUCG - weak-signal digital modes (JTDX based)
 Exec=jtdx
 Icon=jtdx_icon
 Terminal=false
