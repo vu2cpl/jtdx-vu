@@ -85,7 +85,8 @@ path works on the air. Three things came out of that session:
 Layout checked in a throwaway `-r jttylayout` instance (window capture
 via `screencapture -l <id>`, ids from a 10-line Swift
 `CGWindowListCopyWindowInfo` script — `osascript` lost assistive access
-this session). Not installed over the running on-air instance.
+this session). Installed once Manoj quit; **F-keys confirmed working on
+the air** the same evening.
 
 ### 2026-09-28 — JTTY phase 3: transmit (branch `jtty`)
 
