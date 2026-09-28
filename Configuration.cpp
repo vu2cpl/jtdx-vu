@@ -159,6 +159,7 @@
 #include <QFont>
 #include <QFontDialog>
 #include <QColorDialog>
+#include <QGridLayout>
 #include <QSerialPortInfo>
 #include <QScopedPointer>
 #include <QDebug>
@@ -645,6 +646,14 @@ private:
   QColor next_color_NewDXCC_;
   QColor color_NewDXCCBand_;
   QColor next_color_NewDXCCBand_;
+  QColor color_NewDXCCMode_;          // JTDX-VU
+  QColor next_color_NewDXCCMode_;
+  QColor color_NewDXCCMode_dark_;
+  QColor next_color_NewDXCCMode_dark_;
+  QPushButton * pbNewDXCCMode_ {nullptr};
+  QLabel * labNewDXCCMode_ {nullptr};     // preview on the CQ colour
+  QLabel * labNewMcDXCCMode_ {nullptr};   // preview on the My Call colour
+  void style_pbNewDXCCMode ();
   QColor color_NewGrid_;
   QColor next_color_NewGrid_;
   QColor color_NewGridBand_;
@@ -937,6 +946,7 @@ QColor Configuration::color_NewITUZ () const {return m_->useDarkStyle_? m_->colo
 QColor Configuration::color_NewITUZBand () const {return m_->useDarkStyle_? m_->color_NewITUZBand_dark_ : m_->color_NewITUZBand_;}
 QColor Configuration::color_NewDXCC () const {return m_->useDarkStyle_? m_->color_NewDXCC_dark_ : m_->color_NewDXCC_;}
 QColor Configuration::color_NewDXCCBand () const {return m_->useDarkStyle_? m_->color_NewDXCCBand_dark_ : m_->color_NewDXCCBand_;}
+QColor Configuration::color_NewDXCCMode () const {return m_->useDarkStyle_? m_->color_NewDXCCMode_dark_ : m_->color_NewDXCCMode_;}
 QColor Configuration::color_NewGrid () const {return m_->useDarkStyle_? m_->color_NewGrid_dark_ : m_->color_NewGrid_;}
 QColor Configuration::color_NewGridBand () const {return m_->useDarkStyle_? m_->color_NewGridBand_dark_ : m_->color_NewGridBand_;}
 QColor Configuration::color_NewCall () const {return m_->useDarkStyle_? m_->color_NewCall_dark_ : m_->color_NewCall_;}
@@ -1385,6 +1395,56 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
   , default_audio_output_device_selected_ {false}
 {
   ui_->setupUi (this);
+  {
+    // JTDX-VU: third DXCC colour - "New DXCC on Mode" (MSHV's new mode:
+    // not worked in this mode on any band), added below the colour list
+    pbNewDXCCMode_ = new QPushButton {tr ("New DXCC on Mode")};
+    pbNewDXCCMode_->setMinimumWidth (155);
+    pbNewDXCCMode_->setToolTip (tr ("Colour for a DXCC not yet worked in this mode on any band (\"per mode\")"));
+    // give it its own row right under "New DXCC on Band" in the colour
+    // grid (a layout nested inside the tab): shift the rows below down one
+    std::function<QGridLayout * (QLayout *)> find_grid = [&] (QLayout * l) -> QGridLayout * {
+        if (!l) return nullptr;
+        if (auto g = qobject_cast<QGridLayout *> (l); g && g->indexOf (ui_->pbNewDXCCBand) >= 0) return g;
+        for (int i = 0; i < l->count (); ++i)
+          if (auto r = find_grid (l->itemAt (i)->layout ())) return r;
+        return nullptr;
+      };
+    auto make_label = [] {
+        auto l = new QLabel {"K1ABC"};
+        l->setMinimumSize (80, 20);
+        l->setAlignment (Qt::AlignCenter);
+        return l;
+      };
+    labNewDXCCMode_ = make_label ();
+    labNewMcDXCCMode_ = make_label ();
+    if (auto grid = find_grid (ui_->pbNewDXCCBand->parentWidget ()->layout ()))
+      {
+        int band_row, c, rs, cs;
+        grid->getItemPosition (grid->indexOf (ui_->pbNewDXCCBand), &band_row, &c, &rs, &cs);
+        struct Moved {QLayoutItem * item; int row, col, rs, cs;};
+        QList<Moved> moved;
+        for (int i = grid->count () - 1; i >= 0; --i)
+          {
+            int r, col, rsp, csp;
+            grid->getItemPosition (i, &r, &col, &rsp, &csp);
+            if (r > band_row) moved << Moved {grid->takeAt (i), r, col, rsp, csp};
+          }
+        for (auto const& m : moved) grid->addItem (m.item, m.row + 1, m.col, m.rs, m.cs);
+        grid->addWidget (pbNewDXCCMode_, band_row + 1, 0);
+        grid->addWidget (labNewDXCCMode_, band_row + 1, 1);
+        grid->addWidget (labNewMcDXCCMode_, band_row + 1, 2);
+      }
+    connect (pbNewDXCCMode_, &QPushButton::clicked, this, [this] {
+        auto current = useDarkStyle_ ? next_color_NewDXCCMode_dark_ : next_color_NewDXCCMode_;
+        auto new_color = QColorDialog::getColor (current, this, tr ("New DXCC on Mode Messages Color"));
+        if (new_color.isValid ())
+          {
+            if (useDarkStyle_) next_color_NewDXCCMode_dark_ = new_color; else next_color_NewDXCCMode_ = new_color;
+            style_pbNewDXCCMode ();
+          }
+      });
+  }
   // JTDX-VU: the .ui pins a 686x586 minimum sized for Windows fonts; with the
   // larger macOS UI font that lets the dialog shrink below what its layouts
   // need, so tabs (Notifications worst) overlap.  Let the layouts set it.
@@ -2211,6 +2271,7 @@ void Configuration::impl::read_settings ()
   next_color_NewITUZBand_ = color_NewITUZBand_ = settings_->value("colorNewITUZBand","#c0d0a0").toString();
   next_color_NewDXCC_ = color_NewDXCC_ = settings_->value("colorNewDXCC","#c000c0").toString();
   next_color_NewDXCCBand_ = color_NewDXCCBand_ = settings_->value("colorNewDXCCBand","#d080d0").toString();
+  next_color_NewDXCCMode_ = color_NewDXCCMode_ = settings_->value("colorNewDXCCMode","#ffc070").toString();
   next_color_NewGrid_ = color_NewGrid_ = settings_->value("colorNewGrid","#00a0a0").toString();
   next_color_NewGridBand_ = color_NewGridBand_ = settings_->value("colorNewGridBand","#80d0d0").toString();
   next_color_NewPx_ = color_NewPx_ = settings_->value("colorNewPx","#00a040").toString();
@@ -2228,6 +2289,7 @@ void Configuration::impl::read_settings ()
   next_color_NewITUZBand_dark_ = color_NewITUZBand_dark_ = settings_->value("colorNewITUZBand_dark","#809060").toString();
   next_color_NewDXCC_dark_ = color_NewDXCC_dark_ = settings_->value("colorNewDXCC_dark","#800080").toString();
   next_color_NewDXCCBand_dark_ = color_NewDXCCBand_dark_ = settings_->value("colorNewDXCCBand_dark","#904090").toString();
+  next_color_NewDXCCMode_dark_ = color_NewDXCCMode_dark_ = settings_->value("colorNewDXCCMode_dark","#a06010").toString();
   next_color_NewGrid_dark_ = color_NewGrid_dark_ = settings_->value("colorNewGrid_dark","#006060").toString();
   next_color_NewGridBand_dark_ = color_NewGridBand_dark_ = settings_->value("colorNewGridBand_dark","#409090").toString();
   next_color_NewPx_dark_ = color_NewPx_dark_ = settings_->value("colorNewPx_dark","#006000").toString();
@@ -2236,6 +2298,7 @@ void Configuration::impl::read_settings ()
   next_color_NewCallBand_dark_ = color_NewCallBand_dark_ = settings_->value("colorNewCallBand_dark","#a0a030").toString();
   next_color_WorkedCall_dark_ = color_WorkedCall_dark_ = settings_->value("colorWorkedCall_dark","#00bf00").toString();
   useDarkStyle_ = settings_->value ("UseDarkStyle", false).toBool ();
+  style_pbNewDXCCMode ();
 
   next_font_.fromString (settings_->value ("Font", QGuiApplication::font ().toString ()).toString ());
   if (next_font_ != font_ || useDarkStyle_)
@@ -2653,6 +2716,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue("colorNewITUZBand",color_NewITUZBand_);
   settings_->setValue("colorNewDXCC",color_NewDXCC_);
   settings_->setValue("colorNewDXCCBand",color_NewDXCCBand_);
+  settings_->setValue("colorNewDXCCMode",color_NewDXCCMode_);
   settings_->setValue("colorNewGrid",color_NewGrid_);
   settings_->setValue("colorNewGridBand",color_NewGridBand_);
   settings_->setValue("colorNewPx",color_NewPx_);
@@ -2670,6 +2734,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue("colorNewITUZBand_dark",color_NewITUZBand_dark_);
   settings_->setValue("colorNewDXCC_dark",color_NewDXCC_dark_);
   settings_->setValue("colorNewDXCCBand_dark",color_NewDXCCBand_dark_);
+  settings_->setValue("colorNewDXCCMode_dark",color_NewDXCCMode_dark_);
   settings_->setValue("colorNewGrid_dark",color_NewGrid_dark_);
   settings_->setValue("colorNewGridBand_dark",color_NewGridBand_dark_);
   settings_->setValue("colorNewPx_dark",color_NewPx_dark_);
@@ -3186,6 +3251,7 @@ void Configuration::impl::accept ()
   if (next_font_ != font_ || useDarkStyle_ != ui_->useDarkStyle_check_box->isChecked ())
     {
       useDarkStyle_ = ui_->useDarkStyle_check_box->isChecked ();
+      style_pbNewDXCCMode ();
       font_ = next_font_;
       set_application_font (font_);
     }
@@ -3205,6 +3271,7 @@ void Configuration::impl::accept ()
   color_NewITUZBand_ = next_color_NewITUZBand_;
   color_NewDXCC_ = next_color_NewDXCC_;
   color_NewDXCCBand_ = next_color_NewDXCCBand_;
+  color_NewDXCCMode_ = next_color_NewDXCCMode_;
   color_NewGrid_ = next_color_NewGrid_;
   color_NewGridBand_ = next_color_NewGridBand_;
   color_NewPx_ = next_color_NewPx_;
@@ -3222,6 +3289,7 @@ void Configuration::impl::accept ()
   color_NewITUZBand_dark_ = next_color_NewITUZBand_dark_;
   color_NewDXCC_dark_ = next_color_NewDXCC_dark_;
   color_NewDXCCBand_dark_ = next_color_NewDXCCBand_dark_;
+  color_NewDXCCMode_dark_ = next_color_NewDXCCMode_dark_;
   color_NewGrid_dark_ = next_color_NewGrid_dark_;
   color_NewGridBand_dark_ = next_color_NewGridBand_dark_;
   color_NewPx_dark_ = next_color_NewPx_dark_;
@@ -4607,9 +4675,21 @@ void Configuration::impl::on_pbNewDXCC_clicked()
     }
 }
 
+void Configuration::impl::style_pbNewDXCCMode ()
+{
+  // the button looks like the other colour buttons; the colour is shown in
+  // the K1ABC previews beside it, as for "New DXCC on Band"
+  if (!labNewDXCCMode_) return;
+  auto c = (useDarkStyle_ ? next_color_NewDXCCMode_dark_ : next_color_NewDXCCMode_).name ();
+  labNewDXCCMode_->setStyleSheet (QString {"font-weight: bold;background: %1;color: %2"}
+                                  .arg (c, useDarkStyle_ ? next_color_CQ_dark_.name () : next_color_CQ_.name ()));
+  labNewMcDXCCMode_->setStyleSheet (QString {"font-weight: bold;background: %1;color: %2"}
+                                    .arg (c, useDarkStyle_ ? next_color_MyCall_dark_.name () : next_color_MyCall_.name ()));
+}
+
 void Configuration::impl::on_pbNewDXCCBand_clicked()
 {
-  auto new_color = QColorDialog::getColor(QColor(useDarkStyle_? next_color_NewDXCCBand_dark_.name() : next_color_NewDXCCBand_.name()), this, "New DXCC on Band/Mode Messages Color");
+  auto new_color = QColorDialog::getColor(QColor(useDarkStyle_? next_color_NewDXCCBand_dark_.name() : next_color_NewDXCCBand_.name()), this, "New DXCC on Band Messages Color");
   if (new_color.isValid ())
     {
       if (useDarkStyle_) next_color_NewDXCCBand_dark_ = new_color; else next_color_NewDXCCBand_ = new_color;

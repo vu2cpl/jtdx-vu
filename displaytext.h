@@ -128,6 +128,7 @@ private:
     QString color_NewITUZBand_;
     QString color_NewDXCC_;
     QString color_NewDXCCBand_;
+    QString color_NewDXCCMode_;  // JTDX-VU
     QString color_NewGrid_;
     QString color_NewGridBand_;
     QString color_NewPx_;

@@ -83,6 +83,7 @@ void DisplayText::setConfiguration(Configuration const * config)
   color_NewITUZBand_ = config->color_NewITUZBand().name();
   color_NewDXCC_ = config->color_NewDXCC().name();
   color_NewDXCCBand_ = config->color_NewDXCCBand().name();
+  color_NewDXCCMode_ = config->color_NewDXCCMode().name();
   color_NewGrid_ = config->color_NewGrid().name();
   color_NewGridBand_ = config->color_NewGridBand().name();
   color_NewPx_ = config->color_NewPx().name();
@@ -445,6 +446,8 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
         bool cqzB4BandMode = true;
         bool ituzB4BandMode = true;
         bool countryB4BandMode = true;
+        bool dxccBandB4 = true;   // JTDX-VU: worked on this band
+        bool dxccModeB4 = true;   // JTDX-VU: worked in this mode, any band
         bool pxB4BandMode = true;
         bool callB4BandMode = true;
         bool gridB4 = true;
@@ -496,16 +499,17 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
                 }
             }
             if (displayNewDXCC_) {
-                if (displayNewDXCCBand_ || displayNewDXCCBandMode_) {
-                    if (displayNewDXCCBand_ && displayNewDXCCBandMode_) {
-                        logBook.matchDXCC(/*in*/checkCall,/*out*/countryName,countryB4,countryB4BandMode,/*in*/dialFreq,checkMode);
-                    } else if (displayNewDXCCBand_){
-                        logBook.matchDXCC(/*in*/checkCall,/*out*/countryName,countryB4,countryB4BandMode,/*in*/dialFreq);
-                    } else {
-                        logBook.matchDXCC(/*in*/checkCall,/*out*/countryName,countryB4,countryB4BandMode,/*in*/0,checkMode);
-                    }
-                } else {
-                    logBook.matchDXCC(/*in*/ checkCall, /*out*/ countryName, countryB4 ,countryB4BandMode);
+                // JTDX-VU, as MSHV: band and mode are independent checks -
+                // "per band" = DXCC not worked on this band, "per mode" =
+                // not worked in this mode on any band (no band+mode slot)
+                logBook.matchDXCC(/*in*/ checkCall, /*out*/ countryName, countryB4 ,countryB4BandMode);
+                if (countryB4 && displayNewDXCCBand_) {
+                    bool w = true;
+                    logBook.matchDXCC(/*in*/checkCall,/*out*/countryName,w,dxccBandB4,/*in*/dialFreq);
+                }
+                if (countryB4 && displayNewDXCCBandMode_) {
+                    bool w = true;
+                    logBook.matchDXCC(/*in*/checkCall,/*out*/countryName,w,dxccModeB4,/*in*/0,checkMode);
                 }
             }
             if (displayNewGrid_) {
@@ -656,10 +660,11 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
                         else priority = 22;
                         new_marker = true;
                     }
-                } else if ((displayNewDXCCBand_ || displayNewDXCCBandMode_) && !countryB4BandMode) {
+                } else if ((displayNewDXCCBand_ && !dxccBandB4) || (displayNewDXCCBandMode_ && !dxccModeB4)) {
+                    auto const& dxccColor = (displayNewDXCCBand_ && !dxccBandB4) ? color_NewDXCCBand_ : color_NewDXCCMode_;
                     if ((displayPotential_ && std_type == 3) || std_type != 3) {
                         forceBold = true;
-                        bgColor = color_NewDXCCBand_;
+                        bgColor = dxccColor;
                         if (!lotw.isEmpty ()) priority = 21;
                         else priority = 20;
                         strikethrough = false;
@@ -670,7 +675,7 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
                         }
                     }
                     else if (otherMessagesMarker_) {
-                        servis = servis.left(1) + color_NewDXCCBand_;
+                        servis = servis.left(1) + dxccColor;
                         if (!lotw.isEmpty ()) priority = 21;
                         else priority = 20;
                         new_marker = true;

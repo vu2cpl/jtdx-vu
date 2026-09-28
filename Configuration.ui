@@ -4352,7 +4352,7 @@ Right click for insert and delete options.</string>
                 </size>
                </property>
                <property name="text">
-                <string>New DXCC on Band/Mode</string>
+                <string>New DXCC on Band</string>
                </property>
               </widget>
              </item>

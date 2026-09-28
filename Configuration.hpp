@@ -263,6 +263,7 @@ public:
   QColor color_NewITUZBand () const;
   QColor color_NewDXCC () const;
   QColor color_NewDXCCBand () const;
+  QColor color_NewDXCCMode () const;  // JTDX-VU: DXCC not worked in this mode on any band
   QColor color_NewCall () const;
   QColor color_NewCallBand () const;
   QColor color_NewPx () const;

@@ -44,6 +44,27 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — DXCC colours: New DXCC / on Band / on Mode (MSHV axes)
+
+- Settings → Notifications now has a third DXCC colour, **"New DXCC on
+  Mode"**. The existing button was relabelled "New DXCC on Band".
+  - The new button is a plain grey button with K1ABC previews on the CQ
+    and My Call colours, like the other rows. It is created in code
+    (`Configuration::impl` constructor): the nested colour grid is
+    found and the rows below "New DXCC on Band" are shifted down one,
+    so `Configuration.ui` wasn't restructured.
+  - Settings keys: `colorNewDXCCMode` (#ffc070) and
+    `colorNewDXCCMode_dark` (#a06010). Getter:
+    `Configuration::color_NewDXCCMode()`.
+- `displaytext.cpp`: DXCC status uses MSHV's independent axes instead of
+  JTDX's band+mode slot:
+  - "per band" → not worked on this band (`dxccBandB4`) → band colour.
+  - "per mode" → not worked in this mode on any band (`dxccModeB4`) →
+    mode colour.
+  - An ATNO keeps the New DXCC colour. Priorities are unchanged
+    (band/mode 20–21).
+- Checked visually in a throwaway instance.
+
 ### 2026-09-28 — Show dropdown: All / New DXCC / New band / New mode
 
 - Manoj wants the dropdown exactly as in MSHV, with no cumulative levels
