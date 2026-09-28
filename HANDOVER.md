@@ -42,6 +42,28 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — auto-log and next caller; confirmed-only no longer affects dupes
+
+- **Manoj's goal** is MSHV-like: auto-log, then move straight to the
+  next caller. JTDX does it with Reporting → auto-log (was already on;
+  prompt off; clear DX on) plus AutoSeq (level 3).
+  - The blocker was the **1 QSO** button (`SingleShotQSO`), which halts
+    Tx after every QSO. He turned it off, and **AnsB4** too.
+- **"Not picking the next caller" after AnsB4 off:** JTDX's autoselect
+  (`mainwindow.cpp`, the `time |= 128` line) answers only "new"
+  stations under the enabled New-DXCC/grid/prefix/call notifications
+  when AnsB4 is off. He had **new DXCC + per band on and new call off**,
+  so against the whole Club Log log almost every caller was
+  "worked" and skipped.
+  - Advice: also enable **new calls + per band**, so un-worked
+    stations are answered (skip dupes) with new DXCC/band still first.
+- **Bug fixed** (`logbook/adif.cpp` `_loadFile`): with Club Log
+  "confirmed only", unconfirmed QSOs were skipped completely, so a
+  worked-but-unconfirmed station counted as a *new call* and would be
+  answered again as a dupe. Unconfirmed QSOs now still count for the
+  callsign (dupe) status; only the DXCC/prefix/zone/grid status and the
+  QSO count use confirmed QSOs.
+
 ### 2026-09-28 — logged QSOs not reaching RUMlog: stale DXCA address
 
 - **Cause:** JTDX-VU's Reporting → UDP Server was `192.168.1.169:2334`,

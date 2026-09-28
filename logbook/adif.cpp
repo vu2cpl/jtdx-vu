@@ -126,12 +126,16 @@ void ADIF::_loadFile(const QString filename, const QString mycall, const QString
             if ((mycall.isEmpty () || _extractField(record,"STATION_CALLSIGN:") == mycall) && 
                 (mygrid.isEmpty () || mygrid.left(4) == _extractField(record,"MY_GRIDSQUARE:").left(4).toUpper()) && 
                 (mydate.isEmpty () || mytime.toLongLong() >= mydate.toLongLong())) {
+                // With confirmedOnly an unconfirmed QSO still counts for the
+                // callsign (worked-before / dupe) status - that station WAS
+                // worked - but not for DXCC / prefix / zone / grid status.
+                bool counts_for_status = true;
                 if (confirmedOnly) {
                     auto confirmed = [&] (QString const& field) {
                         auto v = _extractField(record, field).toUpper ();
                         return v == "Y" || v == "V";
                     };
-                    if (!confirmed ("QSL_RCVD:") && !confirmed ("LOTW_QSL_RCVD:") && !confirmed ("EQSL_QSL_RCVD:")) continue;
+                    counts_for_status = confirmed ("QSL_RCVD:") || confirmed ("LOTW_QSL_RCVD:") || confirmed ("EQSL_QSL_RCVD:");
                 }
                 QSO q;
                 q.call = _extractField(record,"CALL:");
@@ -149,12 +153,14 @@ void ADIF::_loadFile(const QString filename, const QString mycall, const QString
                     _callsbandWorked.insert(q.call+q.band,_callsbandWorked.value(q.call+q.band,0)+1);
                     _callsmodeWorked.insert(q.call+q.mode,_callsmodeWorked.value(q.call+q.mode,0)+1);
                     _callsbandmodeWorked.insert(q.call+q.band+q.mode,_callsbandmodeWorked.value(q.call+q.band+q.mode,0)+1);
+                    if (counts_for_status) {
                     _pxsWorked.insert(Radio::striped_prefix(Radio::effective_prefix(q.call)), _pxsWorked.value(Radio::striped_prefix(Radio::effective_prefix(q.call)),0)+1);
                     _pxsbandWorked.insert(Radio::striped_prefix(Radio::effective_prefix(q.call))+q.band, _pxsbandWorked.value(Radio::striped_prefix(Radio::effective_prefix(q.call))+q.band,0)+1);
                     _pxsmodeWorked.insert(Radio::striped_prefix(Radio::effective_prefix(q.call))+q.mode, _pxsmodeWorked.value(Radio::striped_prefix(Radio::effective_prefix(q.call))+q.mode,0)+1);
                     _pxsbandmodeWorked.insert(Radio::striped_prefix(Radio::effective_prefix(q.call))+q.band+q.mode, _pxsbandmodeWorked.value(Radio::striped_prefix(Radio::effective_prefix(q.call))+q.band+q.mode,0)+1);
                     _counts.insert(q.mode,_counts.value(q.mode,0)+1);
-                    QString country = _countries.find(q.call);
+                    }
+                    QString country = counts_for_status ? _countries.find(q.call) : QString {};
                     if (!country.isEmpty ()) { //  country was found
                         QStringList items = country.split(',');
                         _countriesWorked.insert(items[0]+','+items[1]+','+items[2], _countriesWorked.value(items[0]+','+items[1]+','+items[2],0)+1);
@@ -170,7 +176,7 @@ void ADIF::_loadFile(const QString filename, const QString mycall, const QString
                         _ituzmodeWorked.insert(items[4]+q.mode,_ituzmodeWorked.value(items[4]+q.mode,0)+1);
                         _ituzbandmodeWorked.insert(items[4]+q.band+q.mode,_ituzbandmodeWorked.value(items[4]+q.band+q.mode,0)+1);
                     }
-                    if (q.gridsquare.length() > 3) { // grid exists
+                    if (counts_for_status && q.gridsquare.length() > 3) { // grid exists
                         _gridsWorked.insert(q.gridsquare.left(4).toUpper(),_gridsWorked.value(q.gridsquare.left(4).toUpper(),0)+1);
                         _gridsbandWorked.insert(q.gridsquare.left(4).toUpper()+q.band,_gridsbandWorked.value(q.gridsquare.left(4).toUpper()+q.band,0)+1);
                         _gridsmodeWorked.insert(q.gridsquare.left(4).toUpper()+q.mode,_gridsmodeWorked.value(q.gridsquare.left(4).toUpper()+q.mode,0)+1);
