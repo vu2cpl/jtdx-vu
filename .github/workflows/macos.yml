@@ -6,6 +6,12 @@ name: macos
 
 on:
   workflow_dispatch:
+    inputs:
+      arch:
+        description: 'Which build to run'
+        type: choice
+        options: [both, arm64, x86_64]
+        default: both
   push:
     tags: ['v*']
 
@@ -17,12 +23,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        arch: [arm64, x86_64]
         include:
-          - runner: macos-14
-            arch: arm64
-          - runner: macos-15-intel
-            arch: x86_64
+          - arch: arm64
+            runner: macos-14
+          - arch: x86_64
+            runner: macos-15-intel
+        # workflow_dispatch "arch" input drops the other build
+        exclude:
+          - arch: ${{ (github.event_name == 'workflow_dispatch' && inputs.arch == 'arm64') && 'x86_64' || 'none' }}
+          - arch: ${{ (github.event_name == 'workflow_dispatch' && inputs.arch == 'x86_64') && 'arm64' || 'none' }}
     runs-on: ${{ matrix.runner }}
+    # Homebrew no longer has Intel bottles for the newest versions of
+    # Qt's dependencies, so the Intel job compiles them (openssl, qt@5 ...)
+    # from source: allow GitHub's full 6 hours
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
