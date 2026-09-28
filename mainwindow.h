@@ -689,7 +689,8 @@ private:
   int m_jttyNsym {0};                   // symbols of the wave now in foxcom_.wave
   qint64 m_jttyTxRequestedUntil {0};    // ms epoch: Send requested, waiting for PTT + modulator
   qint64 m_jttyTxEndMs {0};             // ms epoch: latest end of the playing wave (0 = not started)
-  int m_jttyTxLineSeq {0};              // negative ids for Tx lines in the Rx Frequency pane
+  int m_jttyTxLineSeq {0};
+  int m_jttyStackIndex {-1};            // page of controls_stack_widget holding the JTTY panel              // negative ids for Tx lines in the Rx Frequency pane
 
   QTimer m_guiTimer;
   QTimer ptt1Timer;                 //StartTx delay

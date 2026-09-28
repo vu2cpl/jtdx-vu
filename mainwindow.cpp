@@ -1089,9 +1089,10 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     vbox->setContentsMargins (2, 1, 2, 0);
     vbox->setSpacing (1);
     vbox->addWidget (m_switcher);
+    // the JTTY controls replace the FT8 Tx-message tabs on the right while
+    // JTTY is selected, as in WSJT-X 3.2
     m_jttyPanel = new JttyPanel {m_settings};
-    m_jttyPanel->setVisible (false);
-    vbox->addWidget (m_jttyPanel);
+    m_jttyStackIndex = ui->controls_stack_widget->addWidget (m_jttyPanel);
     connect (m_jttyPanel, &JttyPanel::displayOptionsChanged, this, &MainWindow::jttyRefreshDisplay);
     connect (m_jttyPanel, &JttyPanel::transmitRequested, this, &MainWindow::jtty_tx);
     connect (m_jttyPanel, &JttyPanel::macroRequested, this, &MainWindow::jttyMacro);
@@ -5087,6 +5088,30 @@ void MainWindow::doubleClickOnCall(bool alt, bool ctrl)
     cursor=ui->decodedTextBrowser2->textCursor();
     t= ui->decodedTextBrowser2->toPlainText();
   }
+  if (m_mode == "JTTY")
+    {
+      // JTDX-VU, as WSJT-X 3.2: JTTY lines are free text, so the word under
+      // the pointer becomes the DX call when it looks like one
+      cursor.select (QTextCursor::WordUnderCursor);
+      auto word = cursor.selectedText ().trimmed ().toUpper ();
+      // QTextEdit's word breaks at '/', so take the whole slash-joined token
+      auto lineCursor = cursor;
+      lineCursor.select (QTextCursor::LineUnderCursor);
+      int const offset = cursor.selectionStart () - lineCursor.selectionStart ();
+      auto const lineText = lineCursor.selectedText ();
+      int start = offset, end = offset + word.size ();
+      while (start > 0 && !lineText.at (start - 1).isSpace ()) --start;
+      while (end < lineText.size () && !lineText.at (end).isSpace ()) ++end;
+      word = lineText.mid (start, end - start).trimmed ().toUpper ();
+      static QRegularExpression const callLike {"^[A-Z0-9]{1,3}[0-9][A-Z0-9]*[A-Z](/[A-Z0-9]+)?$|^[A-Z0-9]+/[A-Z0-9]{1,3}[0-9][A-Z0-9]*[A-Z]$"};
+      if (!word.isEmpty () && callLike.match (word).hasMatch () && word.size () >= 3)
+        {
+          ui->dxCallEntry->setText (word);
+          ui->dxGridEntry->clear ();
+        }
+      else statusBar ()->showMessage (tr ("JTTY: \"%1\" doesn't look like a callsign").arg (word), 4000);
+      return;
+    }
   cursor.select(QTextCursor::LineUnderCursor);
   int position {cursor.position()};
 
@@ -6434,7 +6459,11 @@ void MainWindow::commonActions ()
   if (m_tci) Q_EMIT m_config.transceiver_blocksize(m_FFTSize);
   else Q_EMIT FFTSize (m_FFTSize);
   m_toneSpacing=0.0;
-  if (m_jttyPanel) m_jttyPanel->setVisible (m_mode == "JTTY");   // JTDX-VU
+  if (m_jttyPanel)   // JTDX-VU: JTTY page in place of the Tx-message tabs; WSPR_config owns the other pages
+    {
+      if (m_mode == "JTTY") ui->controls_stack_widget->setCurrentIndex (m_jttyStackIndex);
+      else if (ui->controls_stack_widget->currentIndex () == m_jttyStackIndex) ui->controls_stack_widget->setCurrentIndex (0);
+    }
   m_wideGraph->setMode(m_mode);
   m_wideGraph->setModeTx(m_modeTx);
   m_wideGraph->show();

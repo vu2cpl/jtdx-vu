@@ -29,10 +29,10 @@ Last updated: 2026-09-28
     a silent station. Its Intel build was cancelled.
   - v0.1.0 remains published.
 - **Branch `jtty`** (pushed): JTTY mode port from WSJT-X 3.2.0-rc1.
-  Phase 1 (Fortran lib), phase 2 (RX in the GUI) and phase 3 (TX:
-  Send/F1-F8 in the panel, verified only by offline loopback so far)
-  done. **Not yet tested on the air** — sound-card and TCI paths both
-  need a real key-up. FT2 is queued after JTTY. Not in any release.
+  Phase 1 (Fortran lib), phase 2 (RX in the GUI) and phase 3 (TX) done;
+  **first JTTY QSO made on air 2026-09-28** via TCI. The sound-card TX
+  path is still only loopback-verified. Controls page now mirrors
+  WSJT-X 3.2.0-rc1's. FT2 is queued after JTTY. Not in any release.
 - **Website:** vu2cpl.com has a JTDX-VU card (Utilities & Tools, after
   MSHV-Mac) and a project page at `/projects/jtdx-vu/` with screenshots
   and a v0.2.1 downloads table linking all four builds.
@@ -48,6 +48,44 @@ Last updated: 2026-09-28
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-09-28 — JTTY: first QSO on air; rc1-style controls page (branch `jtty`)
+
+Manoj keyed up on 20 m through the TCI station, ran a CQ and worked one
+station (ALL.TXT `202609_ALL.TXT`, 17:36–17:39 UTC) — the phase-3 TX
+path works on the air. Three things came out of that session:
+
+- **F-keys did nothing:** JTDX's menu actions own F1/F2/F3/F5/F6/F7 as
+  shortcuts, so the key never reached `keyPressEvent`. `JttyPanel` now
+  installs a `qApp` event filter: while the panel is visible and its
+  window is active, F1–F8 (no modifier) and Esc are accepted at
+  `ShortcutOverride` and handled at `KeyPress` (macro / Halt). Other
+  windows (Settings, Log QSO) are untouched by the `activeWindow()` gate.
+- **The FT8 Tx-message tabs on the right were useless in JTTY.** The
+  JTTY panel is now an extra page of `controls_stack_widget`
+  (`m_jttyStackIndex`, added in code), current while JTTY is selected
+  and swapped back to page 0 on leaving; `WSPR_config` still owns the
+  WSPR page. The panel was rebuilt to WSJT-X 3.2.0-rc1's JTTY page:
+  F Tol / Lower case / Include time; F1–F4, their **editable** macro
+  fields, F5–F8, theirs (`[JTTY]/Msg1..8`, defaults = rc1 native
+  templates); Send message + entry + Halt; **Call next** (`%Q`) and
+  **Serial Number** (`%N`, `[JTTY]/SerialNumber`). `%E` expands to
+  `599 %N`; `%Q` falls back to the DX call. The old Exch field is gone.
+  As in rc1, sending a message that starts with `TU ` bumps the serial
+  and opens the Log QSO dialog (when a DX call is set); Lower case also
+  lower-cases what is sent.
+- **Double-click on a decode** in JTTY takes the slash-joined word
+  under the pointer and, if it looks like a callsign, puts it in DX Call
+  (rc1 puts the raw word there; we add a callsign-shape check so a
+  double-click on "599" doesn't clobber the entry). `doubleClickOnCall`
+  returns before the FT8 message parser.
+- `m_currentMessage` is set on Send so the `Transmitting …  JTTY:` line
+  in ALL.TXT carries the text (it was blank tonight).
+
+Layout checked in a throwaway `-r jttylayout` instance (window capture
+via `screencapture -l <id>`, ids from a 10-line Swift
+`CGWindowListCopyWindowInfo` script — `osascript` lost assistive access
+this session). Not installed over the running on-air instance.
 
 ### 2026-09-28 — JTTY phase 3: transmit (branch `jtty`)
 

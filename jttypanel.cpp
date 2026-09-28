@@ -1,34 +1,36 @@
-// JTDX-VU: JTTY control rows.  See jttypanel.h.
+// JTDX-VU: JTTY controls page.  See jttypanel.h.
 
 #include "jttypanel.h"
 
 #include <QSettings>
-#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QComboBox>
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QSpinBox>
 #include <QLabel>
+#include <QApplication>
+#include <QKeyEvent>
 
 namespace
 {
-  // WSJT-X 3.2 native F-key templates (doc/user_guide jtty.adoc); the
-  // button labels are the same shorthand WSJT-X shows
-  struct Macro {char const * label; char const * tpl;};
+  // WSJT-X 3.2 native F-key templates (doc/user_guide jtty.adoc)
+  struct Macro {char const * tip; char const * tpl;};
   Macro const macros[8] = {
-    {"F1 CQ",       "CQ %M CQ"},
-    {"F2 Exch",     "%H %E"},
-    {"F3 TU CQ",    "%H TU CQ %M CQ"},
-    {"F4 My call",  "%M"},
-    {"F5 His call", "%H"},
-    {"F6 TU NOW",   "TU NOW %Q %E"},
-    {"F7 AGN?",     "%H AGN?"},
-    {"F8 Exch only","%E"},
+    {"CQ",                    "CQ %M CQ"},
+    {"HisCall Exchange",      "%H %E"},
+    {"TU CQ",                 "%H TU CQ %M CQ"},
+    {"MyCall",                "%M"},
+    {"HisCall",               "%H"},
+    {"Now QueuedCall Exchange","TU NOW %Q %E"},
+    {"HisCall AGN ?",         "%H AGN?"},
+    {"Exchange",              "%E"},
   };
 }
 
-QString JttyPanel::macroTemplate (int key)
+QString JttyPanel::defaultMacro (int key)
 {
   return (key >= 1 && key <= 8) ? QString::fromLatin1 (macros[key - 1].tpl) : QString {};
 }
@@ -39,16 +41,23 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   , ftol_ {new QComboBox}
   , lowerCase_ {new QCheckBox {tr ("Lower case")}}
   , includeTime_ {new QCheckBox {tr ("Include time")}}
-  , exchange_ {new QLineEdit}
   , entry_ {new QLineEdit}
-  , send_ {new QPushButton {tr ("Send")}}
+  , send_ {new QPushButton {tr ("Send message")}}
   , halt_ {new QPushButton {tr ("Halt")}}
+  , callNext_ {new QLineEdit}
+  , serial_ {new QSpinBox}
 {
   settings_->beginGroup ("JTTY");
   int const ftol = settings_->value ("Ftol", 100).toInt ();
   lowerCase_->setChecked (settings_->value ("LowerCase", false).toBool ());
   includeTime_->setChecked (settings_->value ("IncludeTime", true).toBool ());
-  exchange_->setText (settings_->value ("Exchange", "599 001").toString ());
+  for (int i = 0; i < 8; ++i)
+    {
+      macros_[i] = new QLineEdit {settings_->value (QString {"Msg%1"}.arg (i + 1), defaultMacro (i + 1)).toString ()};
+      macros_[i]->setToolTip (tr (macros[i].tip));
+    }
+  serial_->setRange (1, 9999);
+  serial_->setValue (settings_->value ("SerialNumber", 1).toInt ());
   settings_->endGroup ();
 
   // same tolerance ladder as WSJT-X's sbFtol_2
@@ -61,53 +70,59 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
                       static_cast<QWidget *> (includeTime_), static_cast<QWidget *> (send_),
                       static_cast<QWidget *> (halt_)})
     w->setFocusPolicy (Qt::NoFocus);
-  exchange_->setMaximumWidth (110);
-  exchange_->setToolTip (tr ("Contest exchange sent for %E, e.g. 599 001 or 599 MA"));
-  entry_->setPlaceholderText (tr ("Type a message and press Enter to transmit"));
+  entry_->setPlaceholderText (tr ("Press Enter to send and clear the message"));
+  entry_->setToolTip (tr ("Press Enter to send and clear the message."));
   entry_->setMaxLength (80);
-  send_->setToolTip (tr ("Transmit the message now (Enter)"));
-  halt_->setToolTip (tr ("Stop transmitting"));
+  send_->setToolTip (tr ("Send and clear the message. Press Enter in the field."));
+  halt_->setToolTip (tr ("Stop transmitting (Esc)"));
   halt_->setEnabled (false);
+  callNext_->setToolTip (tr ("Callsign to be worked next (%Q)."));
+  callNext_->setMaximumWidth (110);
+  serial_->setToolTip (tr ("Serial number of QSO for contest exchange (%N; %E sends 599 %N)."));
 
-  auto column = new QVBoxLayout {this};
-  column->setContentsMargins (0, 0, 0, 0);
-  column->setSpacing (2);
+  auto grid = new QGridLayout {this};
+  grid->setContentsMargins (2, 2, 2, 2);
+  grid->setHorizontalSpacing (4);
+  grid->setVerticalSpacing (2);
 
-  auto row1 = new QHBoxLayout;
-  row1->setSpacing (6);
-  auto title = new QLabel {tr ("JTTY")};
-  title->setStyleSheet ("font-weight: bold;");
-  row1->addWidget (title);
-  row1->addSpacing (8);
-  row1->addWidget (new QLabel {tr ("F Tol")});
-  row1->addWidget (ftol_);
-  row1->addSpacing (12);
-  row1->addWidget (lowerCase_);
-  row1->addWidget (includeTime_);
-  row1->addStretch ();
-  row1->addWidget (new QLabel {tr ("Exch")});
-  row1->addWidget (exchange_);
-  column->addLayout (row1);
+  auto options = new QHBoxLayout;
+  options->setSpacing (6);
+  options->addWidget (new QLabel {tr ("F Tol")});
+  options->addWidget (ftol_);
+  options->addSpacing (8);
+  options->addWidget (lowerCase_);
+  options->addWidget (includeTime_);
+  options->addStretch ();
+  grid->addLayout (options, 0, 0, 1, 4);
 
-  auto row2 = new QHBoxLayout;
-  row2->setSpacing (2);
   for (int key = 1; key <= 8; ++key)
     {
-      auto b = new QPushButton {tr (macros[key - 1].label)};
+      auto b = new QPushButton {QString {"F%1"}.arg (key)};
       b->setFocusPolicy (Qt::NoFocus);
-      b->setToolTip (QString::fromLatin1 (macros[key - 1].tpl));
+      b->setToolTip (tr (macros[key - 1].tip));
       b->setSizePolicy (QSizePolicy::Expanding, QSizePolicy::Fixed);
       connect (b, &QPushButton::clicked, this, [this, key] {Q_EMIT macroRequested (key);});
-      row2->addWidget (b);
+      int const row = key <= 4 ? 1 : 3;
+      int const col = (key - 1) % 4;
+      grid->addWidget (b, row, col);
+      grid->addWidget (macros_[key - 1], row + 1, col);
     }
-  column->addLayout (row2);
 
-  auto row3 = new QHBoxLayout;
-  row3->setSpacing (4);
-  row3->addWidget (entry_, 1);
-  row3->addWidget (send_);
-  row3->addWidget (halt_);
-  column->addLayout (row3);
+  auto sendRow = new QHBoxLayout;
+  sendRow->setSpacing (4);
+  sendRow->addWidget (send_);
+  sendRow->addWidget (entry_, 1);
+  sendRow->addWidget (halt_);
+  grid->addLayout (sendRow, 5, 0, 1, 4);
+
+  auto contestRow = new QHBoxLayout;
+  contestRow->setSpacing (4);
+  contestRow->addWidget (new QLabel {tr ("Call next")});
+  contestRow->addWidget (callNext_);
+  contestRow->addStretch ();
+  contestRow->addWidget (new QLabel {tr ("Serial Number")});
+  contestRow->addWidget (serial_);
+  grid->addLayout (contestRow, 6, 0, 1, 4);
 
   connect (ftol_, QOverload<int>::of (&QComboBox::currentIndexChanged), this, [this] (int) {
       settings_->beginGroup ("JTTY");
@@ -125,14 +140,48 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   };
   option (lowerCase_, "LowerCase");
   option (includeTime_, "IncludeTime");
-  connect (exchange_, &QLineEdit::editingFinished, this, [this] {
+  for (int i = 0; i < 8; ++i)
+    {
+      connect (macros_[i], &QLineEdit::editingFinished, this, [this, i] {
+          settings_->beginGroup ("JTTY");
+          settings_->setValue (QString {"Msg%1"}.arg (i + 1), macros_[i]->text ().trimmed ());
+          settings_->endGroup ();
+        });
+    }
+  connect (serial_, QOverload<int>::of (&QSpinBox::valueChanged), this, [this] (int n) {
       settings_->beginGroup ("JTTY");
-      settings_->setValue ("Exchange", exchange_->text ().trimmed ());
+      settings_->setValue ("SerialNumber", n);
       settings_->endGroup ();
     });
   connect (entry_, &QLineEdit::returnPressed, this, &JttyPanel::submitEntry);
   connect (send_, &QPushButton::clicked, this, &JttyPanel::submitEntry);
   connect (halt_, &QPushButton::clicked, this, [this] {Q_EMIT haltRequested ();});
+
+  // F1-F8 and Esc ahead of the menu shortcuts (F1 help, F2 settings, ...)
+  qApp->installEventFilter (this);
+}
+
+bool JttyPanel::eventFilter (QObject * watched, QEvent * event)
+{
+  if ((event->type () == QEvent::ShortcutOverride || event->type () == QEvent::KeyPress)
+      && isVisible () && QApplication::activeWindow () == window ())
+    {
+      auto ke = static_cast<QKeyEvent *> (event);
+      int const key = ke->key ();
+      bool const fkey = key >= Qt::Key_F1 && key <= Qt::Key_F8 && ke->modifiers () == Qt::NoModifier;
+      if (fkey || key == Qt::Key_Escape)
+        {
+          if (event->type () == QEvent::ShortcutOverride)
+            {
+              event->accept ();       // deliver as a plain key press, not a shortcut
+              return true;
+            }
+          if (fkey) Q_EMIT macroRequested (key - Qt::Key_F1 + 1);
+          else Q_EMIT haltRequested ();
+          return true;
+        }
+    }
+  return QWidget::eventFilter (watched, event);
 }
 
 void JttyPanel::submitEntry ()
@@ -163,7 +212,22 @@ bool JttyPanel::includeTime () const
   return includeTime_->isChecked ();
 }
 
-QString JttyPanel::exchange () const
+QString JttyPanel::macro (int key) const
 {
-  return exchange_->text ().trimmed ();
+  return (key >= 1 && key <= 8) ? macros_[key - 1]->text ().trimmed () : QString {};
+}
+
+QString JttyPanel::callNext () const
+{
+  return callNext_->text ().trimmed ().toUpper ();
+}
+
+int JttyPanel::serialNumber () const
+{
+  return serial_->value ();
+}
+
+void JttyPanel::setSerialNumber (int n)
+{
+  serial_->setValue (n);
 }

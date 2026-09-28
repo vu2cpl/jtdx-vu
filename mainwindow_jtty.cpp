@@ -390,29 +390,36 @@ bool MainWindow::jttyUpdateTxState ()
   return wanted;
 }
 
+// F1..F8: WSJT-X 3.2's macros - %M my call, %H his call (DX Call entry),
+// %Q the Call next field (his call when empty), %N the serial number,
+// %E the exchange "599 %N"
 void MainWindow::jttyMacro (int key)
 {
-  auto tpl = JttyPanel::macroTemplate (key);
-  if (tpl.isEmpty () || !m_jttyPanel) return;
+  if (!m_jttyPanel) return;
+  auto tpl = m_jttyPanel->macro (key);
+  if (tpl.isEmpty ()) return;
   auto const my = m_config.my_callsign ().trimmed ().toUpper ();
   auto const his = ui->dxCallEntry->text ().trimmed ().toUpper ();
-  auto const exch = m_jttyPanel->exchange ().trimmed ().toUpper ();
+  auto queued = m_jttyPanel->callNext ();
+  if (queued.isEmpty ()) queued = his;
+  auto const serial = QString {"%1"}.arg (m_jttyPanel->serialNumber (), 3, 10, QLatin1Char {'0'});
   if (tpl.contains ("%M") && my.isEmpty ())
     {
       statusBar ()->showMessage (tr ("JTTY: set your callsign in Settings first"), 5000);
       return;
     }
-  if ((tpl.contains ("%H") || tpl.contains ("%Q")) && his.isEmpty ())
+  if (tpl.contains ("%H") && his.isEmpty ())
     {
       statusBar ()->showMessage (tr ("JTTY: enter the DX call first (double-click a decode)"), 5000);
       return;
     }
-  if (tpl.contains ("%E") && exch.isEmpty ())
+  if (tpl.contains ("%Q") && queued.isEmpty ())
     {
-      statusBar ()->showMessage (tr ("JTTY: fill in the Exch field first"), 5000);
+      statusBar ()->showMessage (tr ("JTTY: fill in Call next (or the DX call) first"), 5000);
       return;
     }
-  tpl.replace ("%M", my).replace ("%H", his).replace ("%Q", his).replace ("%E", exch);
+  tpl.replace ("%E", "599 %N");
+  tpl.replace ("%M", my).replace ("%H", his).replace ("%Q", queued).replace ("%N", serial);
   jtty_tx (tpl);
 }
 
@@ -426,6 +433,7 @@ void MainWindow::jtty_tx (QString message)
     }
   message = message.trimmed ().left (jttyMessageSize);
   if (message.isEmpty ()) return;
+  if (m_jttyPanel->lowerCase ()) message = message.toLower ();   // as WSJT-X: the option covers Tx too
 
   // genjtty takes a fixed 80-character frame and normalises case and
   // unsupported characters itself (lib/jtty/jtty_mod.f90)
@@ -456,7 +464,15 @@ void MainWindow::jtty_tx (QString message)
   m_jttyTxRequestedUntil = m_jtdxtime->currentMSecsSinceEpoch2 () + 3000;   // guiUpdate keys up from here
 
   auto const shown = QString::fromLatin1 (frame).trimmed ().toUpper ();
+  m_currentMessage = shown;           // the "Transmitting ..." ALL.TXT line shows it
   writeToALLTXT ("JTTY Tx " + formatJttyDecodeLine (f0, shown));
+  // WSJT-X: a "TU ..." message closes the contest QSO - bump the serial and
+  // offer the log dialog
+  if (shown.startsWith ("TU ") && !ui->dxCallEntry->text ().trimmed ().isEmpty ())
+    {
+      m_jttyPanel->setSerialNumber (m_jttyPanel->serialNumber () + 1);
+      QTimer::singleShot (0, this, SLOT (on_logQSOButton_clicked ()));
+    }
   tx_status_label->setText (tr ("Tx: ") + shown.left (30));
   // a Tx line in the Rx Frequency pane, in order with the decodes; negative
   // ids can never collide with the decoder's
