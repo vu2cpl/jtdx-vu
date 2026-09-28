@@ -1,0 +1,70 @@
+# JTDX-VU macOS builds: Apple Silicon (macos-14 runner, so it runs on
+# macOS 14+) and Intel (macos-15-intel). Each is a self-contained,
+# ad-hoc signed JTDX-VU.app from macos-bundle.sh, zipped with ditto.
+# Runs on demand or on a v* tag; on a tag the zips go to that release.
+name: macos
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependencies
+        run: |
+          brew update --quiet || true
+          brew install qt@5 hamlib fftw gcc boost libusb webp
+
+      - name: Configure
+        run: |
+          B=$(brew --prefix)
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DCMAKE_PREFIX_PATH="$B/opt/qt@5;$B" \
+            -DCMAKE_Fortran_COMPILER="$B/bin/gfortran" \
+            -DWSJT_GENERATE_DOCS=OFF -DWSJT_SKIP_MANPAGES=ON \
+            -DCMAKE_INSTALL_PREFIX="$PWD/build/dist"
+
+      - name: Build
+        run: cmake --build build -j 4
+
+      - name: Bundle
+        run: |
+          ./macos-bundle.sh
+          VER=$(sed -n 's/^set (JTDXVU_VERSION \(.*\))/\1/p' Versions.cmake)
+          echo "VER=$VER" >> $GITHUB_ENV
+          # self-check: the app must load no Homebrew library
+          test "$(file build/bundle/JTDX-VU.app/Contents/MacOS/jtdx | grep -c '${{ matrix.arch }}')" = 1
+          Z="JTDX-VU-$VER-macos-${{ matrix.arch }}.zip"
+          ditto -c -k --norsrc --keepParent build/bundle/JTDX-VU.app "$Z"
+          shasum -a 256 "$Z" > "$Z.sha256"
+          echo "Z=$Z" >> $GITHUB_ENV
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JTDX-VU-macos-${{ matrix.arch }}
+          path: JTDX-VU-*-macos-*.zip*
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "JTDX-VU $GITHUB_REF_NAME" --notes "macOS builds attached by CI."
+          gh release upload "$GITHUB_REF_NAME" "$Z" "$Z.sha256" --clobber
