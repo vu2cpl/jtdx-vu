@@ -503,7 +503,10 @@ void TCITransceiver::do_stop ()
   if (tci_Ready && inConnected && _power_) {
     requested_other_frequency_ = "";
     if (started_split_ != split_) {requested_split_ = started_split_; rig_split();}
-    if (started_mode_ != mode_) sendTextMessage(mode_to_command(started_mode_));
+    // JTDX-VU: don't hand the radio back in the mode it was in when JTDX
+    // started (often LSB) - leave it in the digital mode JTDX set (DIGU),
+    // so it is still right for the next start and for other digital apps
+    // if (started_mode_ != mode_) sendTextMessage(mode_to_command(started_mode_));
     if (!started_rx2_ && rx2_) {
       rx2_enable (false);
     }

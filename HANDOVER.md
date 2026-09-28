@@ -44,6 +44,15 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — TCI: don't restore LSB on exit
+
+- Rig is **TCI Client RX1** at 127.0.0.1:7374 with DataMode = data, so
+  JTDX sets DIGU with the frequency on start. `TCITransceiver::do_stop`
+  sent the mode captured at connect (`started_mode_`, often LSB) back to
+  the radio on exit, so the slice was LSB after every JTDX exit.
+- That restore line is commented out; the split restore is kept.
+  Manoj wants the radio left in DIGU.
+
 ### 2026-09-28 — "mode" level is MSHV's new mode (any band)
 
 - Manoj wants the levels exactly as in MSHV: **new DXCC** = never worked;
