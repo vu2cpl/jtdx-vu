@@ -26,6 +26,16 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — app icon with "VU"
+
+- `icons/Darwin/jtdx.iconset/*` (all 10 sizes) is JTDX's compass star
+  with a large green (0,150,60) "VU", Arial Bold with a white outline,
+  in the bottom-right corner. Manoj chose it from orange/red/green and
+  badge/letters previews. It was drawn at 1024 px with PIL, scaled
+  down, then built into `jtdx.icns` by the existing CMake `iconutil`
+  step.
+- The original icon is in git history (upstream `2a0e2bea`).
+
 ### 2026-09-28 — band/mode buttons and a "show only new" filter
 
 - **`bandmodeswitcher.{h,cpp}`** is modelled on MSHV's
