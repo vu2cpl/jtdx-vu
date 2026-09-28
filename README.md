@@ -45,7 +45,7 @@ private build.
   - The log is fetched at start-up when the cached copy is more than
     24 h old, or on demand with "Refresh now".
 - **Band and mode buttons** (after the MSHV switcher by LZ2HV). Two
-  rows above the decode panes: one click changes mode, or moves to a
+  a single compact row above the decode panes (modes | bands | Show filter): one click changes mode, or moves to a
   band's working frequency for the current mode. The current band and
   mode are shown green. Choose which buttons appear in View > Band &
   Mode Buttons....

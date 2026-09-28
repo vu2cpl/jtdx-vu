@@ -14,6 +14,7 @@
 #include <QCoreApplication>
 #include <QComboBox>
 #include <QLabel>
+#include <QFrame>
 
 QStringList const& BandModeSwitcher::all_modes ()
 {
@@ -32,8 +33,7 @@ BandModeSwitcher::BandModeSwitcher (QSettings * settings, bool dark, QWidget * p
   : QWidget {parent}
   , settings_ {settings}
   , dark_ {dark}
-  , band_row_ {new QWidget}
-  , mode_row_ {new QWidget}
+  , row_ {new QHBoxLayout {this}}
   , new_only_combo_ {new QComboBox}
 {
   settings_->beginGroup ("Switcher");
@@ -59,60 +59,54 @@ BandModeSwitcher::BandModeSwitcher (QSettings * settings, bool dark, QWidget * p
       Q_EMIT new_only_changed (level);
     });
 
-  auto layout = new QVBoxLayout {this};
-  layout->setContentsMargins (0, 0, 0, 0);
-  layout->setSpacing (2);
-  layout->addWidget (mode_row_);
-  layout->addWidget (band_row_);
-  for (auto row : {band_row_, mode_row_})
-    {
-      auto h = new QHBoxLayout {row};
-      h->setContentsMargins (0, 0, 0, 0);
-      h->setSpacing (2);
-    }
+  row_->setContentsMargins (0, 0, 0, 0);
+  row_->setSpacing (2);
   rebuild ();
 }
 
 void BandModeSwitcher::rebuild ()
 {
-  for (auto row : {band_row_, mode_row_})
+  while (auto item = row_->takeAt (0))
     {
-      auto h = row->layout ();
-      while (auto item = h->takeAt (0))
-        {
-          if (item->widget () != new_only_combo_) delete item->widget ();
-          delete item;
-        }
+      if (item->widget () != new_only_combo_) delete item->widget ();
+      delete item;
     }
   band_buttons_.clear ();
   mode_buttons_.clear ();
 
-  auto add = [] (QWidget * row, QString const& text) {
+  // one compact row: [modes] | [bands] | Show: [filter]
+  auto add = [this] (QString const& text) {
     auto b = new QPushButton {text};
     b->setFocusPolicy (Qt::NoFocus);   // never pull keyboard focus off the message fields
-    b->setMinimumWidth (b->fontMetrics ().horizontalAdvance (text) + 16);
-    b->setMinimumHeight (b->fontMetrics ().height () + 12);
+    b->setMinimumWidth (b->fontMetrics ().horizontalAdvance (text) + 12);
     b->setSizePolicy (QSizePolicy::Expanding, QSizePolicy::Fixed);  // share the row's full width
-    static_cast<QHBoxLayout *> (row->layout ())->addWidget (b);
+    row_->addWidget (b);
     return b;
   };
+  auto separator = [this] {
+    auto line = new QFrame;
+    line->setFrameShape (QFrame::VLine);
+    line->setFrameShadow (QFrame::Sunken);
+    row_->addSpacing (4);
+    row_->addWidget (line);
+    row_->addSpacing (4);
+  };
   // keep the canonical order whatever order the settings list has
-  for (auto const& m : all_modes ())
-    if (modes_.contains (m))
-      connect (mode_buttons_[m] = add (mode_row_, m), &QPushButton::clicked, this, [this, m] {Q_EMIT mode_clicked (m);});
-  for (auto const& b : all_bands ())
-    if (bands_.contains (b))
-      connect (band_buttons_[b] = add (band_row_, b), &QPushButton::clicked, this, [this, b] {Q_EMIT band_clicked (b);});
-  auto mode_layout = static_cast<QHBoxLayout *> (mode_row_->layout ());
-  if (mode_buttons_.isEmpty () || !show_modes_) mode_layout->addStretch ();
-  mode_layout->addSpacing (8);
-  mode_layout->addWidget (new QLabel {tr ("Show:")});
-  new_only_combo_->setMinimumHeight (new_only_combo_->fontMetrics ().height () + 12);
-  mode_layout->addWidget (new_only_combo_);
-
-  // the mode row also carries the "show only new" filter, so it always shows
-  for (auto b : mode_buttons_) b->setVisible (show_modes_);
-  band_row_->setVisible (show_bands_ && !band_buttons_.isEmpty ());
+  if (show_modes_)
+    for (auto const& m : all_modes ())
+      if (modes_.contains (m))
+        connect (mode_buttons_[m] = add (m), &QPushButton::clicked, this, [this, m] {Q_EMIT mode_clicked (m);});
+  if (show_bands_)
+    {
+      if (!mode_buttons_.isEmpty ()) separator ();
+      for (auto const& b : all_bands ())
+        if (bands_.contains (b))
+          connect (band_buttons_[b] = add (b), &QPushButton::clicked, this, [this, b] {Q_EMIT band_clicked (b);});
+    }
+  if (mode_buttons_.isEmpty () && band_buttons_.isEmpty ()) row_->addStretch ();
+  else separator ();
+  row_->addWidget (new QLabel {tr ("Show:")});
+  row_->addWidget (new_only_combo_);
   restyle ();
 }
 

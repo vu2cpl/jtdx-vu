@@ -1,5 +1,5 @@
-// JTDX-VU (VU2CPL): one-click band and mode buttons above the decode
-// panes, after the MSHV "Band / Mode Switcher Buttons" (by LZ2HV).
+// JTDX-VU (VU2CPL): one compact row of one-click mode and band buttons,
+// plus the "show only new" filter, above the decode panes, after the MSHV "Band / Mode Switcher Buttons" (by LZ2HV).
 // The rows, and which bands/modes they show, are chosen in
 // View > Band & Mode Buttons... and kept in the [Switcher] settings group.
 
@@ -48,8 +48,7 @@ private:
   QStringList modes_;
   QString active_band_;
   QString active_mode_;
-  QWidget * band_row_;
-  QWidget * mode_row_;
+  QHBoxLayout * row_;
   QComboBox * new_only_combo_;
   QMap<QString, QPushButton *> band_buttons_;
   QMap<QString, QPushButton *> mode_buttons_;
