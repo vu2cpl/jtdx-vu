@@ -29,7 +29,13 @@ jobs:
           Expand-Archive OmniRig.zip -DestinationPath omnirig
           $setup = Get-ChildItem omnirig -Recurse -Filter *.exe | Select-Object -First 1
           Start-Process -Wait -FilePath $setup.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART'
-          Get-ChildItem 'HKLM:\SOFTWARE\Classes\TypeLib\{4FE359C5-A58F-459D-BE95-CA559FB4F270}' -Recurse | Select-Object -First 3
+          # OmniRig is 32-bit and registers its type library under win32 only;
+          # the 64-bit dumpcpp looks under win64, so point that at the same exe
+          $tl = 'HKLM:\SOFTWARE\Classes\TypeLib\{4FE359C5-A58F-459D-BE95-CA559FB4F270}\1.0\0'
+          $exe = (Get-ItemProperty "$tl\win32").'(default)'
+          New-Item -Path "$tl\win64" -Force | Out-Null
+          Set-ItemProperty -Path "$tl\win64" -Name '(default)' -Value $exe
+          Get-ItemProperty "$tl\win64"
 
       - uses: msys2/setup-msys2@v2
         with:
