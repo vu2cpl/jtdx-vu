@@ -42,6 +42,30 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — Non-stop option (keep calling, watchdog-limited)
+
+- **Why auto-continue never happened:** in stock JTDX, with **auto-log
+  on**, the end of every QSO halts Tx (`FIN, end of QSO, Autolog`,
+  also `S73`/`SRR73` → `autoStopTx` → `haltTx`). The "QSO finished →
+  clear DX → next caller" branch in `process_Auto()` runs only when
+  logging is manual (`!m_config.autolog()`). So auto-log and
+  auto-continue were mutually exclusive, whatever 1 QSO/AnsB4 were set to.
+- **Non-stop** (`m_nonstop`; the "Non-stop" button at the end of the
+  switcher row and AutoSeq menu → "Non-stop (until Tx watchdog)";
+  saved as `JTDXVU/NonStop`):
+  - The continue branch also runs with auto-log once the QSO is logged.
+  - `nonstop_continue()` is called at FIN/S73/SRR73, in place of
+    `autoStopTx`. It clears DX and goes back to CQ (tx6), so AutoSeq
+    answers the next caller. It never applies in single-shot or Hound
+    mode, or while a manual-log QSO isn't logged yet.
+  - The give-up counters (`nAnswerCQCounter`, `nAnswerInCallCounter`)
+    are ignored, so a called station keeps being called. It still moves
+    on when that station answers someone else (`m_reply_other`).
+  - **The Tx watchdog is untouched.** It resets when a station calls or
+    the Tx message changes, so it only fires after `watchdog` minutes of
+    unanswered CQ ("WD 60m" in the status bar).
+- **Not yet verified on air.**
+
 ### 2026-09-28 — auto-log and next caller; confirmed-only no longer affects dupes
 
 - **Manoj's goal** is MSHV-like: auto-log, then move straight to the

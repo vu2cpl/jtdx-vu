@@ -55,6 +55,7 @@
 #include "eqsl.h"
 #include "clublog.h"
 #include "bandmodeswitcher.h"
+#include <QSignalBlocker>
 #include <QVBoxLayout>
 #include <QHash>
 #include "signalmeter.h"
@@ -1090,6 +1091,39 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     connect (action, &QAction::triggered, this, [this] {m_switcher->settings_dialog (this);});
   }
   connect (m_switcher, &BandModeSwitcher::band_clicked, this, &MainWindow::switch_to_band);
+  {
+    // JTDX-VU Non-stop toggle: AutoSeq menu + a button at the end of the row
+    m_nonstop = m_settings->value ("JTDXVU/NonStop", false).toBool ();
+    auto action = new QAction {tr ("Non-stop (until Tx watchdog)"), this};
+    action->setCheckable (true);
+    action->setChecked (m_nonstop);
+    action->setToolTip (tr ("Keep calling: after each logged QSO go straight back to CQ / the next caller, "
+                            "and keep calling a station until it answers. The Tx watchdog still stops Tx."));
+    ui->menuAutoSeq->addSeparator ();
+    ui->menuAutoSeq->addAction (action);
+    auto button = new QPushButton {tr ("Non-stop")};
+    button->setCheckable (true);
+    button->setChecked (m_nonstop);
+    button->setFocusPolicy (Qt::NoFocus);
+    button->setToolTip (action->toolTip ());
+    auto style = [this, button] (bool on) {
+        button->setStyleSheet (on ? (m_useDarkStyle ? "QPushButton{background-color:rgb(64,130,0);color:white;}"
+                                                    : "QPushButton{background-color:rgb(140,240,140);color:black;}")
+                                  : QString {});
+      };
+    style (m_nonstop);
+    m_switcher->add_trailing_widget (button);
+    auto set = [this, action, button, style] (bool on) {
+        m_nonstop = on;
+        m_settings->setValue ("JTDXVU/NonStop", on);
+        QSignalBlocker b1 {action}, b2 {button};
+        action->setChecked (on);
+        button->setChecked (on);
+        style (on);
+      };
+    connect (action, &QAction::toggled, this, set);
+    connect (button, &QPushButton::toggled, this, set);
+  }
   ui->decodedTextBrowser->setNewOnly (m_switcher->new_only ());  // Band Activity only
   connect (m_switcher, &BandModeSwitcher::new_only_changed, ui->decodedTextBrowser, &DisplayText::setNewOnly);
   connect (m_switcher, &BandModeSwitcher::mode_clicked, this, [this] (QString const& mode) {
@@ -3495,6 +3529,21 @@ void MainWindow::decode()                                       //decode()
 //  m_msDecoderStarted = m_jtdxtime->currentMSecsSinceEpoch2();
 }
 
+// JTDX-VU "Non-stop": at the end of a QSO keep transmitting - clear the DX
+// call and go back to CQ, so AutoSeq answers the next caller - instead of
+// halting Tx. Only once the QSO is logged, never in single-shot / Hound
+// mode, and the Tx watchdog still applies as usual.
+bool MainWindow::nonstop_continue ()
+{
+  if (!m_nonstop || !m_autoseq || m_singleshot || m_houndMode) return false;
+  if (!m_config.autolog () && m_lastloggedcall != m_hisCall) return false;  // not logged yet
+  if (!m_hisCall.isEmpty ()) clearDX (" cleared, non-stop: next QSO");
+  on_txb6_clicked ();
+  if (ui->tabWidget->currentIndex () == 1) ui->genMsg->setText (ui->tx6->text ());
+  if (m_config.write_decoded_debug ()) writeToALLTXT ("Non-stop: QSO finished, continuing");
+  return true;
+}
+
 void MainWindow::process_Auto()
 {
   int count = 0;
@@ -3537,14 +3586,14 @@ void MainWindow::process_Auto()
            }
          }
       }
-    } else if ((m_status == QsoHistory::SRR73 || m_status >= QsoHistory::S73) && !m_singleshot && !m_config.autolog() && m_lastloggedcall == m_hisCall && !m_lockTxFreq &&
+    } else if ((m_status == QsoHistory::SRR73 || m_status >= QsoHistory::S73) && !m_singleshot && (!m_config.autolog() || m_nonstop) && m_lastloggedcall == m_hisCall && !m_lockTxFreq &&
         (tx == 1 || abs(rx - ui->TxFreqSpinBox->value ()) > m_nguardfreq)) { 
       clearDX (" cleared, AutoSeq QSO finished");
       hisCall = m_hisCall;
       grid = m_hisGrid;
       m_status = QsoHistory::NONE;
     } else if ((m_status == QsoHistory::RCQ || m_status == QsoHistory::SCALL || (m_status == QsoHistory::SREPORT && m_skipTx1 && !m_houndMode)) && m_config.answerCQCount() &&
-        ((prio > 4 && prio < 17) || prio < 2 || m_strictdirCQ) && (m_config.nAnswerCQCounter() <= count || m_reply_other)) {
+        ((prio > 4 && prio < 17) || prio < 2 || m_strictdirCQ) && ((!m_nonstop && m_config.nAnswerCQCounter() <= count) || m_reply_other)) {
       clearDX (" cleared, RCQ/SCALL/SREPORT count reached");
       if (m_reply_other)
           counters2 = false;
@@ -3559,7 +3608,7 @@ void MainWindow::process_Auto()
       if (m_singleshot)
         counters = false;
     } else if ((m_status == QsoHistory::RCALL || (m_status == QsoHistory::SREPORT && !m_skipTx1)) && m_config.answerInCallCount() && 
-        (m_config.nAnswerInCallCounter() <= count || m_reply_other)) {
+        ((!m_nonstop && m_config.nAnswerInCallCounter() <= count) || m_reply_other)) {
       clearDX (" cleared, RCALL/SREPORT count reached");
       m_qsoHistory.calllist(hisCall,rpt.toInt(),time);
       count = m_qsoHistory.reset_count(hisCall);
@@ -3704,6 +3753,7 @@ void MainWindow::process_Auto()
         break;
       }
       case QsoHistory::SRR73: {
+        if (nonstop_continue ()) break;
         if (!m_singleshot && !m_config.autolog() && m_lastloggedcall == m_hisCall)
           autoStopTx("SRR73, none received ");
         break;
@@ -3714,11 +3764,13 @@ void MainWindow::process_Auto()
         break;
       }
       case QsoHistory::S73: {
+        if (nonstop_continue ()) break;
 //        if (!m_singleshot && !m_config.autolog() && m_lastloggedcall == m_hisCall)
           autoStopTx("S73, none received ");
         break;
       }
       case QsoHistory::FIN: {
+        if (nonstop_continue ()) break;
         if (m_singleshot) 
           autoStopTx("FIN, end of QSO, Singleshot ");
         else if (m_config.autolog())

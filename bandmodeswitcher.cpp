@@ -68,7 +68,7 @@ void BandModeSwitcher::rebuild ()
 {
   while (auto item = row_->takeAt (0))
     {
-      if (item->widget () != new_only_combo_) delete item->widget ();
+      if (item->widget () != new_only_combo_ && !trailing_.contains (item->widget ())) delete item->widget ();
       delete item;
     }
   band_buttons_.clear ();
@@ -107,6 +107,7 @@ void BandModeSwitcher::rebuild ()
   else separator ();
   row_->addWidget (new QLabel {tr ("Show:")});
   row_->addWidget (new_only_combo_);
+  for (auto w : trailing_) row_->addWidget (w);
   restyle ();
 }
 
@@ -192,5 +193,11 @@ void BandModeSwitcher::settings_dialog (QWidget * parent)
   settings_->setValue ("Bands", bands_);
   settings_->setValue ("Modes", modes_);
   settings_->endGroup ();
+  rebuild ();
+}
+
+void BandModeSwitcher::add_trailing_widget (QWidget * w)
+{
+  trailing_ << w;
   rebuild ();
 }

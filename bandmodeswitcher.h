@@ -34,6 +34,7 @@ public:
   Q_SIGNAL void new_only_changed (int level) const;  // 0 all .. 3 DXCC/band/mode
 
   int new_only () const {return new_only_;}
+  void add_trailing_widget (QWidget *);  // kept at the end of the row across rebuilds
 
 private:
   void rebuild ();
@@ -50,6 +51,7 @@ private:
   QString active_mode_;
   QHBoxLayout * row_;
   QComboBox * new_only_combo_;
+  QList<QWidget *> trailing_;
   QMap<QString, QPushButton *> band_buttons_;
   QMap<QString, QPushButton *> mode_buttons_;
 };
