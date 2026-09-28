@@ -1094,14 +1094,14 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   {
     // JTDX-VU Non-stop toggle: AutoSeq menu + a button at the end of the row
     m_nonstop = m_settings->value ("JTDXVU/NonStop", false).toBool ();
-    auto action = new QAction {tr ("Non-stop (until Tx watchdog)"), this};
+    auto action = new QAction {tr ("CNS - Call Non-Stop (10 min Tx watchdog)"), this};
     action->setCheckable (true);
     action->setChecked (m_nonstop);
-    action->setToolTip (tr ("Keep calling: after each logged QSO go straight back to CQ / the next caller, "
+    action->setToolTip (tr ("CNS - Call Non-Stop: after each logged QSO go straight back to CQ / the next caller, "
                             "and keep calling a station until it answers. The Tx watchdog still stops Tx."));
     ui->menuAutoSeq->addSeparator ();
     ui->menuAutoSeq->addAction (action);
-    auto button = new QPushButton {tr ("Non-stop")};
+    auto button = new QPushButton {tr ("CNS")};  // Call Non-Stop
     button->setCheckable (true);
     button->setChecked (m_nonstop);
     button->setFocusPolicy (Qt::NoFocus);
