@@ -61,17 +61,14 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   band's working frequency for the current mode. The current band and
   mode are shown green. Choose which buttons appear in View > Band &
   Mode Buttons....
-- **Show only needed decodes.** The "Show:" selector (All / New DXCC /
-  New DXCC or band / New DXCC, band or mode) filters the Band Activity
-  pane down to entities you still need. The levels are MSHV's: *band* =
-  not worked on this band, *mode* = not worked in this mode on any
-  band. It uses using Club Log when it's
-  enabled. It turns amber while active. Like MSHV it is live: changing
-  it re-filters every decode already on screen, and a station you have
-  just worked drops out.
-  - Traffic with your call, and with your current QSO partner, always
-    shows.
-  - The Rx Frequency pane is never filtered.
+- **Show only needed decodes.** The "Show:" selector works as in MSHV:
+  **All**, **New DXCC** (entity never worked), **New band** (not
+  worked on this band) or **New mode** (not worked in this mode on any
+  band). Each option is its own test, and an ATNO counts for all three.
+  It uses Club Log when enabled, turns amber while active, and is live:
+  changing it re-filters every decode already on screen, and a
+  just-worked station drops out. Traffic with your call and your QSO
+  partner always shows, and the Rx Frequency pane is never filtered.
 - **CNS (Call Non-Stop):** a button at the end of the row, also in the
   AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
   or the next caller instead of halting Tx. A station that doesn't

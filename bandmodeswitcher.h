@@ -31,7 +31,7 @@ public:
 
   Q_SIGNAL void band_clicked (QString const& band) const;
   Q_SIGNAL void mode_clicked (QString const& mode) const;
-  Q_SIGNAL void new_only_changed (int level) const;  // 0 all .. 3 DXCC/band/mode
+  Q_SIGNAL void new_only_changed (int level) const;  // 0 all, 1 new DXCC, 2 new band, 3 new mode
 
   int new_only () const {return new_only_;}
   void add_trailing_widget (QWidget *);  // kept at the end of the row across rebuilds

@@ -45,11 +45,12 @@ BandModeSwitcher::BandModeSwitcher (QSettings * settings, bool dark, QWidget * p
   new_only_ = qBound (0, settings_->value ("NewOnly", 0).toInt (), 3);
   settings_->endGroup ();
 
-  new_only_combo_->addItems ({tr ("All"), tr ("New DXCC"), tr ("New DXCC or band"), tr ("New DXCC, band or mode")});
+  new_only_combo_->addItems ({tr ("All"), tr ("New DXCC"), tr ("New band"), tr ("New mode")});
   new_only_combo_->setCurrentIndex (new_only_);
   new_only_combo_->setFocusPolicy (Qt::NoFocus);
   new_only_combo_->setToolTip (tr ("Band Activity: show only decodes from DXCC entities you still need - as in MSHV:\n"
-                                   "New DXCC = never worked; band = not on this band; mode = not in this mode on any band.\n"
+                                   "New DXCC = entity never worked; New band = not worked on this band;\n"
+                                   "New mode = not worked in this mode on any band.\n"
                                    "Uses Club Log when enabled; traffic with your call and your QSO partner always shows."));
   connect (new_only_combo_, QOverload<int>::of (&QComboBox::currentIndexChanged), this, [this] (int level) {
       new_only_ = level;

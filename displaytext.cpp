@@ -1095,25 +1095,27 @@ void DisplayText::displayQSY(QString text)
 
 bool DisplayText::needed (LogBook & logBook, LineMeta const& m, int level)
 {
+  // As in MSHV, each choice is its own test (not cumulative, no band+mode
+  // slot): 1 = new DXCC, 2 = new band (DXCC not worked on this band),
+  // 3 = new mode (DXCC not worked in this mode on any band).  An ATNO is
+  // new for all three.
   if (m.call.isEmpty ()) return false;
   QString country;
   bool worked = true, workedSlot = true;
   logBook.matchDXCC (m.call, country, worked, workedSlot);
   if (country.isEmpty () || country.startsWith ("  ,?,")) return false;   // unknown entity
   if (!worked) return true;
-  if (level >= 2)
+  switch (level)
     {
-      logBook.matchDXCC (m.call, country, worked, workedSlot, m.dialFreq);
-      if (!workedSlot) return true;
+    case 2:
+      logBook.matchDXCC (m.call, country, worked, workedSlot, m.dialFreq);       // band only
+      return !workedSlot;
+    case 3:
+      logBook.matchDXCC (m.call, country, worked, workedSlot, 0, m.mode);        // mode only, any band
+      return !workedSlot;
+    default:
+      return false;
     }
-  if (level >= 3)
-    {
-      // MSHV's "new mode": this DXCC never worked in this mode on ANY band
-      // (no frequency -> no band -> mode-only lookup)
-      logBook.matchDXCC (m.call, country, worked, workedSlot, 0, m.mode);
-      if (!workedSlot) return true;
-    }
-  return false;
 }
 
 void DisplayText::hide_last_block ()

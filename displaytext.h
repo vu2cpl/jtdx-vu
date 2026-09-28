@@ -19,7 +19,7 @@ public:
     explicit DisplayText(QWidget *parent = 0);
     void setConfiguration(Configuration const *);
     void setMyContinent (QString const&);
-    // JTDX-VU: 0 = show all, 1 = only new DXCC, 2 = + new band, 3 = + new band+mode.
+    // JTDX-VU: 0 = show all, 1 = new DXCC, 2 = new band, 3 = new mode (as MSHV).
     // Applies at once to every line already shown (lines are hidden, not dropped).
     void setNewOnly (int level);
     void refilter (LogBook const&);   // re-check lines after the log changed

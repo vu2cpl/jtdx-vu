@@ -44,6 +44,18 @@ Last updated: 2026-09-28
 
 ## What changed
 
+### 2026-09-28 — Show dropdown: All / New DXCC / New band / New mode
+
+- Manoj wants the dropdown exactly as in MSHV, with no cumulative levels
+  and no band+mode slot. `DisplayText::needed` is now one test per
+  option:
+  - 1: DXCC never worked
+  - 2: not worked on this band (`matchDXCC` with frequency only)
+  - 3: not worked in this mode on any band (`matchDXCC(…, 0, mode)`)
+  - An ATNO is "new" for all three.
+- Combo labels are "All", "New DXCC", "New band", "New mode". The stored
+  `[Switcher] NewOnly` index keeps its number and now means those.
+
 ### 2026-09-28 — band/mode buttons re-assert DIGU; band press retry
 
 - **TCI exit restore:** a change to stop JTDX restoring the start mode
