@@ -61,8 +61,8 @@ Last updated: 2026-09-28
   apply to visible lines only. The filter is **display-only** now, as
   in MSHV: hidden callers still reach `qsoHistory`/AutoSeq, and
   AnsB4/worked-before decides whom AutoSeq answers.
-- **Not yet verified on air.** The release is on hold until Manoj has
-  tested (his instruction).
+- **Confirmed working by Manoj on air, 2026-09-28.** The release is still
+  on hold until he's also happy with CNS (his instruction).
 
 ### 2026-09-28 — Non-stop option (keep calling, watchdog-limited)
 
