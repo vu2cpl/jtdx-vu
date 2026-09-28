@@ -1097,8 +1097,9 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     auto action = new QAction {tr ("CNS - Call Non-Stop (10 min Tx watchdog)"), this};
     action->setCheckable (true);
     action->setChecked (m_nonstop);
-    action->setToolTip (tr ("CNS - Call Non-Stop: after each logged QSO go straight back to CQ / the next caller, "
-                            "and keep calling a station until it answers. The Tx watchdog still stops Tx."));
+    action->setToolTip (tr ("CNS - Call Non-Stop: after each logged QSO go straight back to CQ / the next caller "
+                            "instead of halting Tx. A station that does not answer is dropped after the AutoSeq "
+                            "counters, as usual. The Tx watchdog (10 min while CNS is on) still stops Tx."));
     ui->menuAutoSeq->addSeparator ();
     ui->menuAutoSeq->addAction (action);
     auto button = new QPushButton {tr ("CNS")};  // Call Non-Stop
@@ -3602,7 +3603,7 @@ void MainWindow::process_Auto()
       grid = m_hisGrid;
       m_status = QsoHistory::NONE;
     } else if ((m_status == QsoHistory::RCQ || m_status == QsoHistory::SCALL || (m_status == QsoHistory::SREPORT && m_skipTx1 && !m_houndMode)) && m_config.answerCQCount() &&
-        ((prio > 4 && prio < 17) || prio < 2 || m_strictdirCQ) && ((!m_nonstop && m_config.nAnswerCQCounter() <= count) || m_reply_other)) {
+        ((prio > 4 && prio < 17) || prio < 2 || m_strictdirCQ) && (m_config.nAnswerCQCounter() <= count || m_reply_other)) {
       clearDX (" cleared, RCQ/SCALL/SREPORT count reached");
       if (m_reply_other)
           counters2 = false;
@@ -3617,7 +3618,7 @@ void MainWindow::process_Auto()
       if (m_singleshot)
         counters = false;
     } else if ((m_status == QsoHistory::RCALL || (m_status == QsoHistory::SREPORT && !m_skipTx1)) && m_config.answerInCallCount() && 
-        ((!m_nonstop && m_config.nAnswerInCallCounter() <= count) || m_reply_other)) {
+        (m_config.nAnswerInCallCounter() <= count || m_reply_other)) {
       clearDX (" cleared, RCALL/SREPORT count reached");
       m_qsoHistory.calllist(hisCall,rpt.toInt(),time);
       count = m_qsoHistory.reset_count(hisCall);

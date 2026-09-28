@@ -80,9 +80,12 @@ Last updated: 2026-09-28
     `autoStopTx`. It clears DX and goes back to CQ (tx6), so AutoSeq
     answers the next caller. It never applies in single-shot or Hound
     mode, or while a manual-log QSO isn't logged yet.
-  - The give-up counters (`nAnswerCQCounter`, `nAnswerInCallCounter`)
-    are ignored, so a called station keeps being called. It still moves
-    on when that station answers someone else (`m_reply_other`).
+  - ~~The give-up counters are ignored under CNS~~: **reverted after
+    v0.2.0.** Manoj wants a station that doesn't answer dropped after the
+    AutoSeq counters (his are `SeqAnswerCQCounterValue=3` and
+    `SeqAnswerInCallCounterValue=3`). CNS no longer touches
+    `nAnswerCQCounter`/`nAnswerInCallCounter`, and only replaces the
+    end-of-QSO halt.
   - **The Tx watchdog is untouched.** It resets when a station calls or
     the Tx message changes, so it only fires after `watchdog` minutes of
     unanswered CQ ("WD 60m" in the status bar).
