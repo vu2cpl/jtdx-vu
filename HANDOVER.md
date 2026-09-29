@@ -30,8 +30,18 @@ Last updated: 2026-09-28
   exit when `brew list` shows all formulae; it also **caches the Intel
   job's source-built kegs** (`actions/cache`, one tarball of the kegs
   that step installed, key `brew-kegs-macos-15-intel-v1`; bump the
-  suffix to rebuild) so later releases skip the ~2.5 h compile. Both
-  commits are after the tag; the tag itself was not moved. Website updated the same morning (card + page,
+  suffix to rebuild) so later releases skip the ~3.5 h compile. All
+  these commits are after the tag; the tag itself was not moved.
+  **Two more lost Intel runs on the way** (tag run 2 h 20, first
+  seeding run 3 h 45, both with everything compiled): `brew unlink
+  openssl@1.1` removes nothing — the image's `bin/openssl` isn't a
+  tracked link — so the tolerance fallback is what actually matters;
+  and the first cache step wrote its list into `/usr/local`, which is
+  not writable. The cache now lives in `~/brew-cache`, is saved by an
+  explicit `actions/cache/save` step right after Dependencies (a post
+  step is skipped when the job fails later), and cannot fail the build.
+  `hashFiles()` only sees the workspace, so the save is gated on a
+  step output instead. Website updated the same morning (card + page,
   downloads table on v0.3.0; all three attached assets answer 206 to
   an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
   `/Applications/JTDX-VU.app` is the tagged v0.3.0 bundle (installed
