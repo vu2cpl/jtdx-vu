@@ -168,6 +168,20 @@ namespace
       {3400065000, Modes::JT65, IARURegions::ALL,true},
       
       {5760065000, Modes::JT65, IARURegions::ALL,true},
+      // JTDX-VU: FT2 dial frequencies as MSHV ships them (config_band_all.h)
+      {1843000, Modes::FT2, IARURegions::ALL,true},
+      {3578000, Modes::FT2, IARURegions::ALL,true},
+      {5360000, Modes::FT2, IARURegions::ALL,true},
+      {7052000, Modes::FT2, IARURegions::ALL,true},
+      {10144000, Modes::FT2, IARURegions::ALL,true},
+      {14084000, Modes::FT2, IARURegions::ALL,true},
+      {18108000, Modes::FT2, IARURegions::ALL,true},
+      {21144000, Modes::FT2, IARURegions::ALL,true},
+      {24923000, Modes::FT2, IARURegions::ALL,true},
+      {28184000, Modes::FT2, IARURegions::ALL,true},
+      {50320000, Modes::FT2, IARURegions::ALL,true},
+      {70159000, Modes::FT2, IARURegions::ALL,true},
+      {144177000, Modes::FT2, IARURegions::ALL,true},
       // JTDX-VU: JTTY dial frequencies as shipped by WSJT-X 3.2.0-rc1
       // (conventional RTTY frequency, +10 kHz where the band plan allows)
       {1838000, Modes::JTTY, IARURegions::ALL,true},

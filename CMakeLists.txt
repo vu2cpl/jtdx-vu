@@ -284,6 +284,7 @@ set (wsjt_FSRCS
   lib/afc9.f90
   lib/agcc.f90
   lib/ft4/agccft4.f90
+  lib/ft2/agccft2.f90
   lib/agccft8.f90
   lib/azdist.f90
   lib/baddata.f90
@@ -353,6 +354,10 @@ set (wsjt_FSRCS
   lib/four2a.f90
   lib/foxgen.f90
   lib/ft4/ft4_baseline.f90
+  lib/ft2/ft2_baseline.f90
+  lib/ft2_decode.f90
+  lib/ft2_mod1.f90
+  lib/ft2/ft2_downsample.f90
   lib/ft4_decode.f90
   lib/ft4_mod1.f90
   lib/ft4/ft4_downsample.f90
@@ -371,6 +376,7 @@ set (wsjt_FSRCS
   lib/ft8sim_gfsk.f90
   lib/fqso_first.f90
   lib/ft4/gen_ft4wave.f90
+  lib/ft2/gen_ft2wave.f90
   lib/gen_ft8wave.f90
   lib/gen_ft8wavesub.f90
   lib/gen10.f90
@@ -383,7 +389,9 @@ set (wsjt_FSRCS
   lib/genwspr.f90
   lib/geodist.f90
   lib/ft4/get_ft4_bitmetrics.f90
+  lib/ft2/get_ft2_bitmetrics.f90
   lib/ft4/getcandidates4.f90
+  lib/ft2/getcandidates2.f90
   lib/gfsk_pulse.f90
   lib/graycode.f90
   lib/graycode65.f90
@@ -469,6 +477,7 @@ set (wsjt_FSRCS
   lib/ft8v2/packjt77sd.f90
   lib/partint.f90
   lib/ft4/partintft4.f90
+  lib/ft2/partintft2.f90
   lib/partintft8.f90
   lib/pctile.f90
   lib/peakdt10.f90
@@ -499,6 +508,7 @@ set (wsjt_FSRCS
   lib/subtract10.f90
   lib/subtract65.f90
   lib/ft4/subtractft4.f90
+  lib/ft2/subtractft2.f90
   lib/ft8v2/subtractft8.f90
   lib/sun.f90
   lib/symspec.f90
@@ -506,6 +516,7 @@ set (wsjt_FSRCS
   lib/symspec2.f90
   lib/symspec65.f90
   lib/ft4/sync4d.f90
+  lib/ft2/sync2d.f90
   lib/sync10.f90
   lib/sync65.f90
   lib/sync8.f90
@@ -1114,6 +1125,12 @@ target_link_libraries (wsjt_qtmm Qt5::Multimedia)
 
 add_executable (ft4sim lib/ft4/ft4sim.f90 jtdx.rc)
 target_link_libraries (ft4sim wsjt_fort wsjt_cxx)
+
+# JTDX-VU: FT2 simulator and standalone file decoder (reference for GUI tests)
+add_executable (ft2sim lib/ft2/ft2sim.f90 jtdx.rc)
+target_link_libraries (ft2sim wsjt_fort wsjt_cxx)
+add_executable (ft2dec lib/ft2/tools/ft2dec.f90)
+target_link_libraries (ft2dec wsjt_fort wsjt_cxx ${FFTW3_LIBRARIES})
 
 add_executable (ft8sim lib/ft8sim.f90 jtdx.rc)
 target_link_libraries (ft8sim wsjt_fort wsjt_cxx)

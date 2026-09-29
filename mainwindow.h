@@ -157,6 +157,7 @@ private slots:
   void on_propLineEdit_textChanged(const QString &text);
   void on_actionSettings_triggered();
   void jttyModeSelected();  // JTDX-VU
+  void ft2ModeSelected();   // JTDX-VU
   void on_monitorButton_clicked (bool);
   void on_swlButton_clicked (bool);
   void on_filterButton_clicked (bool);
@@ -679,6 +680,7 @@ private:
   bool m_nonstop {false};  // JTDX-VU Non-stop (Tx watchdog still applies)
   JttyPanel *m_jttyPanel {nullptr};   // JTDX-VU JTTY
   QAction *m_actionJTTY {nullptr};
+  QAction *m_actionFT2 {nullptr};
   QVector<JttyDecodeLine> m_jttyAllFreqLines;
   QVector<JttyQsoLine> m_jttyQsoLines;
   QTextBlock m_jttyAllFreqsGroupStart;

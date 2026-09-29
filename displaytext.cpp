@@ -990,7 +990,7 @@ void DisplayText::displayTransmittedText(QString text, QString myCall, QString h
     }
     t2 = QString::asprintf("%4d",txFreq);
     if(modeTx=="FT8") t1=" ~ ";
-    else if(modeTx=="FT4") t1=" : ";
+    else if(modeTx=="FT4" || modeTx=="FT2") t1=" : ";
     else if(modeTx=="JT65") t1=" # ";
     else if(modeTx=="T10") t1=" + ";
     

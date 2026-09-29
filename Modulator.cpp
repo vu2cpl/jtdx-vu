@@ -77,6 +77,7 @@ void Modulator::start (unsigned symbolsLength, double framesPerSymbol,
   else if(m_nsps==576) {
     delay_ms=500;   //FT4
   }
+  else if(m_nsps==288) delay_ms=500;   //FT2 (JTDX-VU): same 0.5 s start as FT4, MSHV interop
   // noise generator parameters
   if (m_addNoise) {
     m_snr = qPow (10.0, 0.05 * (dBSNR - 6.0));

@@ -19,7 +19,8 @@ namespace
     "FT8",
     "FT4",
     "WSPR",
-    "JTTY"
+    "JTTY",
+    "FT2"
   };
 }
 

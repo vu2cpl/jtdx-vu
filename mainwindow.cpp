@@ -83,6 +83,7 @@ extern "C" {
   void gen_ft8wave_(int itone[], int* nsym, int* nsps, float* bt, float* fsample, float* f0, float xjunk[], float wave[], int* icmplx, int* nwave);
 
   void gen_ft4wave_(int itone[], int* nsym, int* nsps, float* fsample, float* f0, float xjunk[], float wave[], int* icmplx, int* nwave);
+  void gen_ft2wave_(int itone[], int* nsym, int* nsps, float* fsample, float* f0, float xjunk[], float wave[], int* icmplx, int* nwave);   // JTDX-VU
 
   void gen9_(char* msg, int* ichk, char* msgsent, int itone[],
                int* itext, fortran_charlen_t, fortran_charlen_t);
@@ -625,6 +626,12 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   m_actionJTTY->setActionGroup (modeGroup);
   ui->menuMode->addAction (m_actionJTTY);
   connect (m_actionJTTY, &QAction::triggered, this, &MainWindow::jttyModeSelected);
+  // JTDX-VU: FT2 (IU8LMC) - FT4 at twice the speed, 3.75 s periods; sits after FT4 in the menu
+  m_actionFT2 = new QAction {tr ("FT2"), this};
+  m_actionFT2->setCheckable (true);
+  m_actionFT2->setActionGroup (modeGroup);
+  ui->menuMode->insertAction (ui->actionJT65, m_actionFT2);
+  connect (m_actionFT2, &QAction::triggered, this, &MainWindow::ft2ModeSelected);
 
   QActionGroup* languageGroup = new QActionGroup(this);
   ui->actionEnglish->setActionGroup(languageGroup);
@@ -1147,7 +1154,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   connect (m_switcher, &BandModeSwitcher::mode_clicked, this, [this] (QString const& mode) {
       QHash<QString, QAction *> const actions {
         {"FT8", ui->actionFT8}, {"FT4", ui->actionFT4}, {"JT9", ui->actionJT9}, {"JT65", ui->actionJT65},
-        {"T10", ui->actionT10}, {"JT9+JT65", ui->actionJT9_JT65}, {"WSPR-2", ui->actionWSPR_2}, {"JTTY", m_actionJTTY}};
+        {"T10", ui->actionT10}, {"JT9+JT65", ui->actionJT9_JT65}, {"WSPR-2", ui->actionWSPR_2}, {"JTTY", m_actionJTTY}, {"FT2", m_actionFT2}};
       if (!actions.contains (mode) || !actions[mode]->isEnabled ()) return;
       if (mode != m_mode)
         {
@@ -1192,6 +1199,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   
   if(m_mode=="FT8") on_actionFT8_triggered();
   else if(m_mode=="FT4") on_actionFT4_triggered();
+  else if(m_mode=="FT2") ft2ModeSelected();
   else if(m_mode=="JT9+JT65") on_actionJT9_JT65_triggered();
   else if(m_mode=="JT9") on_actionJT9_triggered();
   else if(m_mode=="JT65") on_actionJT65_triggered();
@@ -1500,6 +1508,7 @@ void MainWindow::readSettings()
   if(!m_modeTx.startsWith("FT") && !m_modeTx.startsWith("JT") && m_modeTx!="T10" && !m_modeTx.startsWith ("WSPR")) {
     if(m_mode=="FT8") m_modeTx="FT8";
 	else if(m_mode=="FT4") m_modeTx="FT4";
+	else if(m_mode=="FT2") m_modeTx="FT2";
     else if(m_mode=="JT9+JT65") m_modeTx="JT65";
     else if(m_mode=="JT65") m_modeTx="JT65";
     else if(m_mode=="JT9") m_modeTx="JT9";
@@ -1753,6 +1762,7 @@ void MainWindow::setStopHSym()
     else m_hsymStop=49;
   }
   else if(m_mode=="FT4") m_hsymStop=21;
+  else if(m_mode=="FT2") m_hsymStop=12;   // JTDX-VU: 12*3456 = 41472 samples = NMAX
   else if(m_mode.startsWith("JT") or m_mode=="T10") { m_hsymStop=173; if(m_config.decode_at_52s()) m_hsymStop=179; }
   else if(m_mode.startsWith ("WSPR")) m_hsymStop=396;
 }
@@ -1764,7 +1774,7 @@ void MainWindow::setClockStyle(bool reset)
   QString minute = t.time().toString("mm");
   QString second = t.time().toString("ss");
   QString secms = t.time().toString("ss.zzz");
-  secms.remove(2,1); int ft4int = secms.toInt()/7500;
+  secms.remove(2,1); int ft4int = secms.toInt()/7500; int ft2int = secms.toInt()/3750;   // JTDX-VU: FT2 slot within the minute
 
   if(m_start || reset) {
     if(m_mode.startsWith("FT")) {
@@ -1775,6 +1785,10 @@ void MainWindow::setClockStyle(bool reset)
       }
       else if(m_mode=="FT4") {
         if(ft4int==0 || ft4int==2 || ft4int==4 || ft4int==6) ui->labUTC->setStyleSheet(QString("font-size: 18pt;background: %1;color : %2").arg(Radio::convert_dark("#96ffff",m_useDarkStyle),Radio::convert_dark("#1400b1",m_useDarkStyle)));
+        else ui->labUTC->setStyleSheet(QString("font-size: 18pt;background: %1;color: %2").arg(Radio::convert_dark("#ffff96",m_useDarkStyle),Radio::convert_dark("#0000ff",m_useDarkStyle)));
+      }
+      else if(m_mode=="FT2") {
+        if(ft2int%2==0) ui->labUTC->setStyleSheet(QString("font-size: 18pt;background: %1;color : %2").arg(Radio::convert_dark("#96ffff",m_useDarkStyle),Radio::convert_dark("#1400b1",m_useDarkStyle)));
         else ui->labUTC->setStyleSheet(QString("font-size: 18pt;background: %1;color: %2").arg(Radio::convert_dark("#ffff96",m_useDarkStyle),Radio::convert_dark("#0000ff",m_useDarkStyle)));
       }
     }
@@ -1797,6 +1811,10 @@ void MainWindow::setClockStyle(bool reset)
 	}
     else if(m_mode=="FT4") {
         if(ft4int==0 || ft4int==2 || ft4int==4 || ft4int==6) ui->labUTC->setStyleSheet(QString("font-size: 18pt;background: %1;color : %2").arg(Radio::convert_dark("#96ffff",m_useDarkStyle),Radio::convert_dark("#1400b1",m_useDarkStyle)));
+        else ui->labUTC->setStyleSheet(QString("font-size: 18pt;background: %1;color: %2").arg(Radio::convert_dark("#ffff96",m_useDarkStyle),Radio::convert_dark("#0000ff",m_useDarkStyle)));
+    }
+    else if(m_mode=="FT2") {
+        if(ft2int%2==0) ui->labUTC->setStyleSheet(QString("font-size: 18pt;background: %1;color : %2").arg(Radio::convert_dark("#96ffff",m_useDarkStyle),Radio::convert_dark("#1400b1",m_useDarkStyle)));
         else ui->labUTC->setStyleSheet(QString("font-size: 18pt;background: %1;color: %2").arg(Radio::convert_dark("#ffff96",m_useDarkStyle),Radio::convert_dark("#0000ff",m_useDarkStyle)));
     }
 	else if((m_mode.startsWith("JT") || m_mode=="T10") && second=="00") {
@@ -1838,6 +1856,7 @@ void MainWindow::setMinButton()
     } else {
 	  if(m_mode.startsWith("FT")) {
 		if(m_mode=="FT8") ui->TxMinuteButton->setText("TX 15/45");
+        else if(m_mode=="FT2") ui->TxMinuteButton->setText("TX 3.75");   // JTDX-VU
         else ui->TxMinuteButton->setText("TX 7.5");
       } 
       else ui->TxMinuteButton->setText(tr("TX Odd"));
@@ -1989,6 +2008,8 @@ void MainWindow::dataSink(qint64 frames)
      || (m_mode=="FT8" && m_delay > 0 && ihsymdelay >= nhsymEStopFT8)
      || (m_mode=="FT4" && m_delay==0 && ihsym == m_hsymStop)
      || (m_mode=="FT4" && m_delay > 0 && ihsymdelay >= m_hsymStop)
+     || (m_mode=="FT2" && m_delay==0 && ihsym == m_hsymStop)
+     || (m_mode=="FT2" && m_delay > 0 && ihsymdelay >= m_hsymStop)
      || ((m_mode.startsWith("JT") || m_mode=="T10") && m_delay==0 && ihsym == m_hsymStop)
      || ((m_mode.startsWith("JT") || m_mode=="T10") && m_delay > 0 && ihsymdelay >= m_hsymStop)
      || (m_mode.startsWith("WSPR") && ihsym == m_hsymStop)) {
@@ -1997,6 +2018,7 @@ void MainWindow::dataSink(qint64 frames)
     if(lastdelayed && !m_modeChanged) {
       if(m_mode=="FT8" && last.secsTo(now)<12) { lastdelayed=false; return; }
       else if(m_mode=="FT4" && last.secsTo(now)<6) { lastdelayed=false; return; }
+      else if(m_mode=="FT2" && last.secsTo(now)<3) { lastdelayed=false; return; }
       else if(!m_mode.startsWith("FT") && !m_mode.startsWith("WSPR") && last.secsTo(now)<46) { lastdelayed=false; return; }
       lastdelayed=false;
     }
@@ -2030,6 +2052,7 @@ void MainWindow::dataSink(qint64 frames)
       m_fileToSave.clear ();
       int samples=m_TRperiod*12000;
       if(m_mode=="FT4") samples=21*3456;
+      if(m_mode=="FT2") samples=12*3456;
       // the following is potential a threading hazard - not a good
       // idea to pass pointer to be processed in another thread
       if ((m_saveWav==2 || m_saveWav==1 || m_mode.mid (0,4) == "WSPR") && !m_fnameWE.isEmpty ())
@@ -2222,6 +2245,7 @@ void MainWindow::on_actionSettings_triggered()               //Setup Dialog
 
       if(m_mode=="FT8") on_actionFT8_triggered();
       else if(m_mode=="FT4") on_actionFT4_triggered();
+      else if(m_mode=="FT2") ft2ModeSelected();
       else if(m_mode=="JT9+JT65") on_actionJT9_JT65_triggered();
       else if(m_mode=="JT9") on_actionJT9_triggered();
       else if(m_mode=="JT65") on_actionJT65_triggered();
@@ -2338,6 +2362,9 @@ void MainWindow::monitor (bool state)
       }
       else if(m_mode == "FT4") {
          curdsec=curdsec%75; if(curdsec > 0 && curdsec < 40) m_delay=curdsec+m_addtx; else m_delay = 0;
+      }
+      else if(m_mode == "FT2") {   // JTDX-VU: 37.5 ds periods
+         curdsec=curdsec%75; if(curdsec >= 38) curdsec-=38; if(curdsec > 0 && curdsec < 20) m_delay=curdsec+m_addtx; else m_delay = 0;
       }
 	  else if(!m_mode.startsWith("WSPR")) {
          if(curdsec > 0 && curdsec < 350) m_delay=curdsec+m_addtx; else m_delay = 0; // 2 second processing delay
@@ -3522,6 +3549,7 @@ void MainWindow::decode()                                       //decode()
   
   if(m_mode=="FT8") dec_data.params.nmode=8;
   else if(m_mode=="FT4") dec_data.params.nmode=4;
+  else if(m_mode=="FT2") dec_data.params.nmode=2;
   else if(m_mode=="JT9+JT65") dec_data.params.nmode=9+65;
   else if(m_mode=="JT9") dec_data.params.nmode=9;
   else if(m_mode=="JT65") dec_data.params.nmode=65;
@@ -3857,6 +3885,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
     // autoseq guard frequency band
       if(m_modeTx == "FT8") m_nguardfreq = 51;
       else if(m_modeTx == "FT4") m_nguardfreq = 84;
+      else if(m_modeTx == "FT2") m_nguardfreq = 168;
       else if(m_modeTx == "JT65") m_nguardfreq = 176;
       else if(m_modeTx == "JT9") m_nguardfreq = 16;
       else if(m_modeTx == "T10") m_nguardfreq = 67;
@@ -3905,7 +3934,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
             ui->syncButton->setChecked(false);
           } else if (!ui->syncButton->isEnabled()) ui->syncButton->setEnabled(true);
         }
-        else if (m_mode=="FT4") {
+        else if (m_mode=="FT4" || m_mode=="FT2") {
           if(navexdt<41) ui->label_6->setStyleSheet(QString("QLabel{background: %1}").arg(Radio::convert_dark("#fdedc5",m_useDarkStyle)));
           else if(navexdt>40 && navexdt<81) ui->label_6->setStyleSheet(QString("QLabel{background: %1}").arg(Radio::convert_dark("#ffff00",m_useDarkStyle)));
           else if(navexdt>80) ui->label_6->setStyleSheet(QString("QLabel{background: %1}").arg(Radio::convert_dark("#ff8000",m_useDarkStyle)));
@@ -3956,7 +3985,8 @@ void MainWindow::readFromStdout()                             //readFromStdout
             QString band;
             if (m_jtdxtime->currentMSecsSinceEpoch2() / 1000 - m_secBandChanged > 50 
 			|| (m_jtdxtime->currentMSecsSinceEpoch2() / 1000 - m_secBandChanged > 14 && m_mode == "FT8")
-			|| (m_jtdxtime->currentMSecsSinceEpoch2() / 1000 - m_secBandChanged > 6 && m_mode == "FT4"))
+			|| (m_jtdxtime->currentMSecsSinceEpoch2() / 1000 - m_secBandChanged > 6 && m_mode == "FT4")
+			|| (m_jtdxtime->currentMSecsSinceEpoch2() / 1000 - m_secBandChanged > 3 && m_mode == "FT2"))
               {
                 band = ' ' + m_config.bands ()->find (m_freqNominal) + ' ';
               }
@@ -4121,6 +4151,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       if(m_okToPost and m_config.spot_to_psk_reporter () and stdMsg and !m_diskData) {
         QString msgmode="FT8";
         if (m_mode=="FT4") msgmode="FT4";
+        else if (m_mode=="FT2") msgmode="FT2";
         else if (decodedtext.isJT65()) msgmode="JT65";
         else if (m_mode.startsWith("JT9")) msgmode="JT9";
         else if (m_mode=="T10") msgmode="T10";
@@ -4264,6 +4295,7 @@ void MainWindow::guiUpdate()
   txDuration=0.0;
   if(m_modeTx=="FT8") txDuration=13.64; //1.0 + 79*1920/12000.0;
   else if(m_modeTx=="FT4")  txDuration=6.04; //1.0 + 105*576/12000.0;
+  else if(m_modeTx=="FT2")  txDuration=3.52; //1.0 + 105*288/12000.0;
   else if(m_modeTx=="JT65") txDuration=47.81142857142857; //1.0 + 126*4096/11025.0;
   else if(m_modeTx=="JT9") txDuration=49.96; //1.0 + 85.0*m_nsps/12000.0;
   else if(m_modeTx=="T10") txDuration=49.96; //1.0 + 85.0*m_nsps/12000.0;
@@ -4477,6 +4509,12 @@ void MainWindow::guiUpdate()
         genft4_(message, &ichk, &ntxhash, msgsent, const_cast<char *> (ft4msgbits),const_cast<int *>(itone),37,37);
         int nsym=103; int nsps=4*576; float fsample=48000.0; float f0=ui->TxFreqSpinBox->value() - m_XIT; int nwave=(nsym+2)*nsps; int icmplx=0;
         gen_ft4wave_(const_cast<int *>(itone),&nsym,&nsps,&fsample,&f0,foxcom_.wave,foxcom_.wave,&icmplx,&nwave);
+      }
+      else if(m_modeTx=="FT2") {   // JTDX-VU: FT4's tones, 288 samples/symbol (1152 at 48 kHz)
+        int ichk=0; char ft4msgbits[77]; int ntxhash=1;
+        genft4_(message, &ichk, &ntxhash, msgsent, const_cast<char *> (ft4msgbits),const_cast<int *>(itone),37,37);
+        int nsym=103; int nsps=4*288; float fsample=48000.0; float f0=ui->TxFreqSpinBox->value() - m_XIT; int nwave=(nsym+2)*nsps; int icmplx=0;
+        gen_ft2wave_(const_cast<int *>(itone),&nsym,&nsps,&fsample,&f0,foxcom_.wave,foxcom_.wave,&icmplx,&nwave);
       }
       else if(m_modeTx=="JT65") { gen65_(message, &ichk, msgsent, const_cast<int *> (itone), &m_currentMessageType, len1, len1); }
       else if(m_modeTx=="JT9") { gen9_(message, &ichk, msgsent, const_cast<int *> (itone), &m_currentMessageType, len1, len1); }
@@ -4772,6 +4810,7 @@ void MainWindow::guiUpdate()
 	// setting labUTC clock style at operation
 	if ((m_mode=="FT8" && isecond%15==0) || 
         (m_mode=="FT4" && (isecond%15==0 || isecond==8 || isecond==23 || isecond==38 || isecond==53)) ||
+        (m_mode=="FT2" && (isecond%15==0 || isecond%15==4 || isecond%15==8 || isecond%15==11)) ||
         (!m_mode.startsWith("FT") && second=="00")) setClockStyle(false);
 	// setting band scheduler
 	if((minute.toInt())%5==0 && second == "01" && m_config.usesched() && !m_enableTx) {
@@ -4827,6 +4866,7 @@ void MainWindow::set_scheduler(QString const& setto,bool mixed)
     newband=setto.mid(setto.indexOf(" ")+1,4);
     if (newband == "FT8") { on_actionFT8_triggered(); }
     else if (newband == "FT4") { on_actionFT4_triggered(); }
+    else if (newband == "FT2") { ft2ModeSelected(); }
     else if (newband == "JT65") { on_actionJT65_triggered(); }
 	else if (newband == "JT9") { on_actionJT9_triggered(); }
 	else if (newband == "T10") { on_actionT10_triggered(); }
@@ -5787,6 +5827,7 @@ void MainWindow::countQSOs ()
   char c_txt [20];
   if (m_mode == "FT8") { sprintf(c_txt,"FT8  %d",m_logBook.get_qso_count("FT8")); }
   else if (m_mode == "FT4") { sprintf(c_txt,"FT4  %d",m_logBook.get_qso_count("FT4")); }
+  else if (m_mode == "FT2") { sprintf(c_txt,"FT2  %d",m_logBook.get_qso_count("FT2")); }
   else if (m_mode == "JT9+JT65") { sprintf(c_txt,"JT65/9 %d/%d",m_logBook.get_qso_count("JT65"),m_logBook.get_qso_count("JT9")); }
   else if (m_mode == "JT9") { sprintf(c_txt,"JT9  %d",m_logBook.get_qso_count("JT9")); }
   else if (m_mode == "JT65") { sprintf(c_txt,"JT65  %d",m_logBook.get_qso_count("JT65")); }
@@ -6205,6 +6246,7 @@ void MainWindow::on_logQSOButton_clicked()
   if (!m_houndMode && (m_config.prompt_to_log() || m_config.autolog())) {
     if(m_mode == "FT8") dateTimeQSOOff = currenttime.addSecs (14);
     else if(m_mode == "FT4") dateTimeQSOOff = currenttime.addSecs (7);
+    else if(m_mode == "FT2") dateTimeQSOOff = currenttime.addSecs (4);
     else dateTimeQSOOff = currenttime.addSecs (50);
   }
   if (dateTimeQSOOff < m_dateTimeQSOOn) m_dateTimeQSOOn = dateTimeQSOOff;
@@ -6326,6 +6368,28 @@ void MainWindow::on_actionFT4_triggered()
   on_AutoSeqButton_clicked(true);
   m_TRperiod=7.5;
   if(!m_hint) ui->hintButton->click();
+  commonActions();
+  enableHoundAccess(false);
+}
+
+// JTDX-VU: FT2 - the FT4 entry with FT2's numbers
+void MainWindow::ft2ModeSelected()
+{
+  if (m_mode=="WSPR-2") killFile();
+  m_mode="FT2";
+  WSPR_config(false);
+  switch_mode (Modes::FT2);
+  m_modeTx="FT2";
+  m_hsymStop=12;
+  mode_label->setStyleSheet(QString("QLabel{background: %1}").arg(Radio::convert_dark("#5cebdc",m_useDarkStyle)));   // MSHV's FT2 colour
+  m_actionFT2->setChecked(true);
+  ui->pbTxMode->setText("Tx FT2 :");
+  ui->pbTxMode->setEnabled(false);
+  on_AutoSeqButton_clicked(true);
+  m_TRperiod=3.75;
+  if(!m_hint) ui->hintButton->click();
+  if (m_config.seed_default_frequencies (Modes::FT2))
+    statusBar ()->showMessage (tr ("FT2 dial frequencies added to Settings > Frequencies"), 8000);
   commonActions();
   enableHoundAccess(false);
 }
@@ -6487,7 +6551,7 @@ void MainWindow::commonActions ()
   progressBar->setFormat("%v/"+QString::number(m_TRperiod));
   statusChanged();
   on_spotLineEdit_textChanged(ui->spotLineEdit->text());
-  if(m_mode=="FT4") {
+  if(m_mode=="FT4" || m_mode=="FT2") {
     if(m_rrr) { m_savedRRR=m_rrr; ui->rrrCheckBox->click(); }
     ui->rrrCheckBox->setEnabled(false); ui->rrr1CheckBox->setEnabled(false);
     if(!m_hint) ui->hintButton->click();
@@ -6767,6 +6831,7 @@ void MainWindow::band_changed (Frequency f)
       double TRperiod=60.0; // TR period is the only reliable way in this point of code at the mode change 
       if(m_mode=="FT8") TRperiod=15.0;
       else if(m_mode=="FT4") TRperiod=7.5;
+      else if(m_mode=="FT2") TRperiod=3.75;
       int nseqmod = fmod(double(nsec),TRperiod);
       m_nsecBandChanged=nseqmod;
     }
@@ -7369,7 +7434,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
       if (m_tx_when_ready && g_iptt) {
 //          QThread::currentThread()->setPriority(QThread::HighestPriority);
           int ms_delay=1000*m_config.txDelay();
-          if(m_mode=="FT4") ms_delay=20;
+          if(m_mode=="FT4" || m_mode=="FT2") ms_delay=20;
           ptt1Timer.start(ms_delay);
 //          printf("ptt1Timer started\n");
           if(m_config.write_decoded_debug()) writeToALLTXT("ptt1Timer started");
@@ -7399,6 +7464,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
       if(m_config.write_decoded_debug()) writeToALLTXT("handle_transceiver_update: transceiver state transition from offline to online");
       if(m_mode=="FT8") on_actionFT8_triggered();
       else if(m_mode=="FT4") on_actionFT4_triggered();
+      else if(m_mode=="FT2") ft2ModeSelected();
       else if(m_mode=="JT9+JT65") on_actionJT9_JT65_triggered();
       else if(m_mode=="JT9") on_actionJT9_triggered();
       else if(m_mode=="JT65") on_actionJT65_triggered();
@@ -7517,6 +7583,12 @@ void MainWindow::transmit (double snr)
     toneSpacing=-2.0;                     //Transmit a pre-computed, filtered waveform.
     if (m_tci) Q_EMIT m_config.transceiver_modulator_start(NUM_FT4_SYMBOLS,576.0,ui->TxFreqSpinBox->value()-m_XIT,toneSpacing,true,snr,m_TRperiod);
     else Q_EMIT sendMessage (NUM_FT4_SYMBOLS,576.0,ui->TxFreqSpinBox->value()-m_XIT,toneSpacing,m_soundOutput,
+                        m_config.audio_output_channel(),true,snr,m_TRperiod);
+  }
+  else if (m_modeTx == "FT2") {   // JTDX-VU
+    toneSpacing=-2.0;                     //Transmit a pre-computed, filtered waveform.
+    if (m_tci) Q_EMIT m_config.transceiver_modulator_start(NUM_FT2_SYMBOLS,288.0,ui->TxFreqSpinBox->value()-m_XIT,toneSpacing,true,snr,m_TRperiod);
+    else Q_EMIT sendMessage (NUM_FT2_SYMBOLS,288.0,ui->TxFreqSpinBox->value()-m_XIT,toneSpacing,m_soundOutput,
                         m_config.audio_output_channel(),true,snr,m_TRperiod);
   }
   else if (m_modeTx == "JT65") {
@@ -8179,6 +8251,7 @@ void MainWindow::on_the_minute ()
     if(!m_txwatchdog) {
        if(m_modeTx=="FT8") { if(deltasec > 32) update=false; }
        else if(m_modeTx=="FT4") { if(deltasec > 16) update=false; } //to be checked
+       else if(m_modeTx=="FT2") { if(deltasec > 8) update=false; }
        else { if(deltasec > 134) update=false; }
     }
     if (update && (m_idleMinutes < watchdog_minutes ())) { ++m_idleMinutes; update_watchdog_label (); }

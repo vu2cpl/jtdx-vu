@@ -206,6 +206,7 @@ void CPlotter::draw(float swide[], bool bScroll)                            //dr
 
   if(swide[0]>1.0e29) m_line=0;
   if(m_mode=="FT4" and m_line==34) m_line=0;
+  if(m_mode=="FT2" and m_line==17) m_line=0;   // JTDX-VU
   m_line++;
   if(m_timestamp!=0 || m_mode=="JT9+JT65") {
     if(m_line == 16) {
@@ -329,6 +330,7 @@ void CPlotter::DrawOverlay()                                 //DrawOverlay()
   float bw=0.0;
   if(m_modeTx=="FT8") bw=7*12000.0/1920.0;
   else if(m_mode=="FT4") bw=3*12000.0/576.0;
+  else if(m_mode=="FT2") bw=3*12000.0/288.0;   // JTDX-VU
   else if(m_modeTx=="JT65") bw=66.0*11025.0/4096.0;
   else if(m_modeTx=="JT9") bw=9.0*12000.0/m_nsps;
   else if(m_modeTx=="T10") bw=9.0*4.0*12000.0/6912.0;
@@ -343,6 +345,10 @@ void CPlotter::DrawOverlay()                                 //DrawOverlay()
     }
     else if(m_mode=="FT4") {
       x1=XfromFreq(m_rxFreq-95.0); x2=XfromFreq(m_rxFreq+179.0);
+      painter0.drawLine(x1,23,x1,30); painter0.drawLine(x1,23,x2,23); painter0.drawLine(x2,23,x2,30);
+    }
+    else if(m_mode=="FT2") {   // JTDX-VU: FT4's window scaled to the 167 Hz signal
+      x1=XfromFreq(m_rxFreq-178.0); x2=XfromFreq(m_rxFreq+345.0);
       painter0.drawLine(x1,23,x1,30); painter0.drawLine(x1,23,x2,23); painter0.drawLine(x2,23,x2,30);
     }
     else if((m_mode=="JT65" or m_mode=="JT9+JT65") and m_modeTx=="JT65") {

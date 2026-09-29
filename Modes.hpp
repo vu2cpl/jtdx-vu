@@ -25,6 +25,7 @@ public:
     FT4,
     WSPR,
     JTTY,   // JTDX-VU
+    FT2,    // JTDX-VU
     MODES_END_SENTINAL_AND_COUNT
   };
 

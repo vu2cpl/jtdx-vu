@@ -32,7 +32,10 @@ Last updated: 2026-09-28
   Phase 1 (Fortran lib), phase 2 (RX in the GUI) and phase 3 (TX) done;
   **first JTTY QSO made on air 2026-09-28** via TCI. The sound-card TX
   path is still only loopback-verified. Controls page now mirrors
-  WSJT-X 3.2.0-rc1's. FT2 is queued after JTTY. Not in any release.
+  WSJT-X 3.2.0-rc1's. **FT2 added 2026-09-29** on the same branch: RX
+  verified in the GUI on simulated signals, TX loopback-verified, **not
+  yet on the air** (needs an MSHV FT2 station to interoperate with).
+  Not in any release.
 - **Website:** vu2cpl.com has a JTDX-VU card (Utilities & Tools, after
   MSHV-Mac) and a project page at `/projects/jtdx-vu/` with screenshots
   and a v0.2.1 downloads table linking all four builds.
@@ -48,6 +51,73 @@ Last updated: 2026-09-28
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-09-29 — FT2 mode (branch `jtty`)
+
+FT2 is IU8LMC's mode as shipped in MSHV: FT4's protocol at twice the
+speed — same 77-bit payload, LDPC(174,91), 103 channel symbols with the
+four 4×4 Costas arrays, GFSK BT=1 — with 288 samples/symbol at 12 kHz
+(41.67 baud), a 3.75 s T/R period and MSHV's dial frequencies
+(1843/3578/5360/7052/10144/14084/18108/21144/24923/28184/50320/70159/
+144177 kHz). Confirmed by diffing MSHV's `decoderft2.cpp`/`gen_ft2.cpp`
+against its FT4 files: apart from LZ2HV's channel-estimation and
+averaging extras (not ported), every difference is a halved constant.
+
+So the port is a **scaled clone of JTDX's own Fortran FT4 chain**, not a
+transliteration of 2 700 lines of C++:
+
+- `lib/ft2/` — `ft2_params.f90` (NSPS 288, NMAX 41472 = 12 blocks of
+  3456 = 3.456 s of the 3.75 s period, NFFT1 1408, NDOWN 9 so the
+  downsampled rate is 1333.33 S/s and NSS stays 32), `getcandidates2`,
+  `ft2_baseline`, `ft2_downsample`, `sync2d`, `get_ft2_bitmetrics`,
+  `subtractft2` (NFILT 700, MSHV's), `gen_ft2wave` (own pulse cache —
+  `gen_ft4wave` caches its pulse for the first nsps it sees),
+  `agccft2`, `partintft2`, `ft2sim`, `tools/ft2dec.f90`.
+  `lib/ft2_decode.f90` and `lib/ft2_mod1.f90` (`ddf2` buffer) mirror
+  the FT4 pair. The encoder/tone mapping is FT4's `genft4` verbatim.
+- DT search: three segments over −0.52..+1.52 s (MSHV's FT2 window);
+  `xdt = ibest/1333.33 − 0.5` — TX starts 0.5 s into the period as
+  FT4 does (Modulator/TCI `delay_ms=500` for nsps 288), which is what
+  MSHV's decoder assumes too.
+- **Two things that were not just halving:** the candidate smoother
+  had to stay ±1.8 baud (±9 bins of 8.52 Hz) or the four tones 125 Hz
+  apart never merged into one peak (first cut found candidates 13–30
+  Hz off and the fine search pinned at −16 Hz); and the reported SNR
+  needed its own constant (−11.3 instead of FT4's −14.8, measured
+  against `ft2sim` over 24 files: FT4's read 3.5 dB low).
+- `decoder.f90`: `nmode=2` branch (filter guard ±178 Hz = 167 Hz
+  signal + 11), `ft2_decoded` callback, `partintft2`; `jt9a.f90`:
+  npts1 41472 and the `ddf2` copy. `twkfreq1` reads `ft8_mod1`'s
+  `twopi`, which the decoder process sets via `cwfilter` on its first
+  call — the standalone `ft2dec` has to set it itself (an hour lost to
+  a fine search that silently did nothing).
+- GUI: `Modes::FT2`, code-created `m_actionFT2` after FT4 in the Mode
+  menu, `ft2ModeSelected()` (hsymStop 12, TRperiod 3.75, MSHV's
+  `#5cebdc` label), FT2 twins of every `"FT4"` site in mainwindow.cpp
+  (decode trigger, dupe guard 3 s, wav length 12×3456, partial-interval
+  delay, nmode, guard 168 Hz, band-change 3 s, PSK Reporter mode
+  string, txDuration 3.52, wave generation `genft4_`+`gen_ft2wave_` at
+  1152 sps, clock colour per 3.75 s slot, QSO-off +4 s, TCI/modulator
+  start with 288 sps and toneSpacing −2, watchdog 8 s, "TX 3.75"),
+  plotter (bandwidth, filter marks, 17 lines/period), `displaytext`
+  ":" marker, ADIF `MFSK`/`FT2` submode as MSHV logs it, switcher
+  `all_modes`, default frequencies seeded on first entry like JTTY.
+  The TCI `ft4_mode` polling-suppression flag is left off for FT2 (its
+  second-of-minute table doesn't map to 3.75 s).
+
+**Verified:** `ft2sim` → `ft2dec` decodes to −14 dB (FT4's −17.5 less
+the 3 dB of half the symbol energy — on the mark), exact frequency and
+DT over −0.4..+0.8 s; the real `jtdxjt9` path decoded the −10 dB file
+in a throwaway `-r ft2test` instance (`-10 0.0 1501 : CQ VU2CPL MK82`
+in ALL.TXT, both panes, "TX 3.75", `FT2` status); the GUI TX chain
+(`genft4` → `gen_ft2wave` 48 kHz → decimate) decodes back through
+`ft2dec`. **Not yet on the air** — the first test should be with an
+MSHV FT2 station (VUCG runs them), watching DT: a systematic ±0.25 s
+would mean the start-of-period convention differs from MSHV's.
+
+Left out on purpose: MSHV's Wiener channel estimation and FT2
+averaging (decoder-side extras, no protocol impact); the multi-slot
+250 Hz TX; SWL windows are simply wider guesses.
 
 ### 2026-09-28 — JTTY: first QSO on air; rc1-style controls page (branch `jtty`)
 

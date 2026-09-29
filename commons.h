@@ -128,6 +128,7 @@ extern struct {
 #define NUM_WSPR_SYMBOLS 162               //(50+31)*2, embedded sync
 #define NUM_FT8_SYMBOLS 79
 #define NUM_FT4_SYMBOLS 105
+#define NUM_FT2_SYMBOLS 105   // JTDX-VU: FT2 is FT4's frame at 288 samples/symbol
 
 #define NUM_CW_SYMBOLS 250
 #define TX_SAMPLE_RATE 48000

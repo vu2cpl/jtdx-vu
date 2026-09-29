@@ -9,12 +9,14 @@ subroutine multimode_decoder(params)
   use jt10_decode
   use ft8_decode
   use ft4_decode
+  use ft2_decode
   use ft8_mod1, only : ndecodes,allmessages,allsnrs,allfreq,mycall12_0,mycall12_00,hiscall12_0,nmsg,odd,even,oddcopy,     &
                        evencopy,nlasttx,lqsomsgdcd,mycalllen1,msgroot,msgrootlen,lapmyc,lagcc,sumxdtt,avexdt,             &
                        nfawide,nfbwide,mycall,hiscall,lhound,mybcall,hisbcall,lenabledxcsearch,lwidedxcsearch,hisgrid4,   &
                        lmultinst,dd8,nft8cycles,nft8swlcycles,lskiptx1,ncandallthr,nincallthr,incall,msgincall,xdtincall, &
                        maskincallthr,ltxing
   use ft4_mod1, only : llagcc,nFT4decd,nfafilt,nfbfilt,lfilter,lhidetest,lhidetelemetry,dd4
+  use ft2_mod1, only : llagcc2,nFT2decd,nfafilt2,nfbfilt2,lfilter2,lhidetest2,lhidetelemetry2,ddf2
   use packjt77, only : lcommonft8b,ihash22,calls12,calls22
 
   include 'jt9com.f90'
@@ -45,6 +47,10 @@ subroutine multimode_decoder(params)
      integer :: decoded
   end type counting_ft4_decoder
 
+  type, extends(ft2_decoder) :: counting_ft2_decoder
+     integer :: decoded
+  end type counting_ft2_decoder
+
   logical first,firstsd
   logical(1) swlold,lhoundprev
   integer nutc,ndelay
@@ -70,6 +76,7 @@ subroutine multimode_decoder(params)
   type(counting_jt10_decoder) :: my_jt10
   type(counting_ft8_decoder) :: my_ft8
   type(counting_ft4_decoder) :: my_ft4
+  type(counting_ft2_decoder) :: my_ft2
   
  !cast C character arrays to Fortran character strings
 !  datetime=transfer(params%datetime, datetime)
@@ -82,7 +89,7 @@ subroutine multimode_decoder(params)
   hisgrid4=hisgrid(1:4)
 
   my_ft8%decoded=0; my_ft8%xdtt=0.
-  my_jt65%decoded=0; my_jt9%decoded=0; my_jt9s%decoded=0; my_jt10%decoded=0; my_ft4%decoded=0
+  my_jt65%decoded=0; my_jt9%decoded=0; my_jt9s%decoded=0; my_jt10%decoded=0; my_ft4%decoded=0; my_ft2%decoded=0
   nagainjt9=.false.;  nagainjt9s=.false.;  nagainjt10=.false.; ncandall=0; ncandallthr=0
 
   if(params%lmodechanged) then; avexdt=0.; if(params%nmode.eq.8) nintcount=3; endif ! avexdt fast track in FT8 after mode change
@@ -93,6 +100,7 @@ subroutine multimode_decoder(params)
   if(ndelay.gt.0) then ! received incomplete interval
     if(params%nmode.eq.8) then; call partintft8(ndelay,params%nutc); lqsomsgdcd=.true.
     else if(params%nmode.eq.4) then; call partintft4(ndelay,params%nutc)
+    else if(params%nmode.eq.2) then; call partintft2(ndelay,params%nutc)
     else; call partint(ndelay,params%nutc)
     endif
   endif
@@ -2353,6 +2361,35 @@ endif
     go to 800
   endif
 
+! JTDX-VU: FT2, the FT4 branch above with the FT2 chain; the filter guard is
+! the 167 Hz signal width plus the same 11 Hz allowance
+  if(params%nmode.eq.2) then
+    if(params%nagcc) call agccft2()
+    nfa=params%nfa; nfb=params%nfb; nfqso=params%nfqso; lfilter2=params%nfilter
+    if(lfilter2) then
+      nfafilt2=max(nfa,nfqso-178); nfbfilt2=min(nfb,nfqso+178)
+      if(nfqso.lt.nfafilt2 .or. nfqso.gt.nfbfilt2) then
+        write(*,129) nutc,'nfqso is out of bandwidth','d'; 129 format(i6.6,2x,a25,16x,a1); go to 800
+      endif
+    endif
+    llagcc2=params%nagcc; lhidetest2=params%lhidetest; lhidetelemetry2=params%lhidetelemetry
+    nFT2decd=0; sumxdtt(1)=0.0
+    call fillhash(1,.false.)
+    call my_ft2%decode(ft2_decoded,params%nQSOProgress,nfqso,nfa,nfb,params%nft4depth, &
+         params%nstophint,params%nswl)
+    if(params%ndelay.eq.0) then
+      sumxdt=sumxdtt(1)
+      if(nFT2decd.gt.5) then; avexdt=(avexdt+sumxdt/nFT2decd)/2
+      else if(nFT2decd.eq.5) then; avexdt=(1.1*avexdt+0.9*sumxdt/nFT2decd)/2
+      else if(nFT2decd.eq.4) then; avexdt=(1.25*avexdt+0.75*sumxdt/nFT2decd)/2
+      else if(nFT2decd.eq.3) then; avexdt=(1.35*avexdt+0.65*sumxdt/nFT2decd)/2
+      else if(nFT2decd.eq.2) then; avexdt=(1.5*avexdt+0.5*sumxdt/nFT2decd)/2
+      endif
+    endif
+    call fillhash(1,.true.)
+    go to 800
+  endif
+
   lowrms=.false.
   call rms_augap(params%nutc,lowrms)
   if(lowrms) go to 800
@@ -2637,5 +2674,28 @@ contains
 
     return
   end subroutine ft4_decoded
+
+  subroutine ft2_decoded (this,snr,dt,freq,decoded,servis4)
+    use ft2_decode
+    implicit none
+
+    class(ft2_decoder), intent(inout) :: this
+    integer, intent(in) :: snr
+    real, intent(in) :: dt
+    real, intent(in) :: freq
+    character(len=26), intent(in) :: decoded
+    character(len=1), intent(in) :: servis4
+
+    write(*,1002) nutc,snr,dt,nint(freq),decoded,servis4
+1002 format(i6.6,i4,f5.1,i5,1x,':',1x,a26,a1)
+    call flush(6)
+
+    select type(this)
+    type is (counting_ft2_decoder)
+       this%decoded = this%decoded + 1
+    end select
+
+    return
+  end subroutine ft2_decoded
 
 end subroutine multimode_decoder

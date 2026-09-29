@@ -80,6 +80,18 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   with a per-call/band cooldown (5–60 min).
   - The Club Log app password and the Telegram bot token are stored in
     the macOS Keychain (service `JTDX-VU`), never in the .ini.
+- **JTTY** (branch `jtty`, not yet in a release): WSJT-X 3.2's
+  period-free RTTY-style keyboard mode, ported from 3.2.0-rc1 — decoder,
+  transmit, an rc1-style controls page with editable F1–F8 macros, Call
+  next and Serial Number. JTTY is by Joe Taylor K1JT, Steve Franke
+  K9AN, Rob G4KLA and the WSJT-X team.
+- **FT2** (branch `jtty`, not yet in a release): FT4's protocol at twice
+  the speed — 3.75 s periods, 41.67 baud — as introduced in MSHV. The
+  mode was created by Martino IU8LMC (ARI Caserta); MSHV's C++
+  implementation is by Hrisimir LZ2HV. JTDX-VU decodes and transmits it
+  with a scaled copy of JTDX's own FT4 chain. Default dial frequencies
+  follow MSHV (14.084, 7.052, 21.144 MHz …). Add the FT2 button in
+  View > Band & Mode Buttons... if you want it on the switcher.
 
 ## Build on other platforms
 
