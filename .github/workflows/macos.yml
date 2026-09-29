@@ -33,7 +33,9 @@ jobs:
       - name: Dependencies
         run: |
           brew update --quiet || true
-          brew install qt@5 hamlib fftw gcc boost libusb webp
+          # brew install exits 1 on a Tier 3 host (macos-14 since 2026-09) even
+          # after pouring everything; accept it as long as every formula is there
+          brew install qt@5 hamlib fftw gcc boost libusb webp || brew list --versions qt@5 hamlib fftw gcc boost libusb webp
 
       - name: Configure
         run: |

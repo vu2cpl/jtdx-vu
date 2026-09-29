@@ -19,8 +19,14 @@ Last updated: 2026-09-28
   `~/Library/Application Support/JTDX-VU`.
 - **Release v0.3.0: IN PROGRESS 2026-09-29** — JTTY + FT2 + separate
   New-DXCC-on-band/mode colours + DIGU re-assert buttons. Tag `v0.3.0`
-  pushed; CI builds macOS arm64/Intel and Windows; Pi `.deb` from
-  meridianpi5. Website to follow.
+  pushed. Windows zip and Pi `.deb` (meridianpi5) attached; the CI
+  **arm64 job failed in its Dependencies step** — `brew install`
+  exited 1 on macos-14 (now a Homebrew Tier 3 host) after pouring
+  every bottle — so the arm64 zip was built locally with the same
+  `macos-bundle.sh` + `ditto` steps and uploaded by hand; Intel came
+  from CI as usual. `macos.yml` now tolerates that exit code when
+  `brew list` shows all formulae (commit after the tag; the tag itself
+  was not moved). Website to follow.
 - **Release v0.2.1: COMPLETE 2026-09-28**. It's at
   https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.1 with all four
   builds plus a `.sha256` for each:
