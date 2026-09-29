@@ -21,12 +21,17 @@ Last updated: 2026-09-28
   New-DXCC-on-band/mode colours + DIGU re-assert buttons. Tag `v0.3.0`
   pushed. Windows zip and Pi `.deb` (meridianpi5) attached; the CI
   **arm64 job failed in its Dependencies step** — `brew install`
-  exited 1 on macos-14 (now a Homebrew Tier 3 host) after pouring
-  every bottle — so the arm64 zip was built locally with the same
-  `macos-bundle.sh` + `ditto` steps and uploaded by hand; Intel came
-  from CI as usual. `macos.yml` now tolerates that exit code when
-  `brew list` shows all formulae (commit after the tag; the tag itself
-  was not moved). Website updated the same morning (card + page,
+  exited 1 on macos-14 after pouring every bottle, because the runner
+  image links `openssl@1.1` and `openssl@3`'s link step collided with
+  it (not the Tier 3 notice, which was just the last thing printed) —
+  so the arm64 zip was built locally with the same `macos-bundle.sh` +
+  `ditto` steps and uploaded by hand; Intel came from CI as usual.
+  `macos.yml` now unlinks `openssl@1.1` first and tolerates a non-zero
+  exit when `brew list` shows all formulae; it also **caches the Intel
+  job's source-built kegs** (`actions/cache`, one tarball of the kegs
+  that step installed, key `brew-kegs-macos-15-intel-v1`; bump the
+  suffix to rebuild) so later releases skip the ~2.5 h compile. Both
+  commits are after the tag; the tag itself was not moved. Website updated the same morning (card + page,
   downloads table on v0.3.0; all three attached assets answer 206 to
   an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
   `/Applications/JTDX-VU.app` is the tagged v0.3.0 bundle (installed

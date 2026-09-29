@@ -30,12 +30,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The Intel runner is a Homebrew Tier 3 host: no bottles, so gcc, Qt 5,
+      # Boost and their dependencies compile from source (~2.5 h).  Keep the
+      # kegs that step had to install in one tarball and put them back next
+      # time.  Bump the -vN suffix to force a rebuild (new runner image, new
+      # formula versions wanted).
+      - name: Restore Homebrew kegs
+        if: matrix.arch == 'x86_64'
+        uses: actions/cache@v4
+        with:
+          path: ~/brew-kegs.tar
+          key: brew-kegs-${{ matrix.runner }}-v1
+
       - name: Dependencies
         run: |
-          brew update --quiet || true
-          # brew install exits 1 on a Tier 3 host (macos-14 since 2026-09) even
-          # after pouring everything; accept it as long as every formula is there
-          brew install qt@5 hamlib fftw gcc boost libusb webp || brew list --versions qt@5 hamlib fftw gcc boost libusb webp
+          P=$(brew --prefix)
+          FORMULAE="qt@5 hamlib fftw gcc boost libusb webp"
+          # the runner image links openssl@1.1, which blocks openssl@3's
+          # link step and makes brew install exit 1 (v0.3.0 arm64 job)
+          brew unlink openssl@1.1 2>/dev/null || true
+          brew list --formula -1 | sort > /tmp/kegs-before.txt
+          if [ -f ~/brew-kegs.tar ]; then
+            echo "restoring cached kegs"
+            tar -xf ~/brew-kegs.tar -C "$P"
+            # keg-only formulae (qt@5) refuse to link; their opt/ symlink came from the tarball
+            for f in $(cat "$P/brew-kegs.list"); do brew link --overwrite "$f" >/dev/null 2>&1 || true; done
+            export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_UPGRADE=1
+          else
+            brew update --quiet || true
+          fi
+          # accept a non-zero exit (link warnings) as long as every formula is there
+          brew install $FORMULAE || brew list --versions $FORMULAE
+          if [ "${{ matrix.arch }}" = "x86_64" ] && [ ! -f ~/brew-kegs.tar ]; then
+            brew list --formula -1 | sort > /tmp/kegs-after.txt
+            comm -13 /tmp/kegs-before.txt /tmp/kegs-after.txt > "$P/brew-kegs.list"
+            echo "caching $(wc -l < "$P/brew-kegs.list") kegs:"; cat "$P/brew-kegs.list"
+            ( cd "$P" && tar -cf ~/brew-kegs.tar brew-kegs.list $(sed 's|^|Cellar/|' brew-kegs.list) $(sed 's|^|opt/|' brew-kegs.list) )
+            ls -lh ~/brew-kegs.tar
+          fi
 
       - name: Configure
         run: |
