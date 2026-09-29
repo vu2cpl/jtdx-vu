@@ -17,7 +17,7 @@ Last updated: 2026-09-28
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
-- **Release v0.3.0: PUBLISHED 2026-09-29** (Intel zip pending from CI) — JTTY + FT2 + separate
+- **Release v0.3.0: COMPLETE 2026-09-29** — all four builds attached — JTTY + FT2 + separate
   New-DXCC-on-band/mode colours + DIGU re-assert buttons. Tag `v0.3.0`
   pushed. Windows zip and Pi `.deb` (meridianpi5) attached; the CI
   **arm64 job failed in its Dependencies step** — `brew install`
@@ -41,7 +41,12 @@ Last updated: 2026-09-28
   explicit `actions/cache/save` step right after Dependencies (a post
   step is skipped when the job fails later), and cannot fail the build.
   `hashFiles()` only sees the workspace, so the save is gated on a
-  step output instead. Website updated the same morning (card + page,
+  step output instead.
+  Third run (36586507561) passed: Intel zip taken from its artifact,
+  checksum verified, uploaded by hand; cache saved (277 MiB). **Still
+  to confirm at the next release:** that the Intel job restores the
+  cache and finishes in minutes. The arm64 job passed twice on the
+  fixed workflow. Website updated the same morning (card + page,
   downloads table on v0.3.0; all three attached assets answer 206 to
   an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
   `/Applications/JTDX-VU.app` is the tagged v0.3.0 bundle (installed
