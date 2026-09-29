@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.2.1
+# JTDX-VU for VUCG community — v0.3.0
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -39,7 +39,7 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.2.1"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.3.0"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -80,12 +80,12 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   with a per-call/band cooldown (5–60 min).
   - The Club Log app password and the Telegram bot token are stored in
     the macOS Keychain (service `JTDX-VU`), never in the .ini.
-- **JTTY** (branch `jtty`, not yet in a release): WSJT-X 3.2's
+- **JTTY** (new in v0.3.0): WSJT-X 3.2's
   period-free RTTY-style keyboard mode, ported from 3.2.0-rc1 — decoder,
   transmit, an rc1-style controls page with editable F1–F8 macros, Call
   next and Serial Number. JTTY is by Joe Taylor K1JT, Steve Franke
   K9AN, Rob G4KLA and the WSJT-X team.
-- **FT2** (branch `jtty`, not yet in a release): FT4's protocol at twice
+- **FT2** (new in v0.3.0): FT4's protocol at twice
   the speed — 3.75 s periods, 41.67 baud — as introduced in MSHV. The
   mode was created by Martino IU8LMC (ARI Caserta); MSHV's C++
   implementation is by Hrisimir LZ2HV. JTDX-VU decodes and transmits it

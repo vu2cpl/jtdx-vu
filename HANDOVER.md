@@ -8,7 +8,7 @@ Last updated: 2026-09-28
   secret scan, see below). Default branch `jtdx-vu`. The `upstream`
   remote is `jtdx-project/jtdx`; upstream has been dormant since
   2022-03 at tag 159.
-- **Version:** JTDX-VU **0.2.1** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.3.0** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again.
@@ -17,7 +17,11 @@ Last updated: 2026-09-28
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
-- **Release v0.2.1: COMPLETE 2026-09-28** (current). It's at
+- **Release v0.3.0: IN PROGRESS 2026-09-29** — JTTY + FT2 + separate
+  New-DXCC-on-band/mode colours + DIGU re-assert buttons. Tag `v0.3.0`
+  pushed; CI builds macOS arm64/Intel and Windows; Pi `.deb` from
+  meridianpi5. Website to follow.
+- **Release v0.2.1: COMPLETE 2026-09-28**. It's at
   https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.1 with all four
   builds plus a `.sha256` for each:
   - The tag CI attached the Windows, macOS arm64 and macOS Intel zips.
