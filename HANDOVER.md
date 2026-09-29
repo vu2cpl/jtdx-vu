@@ -17,7 +17,7 @@ Last updated: 2026-09-28
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
-- **Release v0.3.0: IN PROGRESS 2026-09-29** — JTTY + FT2 + separate
+- **Release v0.3.0: PUBLISHED 2026-09-29** (Intel zip pending from CI) — JTTY + FT2 + separate
   New-DXCC-on-band/mode colours + DIGU re-assert buttons. Tag `v0.3.0`
   pushed. Windows zip and Pi `.deb` (meridianpi5) attached; the CI
   **arm64 job failed in its Dependencies step** — `brew install`
@@ -26,7 +26,12 @@ Last updated: 2026-09-28
   `macos-bundle.sh` + `ditto` steps and uploaded by hand; Intel came
   from CI as usual. `macos.yml` now tolerates that exit code when
   `brew list` shows all formulae (commit after the tag; the tag itself
-  was not moved). Website to follow.
+  was not moved). Website updated the same morning (card + page,
+  downloads table on v0.3.0; all three attached assets answer 206 to
+  an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
+  `/Applications/JTDX-VU.app` is the `a9603c86` build (all v0.3.0 code,
+  but its About/title still say 0.2.1 — only `Versions.cmake` changed
+  after it); swap in `build/bundle` when Manoj is off the air.
 - **Release v0.2.1: COMPLETE 2026-09-28**. It's at
   https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.1 with all four
   builds plus a `.sha256` for each:
