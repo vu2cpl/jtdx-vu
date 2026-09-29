@@ -29,9 +29,8 @@ Last updated: 2026-09-28
   was not moved). Website updated the same morning (card + page,
   downloads table on v0.3.0; all three attached assets answer 206 to
   an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
-  `/Applications/JTDX-VU.app` is the `a9603c86` build (all v0.3.0 code,
-  but its About/title still say 0.2.1 — only `Versions.cmake` changed
-  after it); swap in `build/bundle` when Manoj is off the air.
+  `/Applications/JTDX-VU.app` is the tagged v0.3.0 bundle (installed
+  2026-09-29 once Manoj was off the air).
 - **Release v0.2.1: COMPLETE 2026-09-28**. It's at
   https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.1 with all four
   builds plus a `.sha256` for each:
