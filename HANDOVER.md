@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-09-28
+Last updated: 2026-09-30
 
 ## Current state
 
@@ -85,6 +85,33 @@ Last updated: 2026-09-28
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-09-30 — Settings dialog fits small screens (Linux bug report)
+
+- **Report:** a Linux user on v0.3.0 (VU2OY on screen) could not see the Settings
+  dialog's OK / Cancel buttons. A silent phone video only showed the
+  main window being dragged about, so the cause was found by testing.
+- **Cause:** the 2026-09-28 macOS fix makes the dialog at least its
+  layout-derived `minimumSizeHint()`. With Linux fonts that is about
+  849x894, taller than a 1366x768 laptop, and the minimum stops the
+  window manager shrinking it. The button row ends up below the screen.
+- **Fix** (`Configuration.cpp`, `fit_to_screen()`, called from
+  `read_settings()` and on every `exec()`): when the needed size fits
+  the screen's available area (less 16x48 px for the frame) nothing
+  changes. When it doesn't, the tab widget is moved into a
+  frameless `QScrollArea`, widened by the scroll-bar extent so no
+  horizontal bar appears, the layout is re-activated so the new
+  minimum takes effect, and the dialog is capped to the screen and
+  moved fully onto it.
+- **Verified on meridianpi5** under Xvfb 1366x768 (no window manager),
+  in a throwaway `-r fittest` instance:
+  - released v0.3.0 `.deb` binary: Settings opens at 849x894, buttons
+    off-screen — the bug reproduces;
+  - patched build: 863x720, tabs scroll, OK / Cancel visible.
+  - The Mac build compiles; on a large screen it takes the unchanged
+    branch.
+- Not in any release yet. The reporter needs a new `.deb`
+  (or a source build) to get it.
 
 ### 2026-09-29 — FT2 mode (branch `jtty`)
 
@@ -830,6 +857,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       and costs about 10 min.
 - [ ] **Windows on Manoj's PC:** Club Log, Telegram and Desktop alerts
       are confirmed. Still to check: audio, CAT and OmniRig on air.
+- [ ] **Settings dialog small-screen fix (2026-09-30)** is unreleased;
+      send the Linux reporter a build and confirm on a real window
+      manager.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
       headless start have been done so far.
 - [ ] **Other Macs:**

@@ -160,6 +160,9 @@
 #include <QFontDialog>
 #include <QColorDialog>
 #include <QGridLayout>
+#include <QScrollArea>
+#include <QScreen>
+#include <QStyle>
 #include <QSerialPortInfo>
 #include <QScopedPointer>
 #include <QDebug>
@@ -391,6 +394,7 @@ private:
   typedef QList<QAudioDeviceInfo> AudioDevices;
 
   void read_settings ();
+  void fit_to_screen ();
   void write_settings ();
 
   bool load_audio_devices (QAudio::Mode, QComboBox *, QAudioDeviceInfo *);
@@ -557,6 +561,7 @@ private:
   QList<QMetaObject::Connection> rig_connections_;
 
   QScopedPointer<Ui::configuration_dialog> ui_;
+  QScrollArea * tabs_scroll_ {nullptr}; // JTDX-VU: wraps the tabs when the dialog cannot fit the screen
 
   QSettings * settings_;
 
@@ -2256,7 +2261,7 @@ void Configuration::impl::read_settings ()
 {
   SettingsGroup g {settings_, "Configuration"};
   restoreGeometry (settings_->value ("window/geometry").toByteArray ());
-  resize (size ().expandedTo (minimumSizeHint ())); // JTDX-VU: never smaller than the layouts need
+  fit_to_screen ();
 
   my_callsign_ = settings_->value ("MyCall", "").toString ();
   my_grid_ = settings_->value ("MyGrid", "").toString ();
@@ -3162,7 +3167,51 @@ int Configuration::impl::exec ()
   rig_changed_ = false;
 
   initialize_models ();
+  fit_to_screen ();             // the screen may differ from the one at start-up
   return QDialog::exec();
+}
+
+// JTDX-VU: size the dialog to what its layouts need, but never larger than
+// the screen it is on.  A layout-derived minimum that exceeds a small
+// laptop display (seen on Linux) pushes OK/Cancel below the bottom edge
+// with no way to shrink the window; when that happens the tab widget is
+// moved into a scroll area so the button row stays reachable.
+void Configuration::impl::fit_to_screen ()
+{
+  auto * scr = QGuiApplication::screenAt (frameGeometry ().center ());
+  if (!scr) scr = QGuiApplication::primaryScreen ();
+  if (!scr) return;
+  auto const avail = scr->availableGeometry ();
+  // leave room for the window frame and title bar
+  QSize const limit {avail.width () - 16, avail.height () - 48};
+  QSize const need = minimumSizeHint ();
+  if (!tabs_scroll_ && need.width () <= limit.width () && need.height () <= limit.height ())
+    {
+      resize (size ().expandedTo (need)); // never smaller than the layouts need
+      return;
+    }
+  if (!tabs_scroll_)
+    {
+      tabs_scroll_ = new QScrollArea {this};
+      tabs_scroll_->setWidgetResizable (true);
+      tabs_scroll_->setFrameShape (QFrame::NoFrame);
+      ui_->gridLayout_31->removeWidget (ui_->configuration_tabs);
+      tabs_scroll_->setWidget (ui_->configuration_tabs);
+      // room for the vertical scroll bar, so no horizontal one is needed
+      tabs_scroll_->setMinimumWidth (ui_->configuration_tabs->minimumSizeHint ().width ()
+                                     + style ()->pixelMetric (QStyle::PM_ScrollBarExtent, nullptr, tabs_scroll_));
+      ui_->gridLayout_31->addWidget (tabs_scroll_, 0, 0);
+      ui_->gridLayout_31->activate (); // recompute the window minimum now, or resize () is clamped to the old one
+    }
+  resize (size ().expandedTo (need).boundedTo (limit));
+  // keep the whole frame on the screen
+  auto fg = frameGeometry ();
+  QPoint at = fg.topLeft ();
+  if (fg.right () > avail.right ()) at.setX (avail.right () - fg.width () + 1);
+  if (fg.bottom () > avail.bottom ()) at.setY (avail.bottom () - fg.height () + 1);
+  if (at.x () < avail.left ()) at.setX (avail.left ());
+  if (at.y () < avail.top ()) at.setY (avail.top ());
+  if (at != fg.topLeft ()) move (at);
 }
 
 TransceiverFactory::ParameterPack Configuration::impl::gather_rig_data ()
