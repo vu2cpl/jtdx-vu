@@ -110,8 +110,8 @@ Last updated: 2026-09-30
   - patched build: 863x720, tabs scroll, OK / Cancel visible.
   - The Mac build compiles; on a large screen it takes the unchanged
     branch.
-- Not in any release yet. The reporter needs a new `.deb`
-  (or a source build) to get it.
+- Not in any release yet. Manoj will ship it in the next minor
+  version bump along with other fixes.
 
 ### 2026-09-29 — FT2 mode (branch `jtty`)
 
@@ -857,9 +857,10 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       and costs about 10 min.
 - [ ] **Windows on Manoj's PC:** Club Log, Telegram and Desktop alerts
       are confirmed. Still to check: audio, CAT and OmniRig on air.
-- [ ] **Settings dialog small-screen fix (2026-09-30)** is unreleased;
-      send the Linux reporter a build and confirm on a real window
-      manager.
+- [ ] **Settings dialog small-screen fix (2026-09-30)** is unreleased.
+      It ships in the next minor version bump with other fixes, not as
+      a one-off build. Once it's out, ask the Linux reporter to confirm
+      on their real window manager.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
       headless start have been done so far.
 - [ ] **Other Macs:**
