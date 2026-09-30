@@ -56,7 +56,8 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
       macros_[i] = new QLineEdit {settings_->value (QString {"Msg%1"}.arg (i + 1), defaultMacro (i + 1)).toString ()};
       macros_[i]->setToolTip (tr (macros[i].tip));
     }
-  serial_->setRange (1, 9999);
+  serial_->setRange (0, 9999);
+  serial_->setSpecialValueText (tr ("none"));   // 0: non-contest, %E sends just 599
   serial_->setValue (settings_->value ("SerialNumber", 1).toInt ());
   settings_->endGroup ();
 
@@ -78,7 +79,8 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   halt_->setEnabled (false);
   callNext_->setToolTip (tr ("Callsign to be worked next (%Q)."));
   callNext_->setMaximumWidth (110);
-  serial_->setToolTip (tr ("Serial number of QSO for contest exchange (%N; %E sends 599 %N)."));
+  serial_->setToolTip (tr ("Serial number of QSO for contest exchange (%N; %E sends 599 %N).\n"
+                           "Set it to none (0) for a non-contest QSO: %E then sends just 599."));
 
   auto grid = new QGridLayout {this};
   grid->setContentsMargins (2, 2, 2, 2);

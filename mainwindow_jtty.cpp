@@ -17,6 +17,10 @@
 
 #include <QTextCursor>
 #include <QTextCharFormat>
+#include <QTextBlock>
+#include <QScrollBar>
+#include <QRegularExpression>
+#include <QStatusBar>
 #include <QTimer>
 #include <QAction>
 
@@ -286,7 +290,11 @@ void MainWindow::renderJttyAllFreqLines ()
 
   QTextCharFormat format;
   format.setFont (ui->decodedTextBrowser->contentFont ());
-  QTextCursor cursor = ui->decodedTextBrowser->textCursor ();
+  // JTDX-VU: edit through a document cursor and follow the end only when the
+  // view is already there, so a line keeps still while the operator clicks it
+  auto * const bar = ui->decodedTextBrowser->verticalScrollBar ();
+  bool const follow = bar->value () >= bar->maximum () - 2;
+  QTextCursor cursor {ui->decodedTextBrowser->document ()};
   if (m_jttyAllFreqsGroupStart.isValid ())
     {
       cursor.setPosition (m_jttyAllFreqsGroupStart.position ());
@@ -300,14 +308,15 @@ void MainWindow::renderJttyAllFreqLines ()
     }
   m_jttyAllFreqsGroupStart = cursor.block ();
   cursor.insertText (displayLines.join (QChar {'\n'}), format);
-  ui->decodedTextBrowser->setTextCursor (cursor);
-  ui->decodedTextBrowser->ensureCursorVisible ();
+  if (follow) bar->setValue (bar->maximum ());
 }
 
 void MainWindow::renderJttyQsoLines ()
 {
   if (m_jttyQsoLines.isEmpty ()) return;
-  QTextCursor cursor = ui->decodedTextBrowser2->textCursor ();
+  auto * const bar = ui->decodedTextBrowser2->verticalScrollBar ();
+  bool const follow = bar->value () >= bar->maximum () - 2;
+  QTextCursor cursor {ui->decodedTextBrowser2->document ()};
   if (m_jttyQsoGroupStart.isValid () && m_jttyQsoGroupEnd.isValid ()
       && m_jttyQsoGroupEndPosition >= m_jttyQsoGroupStart.position ())
     {
@@ -339,8 +348,57 @@ void MainWindow::renderJttyQsoLines ()
   cursor.insertText (renderedLines.join (QChar {'\n'}), format);
   m_jttyQsoGroupEnd = cursor.block ();
   m_jttyQsoGroupEndPosition = cursor.position ();
-  ui->decodedTextBrowser2->setTextCursor (cursor);
-  ui->decodedTextBrowser2->ensureCursorVisible ();
+  if (follow) bar->setValue (bar->maximum ());
+}
+
+// ---- picking a call from the decode panes --------------------------------
+//
+// JTDX-VU: JTTY lines are free text, so a click (N1MM style), a double-click
+// or a mouse selection on a word that looks like a call puts it in DX Call.
+// Punctuation around it ("VU2CPL," "<VU2CPL>") is dropped; a slash inside
+// stays (VU2OY/P).  Single clicks and selections fail silently, so clicking
+// about in the text never nags; a double-click on a non-call says why.
+
+void MainWindow::jttyClickOnCall (bool secondPane)
+{
+  if (m_mode != "JTTY") return;
+  auto * const w = secondPane ? ui->decodedTextBrowser2 : ui->decodedTextBrowser;
+  jttyPickCall (w->textCursor (), true);
+}
+
+bool MainWindow::jttyPickCall (QTextCursor cursor, bool quiet)
+{
+  QString token;
+  auto const lineText = cursor.block ().text ();
+  if (quiet && cursor.hasSelection ())
+    token = cursor.selectedText ();                   // what the mouse selected
+  else
+    {
+      // the whole space-delimited token under the pointer (QTextEdit's own
+      // word breaks at '/' and punctuation)
+      int const pos = (cursor.hasSelection () ? cursor.selectionStart () : cursor.position ())
+        - cursor.block ().position ();
+      int start = qBound (0, pos, lineText.size ()), end = start;
+      while (start > 0 && !lineText.at (start - 1).isSpace ()) --start;
+      while (end < lineText.size () && !lineText.at (end).isSpace ()) ++end;
+      token = lineText.mid (start, end - start);
+    }
+  token = token.trimmed ().toUpper ();
+  static QRegularExpression const edges {"^[^A-Z0-9]+|[^A-Z0-9]+$"};
+  token.remove (edges);
+  static QRegularExpression const callLike {"^[A-Z0-9]{1,3}[0-9][A-Z0-9]*[A-Z](/[A-Z0-9]+)?$|^[A-Z0-9]+/[A-Z0-9]{1,3}[0-9][A-Z0-9]*[A-Z]$"};
+  if (token.size () >= 3 && callLike.match (token).hasMatch ())
+    {
+      if (ui->dxCallEntry->text ().trimmed ().toUpper () != token)
+        {
+          ui->dxCallEntry->setText (token);
+          ui->dxGridEntry->clear ();
+        }
+      return true;
+    }
+  if (!quiet && !token.isEmpty ())
+    statusBar ()->showMessage (tr ("JTTY: \"%1\" doesn't look like a callsign").arg (token), 4000);
+  return false;
 }
 
 // ---- transmit ----------------------------------------------------------------
@@ -392,7 +450,7 @@ bool MainWindow::jttyUpdateTxState ()
 
 // F1..F8: WSJT-X 3.2's macros - %M my call, %H his call (DX Call entry),
 // %Q the Call next field (his call when empty), %N the serial number,
-// %E the exchange "599 %N"
+// %E the exchange "599 %N", or just "599" when Serial Number is 0 (none)
 void MainWindow::jttyMacro (int key)
 {
   if (!m_jttyPanel) return;
@@ -418,7 +476,7 @@ void MainWindow::jttyMacro (int key)
       statusBar ()->showMessage (tr ("JTTY: fill in Call next (or the DX call) first"), 5000);
       return;
     }
-  tpl.replace ("%E", "599 %N");
+  tpl.replace ("%E", m_jttyPanel->serialNumber () > 0 ? "599 %N" : "599");
   tpl.replace ("%M", my).replace ("%H", his).replace ("%Q", queued).replace ("%N", serial);
   jtty_tx (tpl);
 }

@@ -744,6 +744,9 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   connect(txMsgButtonGroup,SIGNAL(buttonClicked(int)),SLOT(set_ntx(int)));
   connect(ui->decodedTextBrowser2,SIGNAL(selectCallsign(bool,bool)),this,SLOT(doubleClickOnCall(bool,bool)));
   connect(ui->decodedTextBrowser,SIGNAL(selectCallsign(bool,bool)),this,SLOT(doubleClickOnCall2(bool,bool)));
+  // JTDX-VU: in JTTY a single click (or a selection) picks a call, like N1MM
+  connect(ui->decodedTextBrowser2,&DisplayText::leftClickReleased,this,[this] {jttyClickOnCall (true);});
+  connect(ui->decodedTextBrowser,&DisplayText::leftClickReleased,this,[this] {jttyClickOnCall (false);});
   connect(ui->decodedTextBrowser->horizontalScrollBar(),SIGNAL(sliderMoved(int)),SLOT(ScrollBarPosition(int)));
 
   // initialise decoded text font and hook up change signal
@@ -5130,26 +5133,9 @@ void MainWindow::doubleClickOnCall(bool alt, bool ctrl)
   }
   if (m_mode == "JTTY")
     {
-      // JTDX-VU, as WSJT-X 3.2: JTTY lines are free text, so the word under
-      // the pointer becomes the DX call when it looks like one
-      cursor.select (QTextCursor::WordUnderCursor);
-      auto word = cursor.selectedText ().trimmed ().toUpper ();
-      // QTextEdit's word breaks at '/', so take the whole slash-joined token
-      auto lineCursor = cursor;
-      lineCursor.select (QTextCursor::LineUnderCursor);
-      int const offset = cursor.selectionStart () - lineCursor.selectionStart ();
-      auto const lineText = lineCursor.selectedText ();
-      int start = offset, end = offset + word.size ();
-      while (start > 0 && !lineText.at (start - 1).isSpace ()) --start;
-      while (end < lineText.size () && !lineText.at (end).isSpace ()) ++end;
-      word = lineText.mid (start, end - start).trimmed ().toUpper ();
-      static QRegularExpression const callLike {"^[A-Z0-9]{1,3}[0-9][A-Z0-9]*[A-Z](/[A-Z0-9]+)?$|^[A-Z0-9]+/[A-Z0-9]{1,3}[0-9][A-Z0-9]*[A-Z]$"};
-      if (!word.isEmpty () && callLike.match (word).hasMatch () && word.size () >= 3)
-        {
-          ui->dxCallEntry->setText (word);
-          ui->dxGridEntry->clear ();
-        }
-      else statusBar ()->showMessage (tr ("JTTY: \"%1\" doesn't look like a callsign").arg (word), 4000);
+      // JTDX-VU: JTTY lines are free text; the word under the pointer
+      // becomes the DX call when it looks like one
+      jttyPickCall (cursor, false);
       return;
     }
   cursor.select(QTextCursor::LineUnderCursor);
@@ -6255,6 +6241,13 @@ void MainWindow::on_logQSOButton_clicked()
   bool autolog = false;
   if(m_logqso73) autolog = m_config.autolog();
   distance=ui->labDist->text();
+  if (m_mode == "JTTY") {
+      // JTDX-VU: a keyboard (RTTY-style) mode logs RST, not FT8's dB report
+      m_logDlg->initLogQSO (m_hisCall, m_hisGrid, m_modeTx, "599", "599", distance, m_name,
+                        m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),autolog);
+      m_logqso73=false;
+      return;
+  }
   if (m_qsoHistory.log_data(m_hisCall,time,rrep,srep) > QsoHistory::SREPORT) {
       if (time < 86400) {
           currenttime.setTime(QTime::fromMSecsSinceStartOfDay(time*1000));

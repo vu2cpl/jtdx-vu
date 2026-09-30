@@ -131,6 +131,12 @@ void DisplayText::mouseDoubleClickEvent(QMouseEvent *e)
   emit(selectCallsign(alt,ctrl));
 }
 
+void DisplayText::mouseReleaseEvent(QMouseEvent *e)
+{
+  QTextEdit::mouseReleaseEvent(e);
+  if (e->button() == Qt::LeftButton && e->modifiers() == Qt::NoModifier) emit(leftClickReleased());
+}
+
 void DisplayText::insertLineSpacer(QString const& line)
 {
     appendText (line, Radio::convert_dark("#d3d3d3",useDarkStyle_), Radio::convert_dark("#000000",useDarkStyle_), 0, " ", Radio::convert_dark("#000000",useDarkStyle_), " ", true);

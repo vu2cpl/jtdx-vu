@@ -841,6 +841,8 @@ private:
   void jtty_tx (QString message);       // encode + generate wave, then let guiUpdate key up
   void jttyMacro (int key);             // F1..F8: expand %M %H %Q %E, then jtty_tx
   void jttyHalt ();
+  bool jttyPickCall (QTextCursor cursor, bool quiet);   // word or selection -> DX Call
+  void jttyClickOnCall (bool secondPane);
   bool jttyModulatorActive () const;
   bool jttyTxBusy () const;             // a Send is pending or playing
   bool jttyUpdateTxState ();            // guiUpdate's m_bTxTime for JTTY

@@ -83,8 +83,11 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
 - **JTTY** (new in v0.3.0): WSJT-X 3.2's
   period-free RTTY-style keyboard mode, ported from 3.2.0-rc1 — decoder,
   transmit, an rc1-style controls page with editable F1–F8 macros, Call
-  next and Serial Number. JTTY is by Joe Taylor K1JT, Steve Franke
-  K9AN, Rob G4KLA and the WSJT-X team.
+  next and Serial Number. Click, double-click or select a callsign in
+  either decode pane to put it in DX Call, as in N1MM; punctuation around
+  it is ignored. Set Serial Number to "none" for a non-contest QSO and
+  %E sends just 599. Log QSO fills RST 599 / 599 in JTTY. JTTY is by Joe
+  Taylor K1JT, Steve Franke K9AN, Rob G4KLA and the WSJT-X team.
 - **FT2** (new in v0.3.0): FT4's protocol at twice
   the speed — 3.75 s periods, 41.67 baud — as introduced in MSHV. The
   mode was created by Martino IU8LMC (ARI Caserta); MSHV's C++

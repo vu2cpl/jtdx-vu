@@ -86,6 +86,41 @@ Last updated: 2026-09-30
 
 ## What changed
 
+### 2026-09-30 — JTTY: click to pick a call, %E without a serial, RST 599 in the log
+
+Manoj on air: couldn't pick a call from JTTY text; %E always sent
+"599 001"; Log QSO showed -15 / -15.
+
+- **Picking a call** (`mainwindow_jtty.cpp`, `jttyPickCall()`):
+  - Reproduced in a throwaway instance with a generated wav (the TX
+    harness taking the message as an argument, then `JTDXVU_OPEN_WAV`).
+    Double-click worked on a clean call, but "VU2CPL," failed ("doesn't
+    look like a callsign"): RTTY text glues punctuation to calls.
+  - Leading and trailing punctuation is now stripped; a slash inside
+    stays (VU2OY/P).
+  - A **single click** (N1MM style) or a mouse **selection** also picks
+    a call: `DisplayText` emits `leftClickReleased()`, handled only in
+    JTTY. Single clicks and selections on non-calls are silent; a
+    double-click still says why.
+  - Both JTTY renders now edit through a document cursor and only
+    follow the end when the view is already at the bottom. Before, every
+    new character reset the widget cursor and jumped to the bottom, so
+    a call scrolled away while being aimed at on air.
+  - Verified by clicking in the test instance: "VU2CPL," → VU2CPL,
+    JA1ABC from the Rx Frequency pane, "MANOJ" ignored, double-click on
+    VU2OY/P. The no-jump render is not yet seen with live on-air text.
+- **%E:** Serial Number now goes down to 0, shown as "none"; then %E is
+  just "599". Any serial above 0 keeps WSJT-X's "599 %N".
+- **Log QSO in JTTY:** RST sent / received are 599 / 599 instead of the
+  FT8 dB reports. Verified in the test instance (dialog cancelled).
+- Not released. Ships with the next minor version.
+- Test gotcha: the live `/Applications/JTDX-VU.app` and a build-dir test
+  instance are both process `jtdx` to System Events. Address test
+  windows by **unix id**, or keystrokes land in the live app. A
+  build-dir instance also needs `jtdxjt9` beside it
+  (`build/jtdx.app/Contents/MacOS/`), or dismissing the subprocess
+  error quits it.
+
 ### 2026-09-30 — Settings dialog fits small screens (Linux bug report)
 
 - **Report:** a Linux user on v0.3.0 (VU2OY on screen) could not see the Settings
@@ -861,6 +896,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       It ships in the next minor version bump with other fixes, not as
       a one-off build. Once it's out, ask the Linux reporter to confirm
       on their real window manager.
+- [ ] **JTTY click-to-pick on live text:** confirm on air that a
+      growing line holds still and a single click grabs the call.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
       headless start have been done so far.
 - [ ] **Other Macs:**
