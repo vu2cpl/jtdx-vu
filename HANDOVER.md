@@ -144,8 +144,8 @@ the 3 dB of half the symbol energy — on the mark), exact frequency and
 DT over −0.4..+0.8 s; the real `jtdxjt9` path decoded the −10 dB file
 in a throwaway `-r ft2test` instance (`-10 0.0 1501 : CQ VU2CPL MK82`
 in ALL.TXT, both panes, "TX 3.75", `FT2` status); the GUI TX chain
-(`genft4` → `gen_ft2wave` 48 kHz → decimate) decodes back through
-`ft2dec`. **Not yet on the air** — the first test should be with an
+(`genft4` → `gen_ft2wave` 48 kHz → decimate; `lib/ft2/tools/txtest_ft2.f90`,
+compiled by hand like the JTTY one) decodes back through `ft2dec`. **Not yet on the air** — the first test should be with an
 MSHV FT2 station (VUCG runs them), watching DT: a systematic ±0.25 s
 would mean the start-of-period convention differs from MSHV's.
 
@@ -187,7 +187,7 @@ path works on the air. Three things came out of that session:
   in ALL.TXT carries the text (it was blank tonight).
 
 Layout checked in a throwaway `-r jttylayout` instance (window capture
-via `screencapture -l <id>`, ids from a 10-line Swift
+via `screencapture -l <id>`, ids from `tools/macos-window-id.swift`, a 10-line Swift
 `CGWindowListCopyWindowInfo` script — `osascript` lost assistive access
 this session). Installed once Manoj quit; **F-keys confirmed working on
 the air** the same evening.
@@ -246,7 +246,7 @@ plays it through the existing pre-generated-wave path (`foxcom_.wave`,
   into both `frequencies_` and the dialog's `next_frequencies_`, or the
   next Settings > OK would write the stale list back. Reuse for FT2.
 
-**Verified offline only:** a scratch Fortran harness calling the exact
+**Verified offline only:** a Fortran harness (`lib/jtty/tools/txtest_jtty.f90`, compiled by hand against `build/libwsjt_fort.a`) calling the exact
 GUI sequence (`genjtty_profile` → `gen_jttywave` at 1536 sps/48 kHz,
 decimated ×4) for `CQ VU2CPL CQ` gives 59 symbols / 1.888 s, and
 `rjtty 0 0 384 1500 100` decodes it back as `1500  CQ VU2CPL CQ`.
