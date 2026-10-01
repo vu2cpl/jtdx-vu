@@ -116,7 +116,7 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
 - **Raspberry Pi / Debian 12:**
   `sudo apt install qtbase5-dev qtmultimedia5-dev libqt5websockets5-dev libqt5serialport5-dev libhamlib-dev libhamlib-utils libfftw3-dev gfortran qttools5-dev-tools qttools5-dev libqt5svg5-dev cmake`,
   then
-  `cmake .. -DCMAKE_BUILD_TYPE=Release -DWSJT_GENERATE_DOCS=OFF -DWSJT_SKIP_MANPAGES=ON -DCMAKE_INSTALL_PREFIX=/usr && make -j3 && cpack -G DEB`.
+  `cmake .. -DCMAKE_BUILD_TYPE=Release -DWSJT_GENERATE_DOCS=OFF -DWSJT_SKIP_MANPAGES=ON -DCMAKE_INSTALL_PREFIX=/usr/local && make -j3 && cpack -G DEB`.
 
 ## Build (macOS, local)
 
