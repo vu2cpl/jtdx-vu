@@ -1089,8 +1089,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       and costs about 10 min.
 - [ ] **Windows on Manoj's PC:** Club Log, Telegram and Desktop alerts
       are confirmed. Still to check: audio, CAT and OmniRig on air.
-- [ ] **Settings dialog small-screen fix** released in v0.4.0; ask the
-      Linux reporter (VU2OY) to confirm on their real window manager.
+- [ ] **Settings dialog small-screen fix** released in v0.4.0; Manoj
+      asked the Linux reporter by DM on 2026-10-01 to confirm on their
+      real window manager. Waiting for the answer.
 - [ ] **JTTY click-to-pick on live text:** confirm on air that a
       growing line holds still and a single click grabs the call.
 - [ ] **JTTY to LoTW:** RUMlog holds the seven JTTY QSOs (checked in
