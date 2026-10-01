@@ -60,9 +60,8 @@ Last updated: 2026-09-30
   `hashFiles()` only sees the workspace, so the save is gated on a
   step output instead.
   Third run (36586507561) passed: Intel zip taken from its artifact,
-  checksum verified, uploaded by hand; cache saved (277 MiB). **Still
-  to confirm at the next release:** that the Intel job restores the
-  cache and finishes in minutes. The arm64 job passed twice on the
+  checksum verified, uploaded by hand; cache saved (277 MiB). **Confirmed at
+  v0.4.0:** the Intel job restored the cache and finished in ~10 min. The arm64 job passed twice on the
   fixed workflow. Website updated the same morning (card + page,
   downloads table on v0.3.0; all three attached assets answer 206 to
   an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
@@ -1090,7 +1089,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       and costs about 10 min.
 - [ ] **Windows on Manoj's PC:** Club Log, Telegram and Desktop alerts
       are confirmed. Still to check: audio, CAT and OmniRig on air.
-- [x] ~~Settings dialog small-screen fix~~ — released in v0.4.0.
+- [ ] **Settings dialog small-screen fix** released in v0.4.0; ask the
+      Linux reporter (VU2OY) to confirm on their real window manager.
 - [ ] **JTTY click-to-pick on live text:** confirm on air that a
       growing line holds still and a single click grabs the call.
 - [ ] **JTTY to LoTW:** RUMlog holds the seven JTTY QSOs (checked in
