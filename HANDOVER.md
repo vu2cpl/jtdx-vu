@@ -88,6 +88,21 @@ Last updated: 2026-09-30
 
 ## What changed
 
+### 2026-10-01 — JTTY logs as ADIF MFSK / JTTY
+
+- JTTY QSOs were written as `<MODE:4>JTTY`, which LoTW/TQSL don't know
+  yet. Both ADIF writers (`logqso.cpp` for the logged-ADIF UDP message
+  to RUMlog, `logbook/adif.cpp` for the log file) now treat JTTY like
+  FT4 and FT2: `<MODE:4>MFSK <SUBMODE:4>JTTY`. That is the form proposed
+  for ADIF 3.1.8, per a search summary Manoj pasted; not checked against
+  the ADIF spec itself.
+- The ADIF reader already maps MFSK + SUBMODE back to the mode name, so
+  worked-before matches both new entries and older `MODE:JTTY` ones.
+- QSOs logged before this change stay as MODE JTTY in RUMlog; fix them
+  there (or in the .adi) before a LoTW upload.
+- Built, not installed: the installed app is still `b6480391`, which
+  Manoj is testing on air.
+
 ### 2026-09-30 — JTTY: click to pick a call, %E without a serial, RST 599 in the log
 
 Manoj on air: couldn't pick a call from JTTY text; %E always sent
