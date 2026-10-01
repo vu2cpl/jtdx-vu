@@ -89,6 +89,40 @@ Last updated: 2026-09-30
 
 ## What changed
 
+### 2026-10-01 — JTTY Auto CQ and a Settings > JTTY tab
+
+Manoj: JTTY only sends once; wants auto CQ with a settable gap (default
+10 s), and a JTTY page in Settings for auto CQ, macro sets, etc.
+
+- **`jttysettings.{h,cpp}`** (new): `JttySettingsPage`, added as the last
+  tab of Settings by `Configuration` (loaded on every `exec()`, saved on
+  OK, then `jtty_settings_changed` → `JttyPanel::reloadMacros`). Shared
+  `[JTTY]` helpers in `namespace JttySettings`.
+  - Auto CQ: macro key (F1), gap (10 s, 1–300), stop after N calls
+    (0 = no limit), stop when my call is decoded (on).
+  - Exchange: what %E sends, default `599 %N`; %N is dropped when the
+    panel's Serial Number is "none".
+  - Macro sets: `MacroSets` array (name, Msg1..8) + `ActiveMacroSet`.
+    First read migrates the panel's old `[JTTY] Msg1..8` into "Default"
+    and adds the built-in "Contest (WSJT-X)" and "Ragchew / DX" sets.
+    New / Rename / Delete / Reset to built-in. Panel edits write into
+    the active set.
+- **Panel:** Auto CQ toggle beside Halt (green when on).
+- **Engine** (`mainwindow_jtty.cpp`): sends the macro, and when
+  `jttyUpdateTxState` sees the transmission end, waits the gap and sends
+  again. Stops on Halt/Esc, any other send (`jtty_tx` not from Auto CQ),
+  DX call picked or typed, the call limit, a decode with my call as a
+  word (not one starting CQ/QRZ, not "DE MYCALL", and not while
+  transmitting, so my own CQ heard back doesn't count), a macro that
+  can't be sent, or leaving JTTY. Status bar says why.
+- **Verified** in a throwaway instance (Rig None, audio to the Mac mini
+  speaker, gap 3 s, limit 2): two CQs 3 s apart, then "Auto CQ stopped:
+  2 call(s) made"; Halt mid-call stops it and nothing follows; the tab
+  shows and saves; switching to "Ragchew / DX" and OK updates the panel.
+  Stop-on-my-call and stop-on-pick are not exercised yet.
+- Note for testing: F2 is a JTTY macro, so Settings must be opened from
+  the app menu (Preferences...) while in JTTY.
+
 ### 2026-10-01 — crash when quitting during TCI start-up (inherited from JTDX)
 
 - **Crash:** SIGSEGV in `QEventLoop::exec` under `TCITransceiver::do_start`
@@ -984,6 +1018,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       for JTTY (TQSL config update may be needed).
 - [ ] **JTTY start-time fix** installed 2026-10-01; check the next
       JTTY QSO logs a sensible start time.
+- [ ] **JTTY Auto CQ on air:** check stop-on-my-call and that a
+      reply is never missed during the gap; not yet installed.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
       headless start have been done so far.
 - [ ] **Other Macs:**

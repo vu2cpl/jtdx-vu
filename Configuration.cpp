@@ -168,6 +168,7 @@
 #include <QDebug>
 #include <QtGui>
 #include "qt_helpers.hpp"
+#include "jttysettings.h"
 #include "MetaDataRegistry.hpp"
 #include "SettingsGroup.hpp"
 #include "FrequencyLineEdit.hpp"
@@ -561,6 +562,7 @@ private:
   QList<QMetaObject::Connection> rig_connections_;
 
   QScopedPointer<Ui::configuration_dialog> ui_;
+  JttySettingsPage * jtty_page_ {nullptr};   // JTDX-VU: Settings > JTTY
   QScrollArea * tabs_scroll_ {nullptr}; // JTDX-VU: wraps the tabs when the dialog cannot fit the screen
 
   QSettings * settings_;
@@ -1463,6 +1465,8 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
   // larger macOS UI font that lets the dialog shrink below what its layouts
   // need, so tabs (Notifications worst) overlap.  Let the layouts set it.
   setMinimumSize (0, 0);
+  jtty_page_ = new JttySettingsPage;
+  ui_->configuration_tabs->addTab (jtty_page_, tr ("JTTY"));
 
   {
     ui_->configuration_dialog_button_box->button(QDialogButtonBox::Ok)->setText(tr("&OK"));
@@ -3167,6 +3171,7 @@ int Configuration::impl::exec ()
   rig_changed_ = false;
 
   initialize_models ();
+  jtty_page_->load (settings_);  // JTDX-VU: what the panel may have changed since
   fit_to_screen ();             // the screen may differ from the one at start-up
   return QDialog::exec();
 }
@@ -3641,6 +3646,8 @@ void Configuration::impl::accept ()
     }
  
   write_settings ();		// make visible to all
+  jtty_page_->save (settings_);
+  Q_EMIT self_->jtty_settings_changed ();
 }
 
 void Configuration::impl::reject ()

@@ -26,6 +26,7 @@
 
 #include "commons.h"
 #include "jttypanel.h"
+#include "jttysettings.h"
 #include "displaytext.h"
 #include "widegraph.h"
 #include "Detector.hpp"
@@ -189,6 +190,9 @@ bool MainWindow::jtty_decode (int k)
     }
   while (updateCount == jttyMaxUpdates);
   if (updates.isEmpty ()) return false;
+
+  if (m_jttyAutoCq)
+    for (auto const& update : updates) jttyAutoCqCheckDecode (update.text);
 
   // Band Activity: every message on the band, updated in place by id
   bool allChanged {false};
@@ -444,13 +448,15 @@ bool MainWindow::jttyUpdateTxState ()
       m_jttyTxEndMs = 0;
       m_jttyTxRequestedUntil = 0;
       if (m_jttyPanel) m_jttyPanel->setTransmitting (false);
+      jttyAutoCqAfterTx ();
     }
   return wanted;
 }
 
 // F1..F8: WSJT-X 3.2's macros - %M my call, %H his call (DX Call entry),
 // %Q the Call next field (his call when empty), %N the serial number,
-// %E the exchange "599 %N", or just "599" when Serial Number is 0 (none)
+// %E the exchange from Settings > JTTY ("599 %N" by default), without %N
+// when Serial Number is 0 (none)
 void MainWindow::jttyMacro (int key)
 {
   if (!m_jttyPanel) return;
@@ -476,7 +482,10 @@ void MainWindow::jttyMacro (int key)
       statusBar ()->showMessage (tr ("JTTY: fill in Call next (or the DX call) first"), 5000);
       return;
     }
-  tpl.replace ("%E", m_jttyPanel->serialNumber () > 0 ? "599 %N" : "599");
+  // %E from Settings > JTTY; with Serial Number "none" the %N part goes
+  auto exchange = JttySettings::exchange (m_settings);
+  if (m_jttyPanel->serialNumber () <= 0) exchange = exchange.remove ("%N").simplified ();
+  tpl.replace ("%E", exchange);
   tpl.replace ("%M", my).replace ("%H", his).replace ("%Q", queued).replace ("%N", serial);
   jtty_tx (tpl);
 }
@@ -484,6 +493,7 @@ void MainWindow::jttyMacro (int key)
 void MainWindow::jtty_tx (QString message)
 {
   if (m_mode != "JTTY" || !m_jttyPanel) return;
+  if (m_jttyAutoCq && !m_jttyAutoCqSending) jttyAutoCqStop (tr ("another message sent"));
   if (jttyTxBusy ())
     {
       statusBar ()->showMessage (tr ("JTTY: still transmitting - wait for the message to finish"), 4000);
@@ -546,8 +556,100 @@ void MainWindow::jtty_tx (QString message)
 
 void MainWindow::jttyHalt ()
 {
+  if (m_jttyAutoCq) jttyAutoCqStop (tr ("halted"));
   m_jttyTxRequestedUntil = 0;
   m_jttyTxEndMs = 0;
   haltTx ("JTTY halt ");
   if (m_jttyPanel) m_jttyPanel->setTransmitting (false);
+}
+
+// ---- Auto CQ -----------------------------------------------------------------
+//
+// JTDX-VU: send the Auto CQ macro (Settings > JTTY, F1 by default), listen for
+// the gap, send it again.  Halt/Esc, any other transmission, picking or typing
+// a DX call, the call limit, a decode with my call (optional) or leaving JTTY
+// stops it.
+
+void MainWindow::jttyAutoCqToggled (bool on)
+{
+  if (!m_jttyPanel) return;
+  if (!on)
+    {
+      jttyAutoCqStop (tr ("switched off"));
+      return;
+    }
+  if (m_mode != "JTTY" || !m_jttyPanel)
+    {
+      m_jttyPanel->setAutoCq (false);
+      return;
+    }
+  m_jttyAutoCq = true;
+  m_jttyAutoCqCount = 0;
+  m_jttyPanel->setAutoCq (true);
+  if (!jttyTxBusy ()) jttyAutoCqFire ();      // else it starts when this transmission ends
+}
+
+void MainWindow::jttyAutoCqFire ()
+{
+  if (!m_jttyAutoCq) return;
+  if (m_mode != "JTTY" || !m_jttyPanel)
+    {
+      jttyAutoCqStop (tr ("left JTTY"));
+      return;
+    }
+  if (jttyTxBusy ()) return;                   // jttyAutoCqAfterTx reschedules
+  int const max = JttySettings::autoCqMax (m_settings);
+  if (max > 0 && m_jttyAutoCqCount >= max)
+    {
+      jttyAutoCqStop (tr ("%n call(s) made", "", m_jttyAutoCqCount));
+      return;
+    }
+  m_jttyAutoCqSending = true;
+  jttyMacro (JttySettings::autoCqKey (m_settings));
+  m_jttyAutoCqSending = false;
+  if (!jttyTxBusy ())
+    {
+      // the macro could not be sent (no call set, empty macro, ...); its own
+      // status message says why
+      m_jttyAutoCq = false;
+      m_jttyAutoCqTimer->stop ();
+      m_jttyPanel->setAutoCq (false);
+      return;
+    }
+  ++m_jttyAutoCqCount;
+}
+
+void MainWindow::jttyAutoCqAfterTx ()
+{
+  if (!m_jttyAutoCq) return;
+  int const gap = JttySettings::autoCqGap (m_settings);
+  m_jttyAutoCqTimer->start (gap * 1000);
+  statusBar ()->showMessage (tr ("Auto CQ: calling again in %1 s").arg (gap), gap * 1000);
+}
+
+void MainWindow::jttyAutoCqStop (QString const& why)
+{
+  bool const was = m_jttyAutoCq;
+  m_jttyAutoCq = false;
+  if (m_jttyAutoCqTimer) m_jttyAutoCqTimer->stop ();
+  if (m_jttyPanel) m_jttyPanel->setAutoCq (false);
+  if (was) statusBar ()->showMessage (tr ("Auto CQ stopped: %1").arg (why), 8000);
+}
+
+// a decode that carries my call as a word, and isn't my own CQ heard back
+// (CQ ... MYCALL, ... DE MYCALL), means someone is answering
+void MainWindow::jttyAutoCqCheckDecode (QString const& text)
+{
+  if (!JttySettings::autoCqStopOnMyCall (m_settings) || jttyTxBusy ()) return;
+  auto const my = m_config.my_callsign ().trimmed ().toUpper ();
+  if (my.isEmpty ()) return;
+  auto const words = text.toUpper ().split (QRegularExpression {"[^A-Z0-9/]+"}, Qt::SkipEmptyParts);
+  if (words.isEmpty () || words.front () == "CQ" || words.front () == "QRZ") return;
+  for (int i = 0; i < words.size (); ++i)
+    if (words[i] == my && !(i > 0 && words[i - 1] == "DE"))
+      {
+        jttyAutoCqStop (tr ("%1 decoded").arg (my));
+        QApplication::alert (this);
+        return;
+      }
 }

@@ -86,7 +86,11 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   next and Serial Number. Click, double-click or select a callsign in
   either decode pane to put it in DX Call, as in N1MM; punctuation around
   it is ignored. Set Serial Number to "none" for a non-contest QSO and
-  %E sends just 599. Log QSO fills RST 599 / 599 in JTTY, and JTTY QSOs
+  %E sends just 599. **Auto CQ** (button beside Halt) repeats a macro
+  with a gap after each call, 10 s by default. Settings > JTTY sets the
+  macro, gap, call limit and stop-on-my-call, what %E sends, and named
+  **macro sets** (the old macros become "Default"; "Contest (WSJT-X)"
+  and "Ragchew / DX" are built in). Log QSO fills RST 599 / 599 in JTTY, and JTTY QSOs
   are logged as ADIF MODE MFSK / SUBMODE JTTY, like FT4. JTTY is by Joe
   Taylor K1JT, Steve Franke K9AN, Rob G4KLA and the WSJT-X team.
 - **FT2** (new in v0.3.0): FT4's protocol at twice

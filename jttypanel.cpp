@@ -1,6 +1,7 @@
 // JTDX-VU: JTTY controls page.  See jttypanel.h.
 
 #include "jttypanel.h"
+#include "jttysettings.h"
 
 #include <QSettings>
 #include <QGridLayout>
@@ -14,25 +15,9 @@
 #include <QApplication>
 #include <QKeyEvent>
 
-namespace
-{
-  // WSJT-X 3.2 native F-key templates (doc/user_guide jtty.adoc)
-  struct Macro {char const * tip; char const * tpl;};
-  Macro const macros[8] = {
-    {"CQ",                    "CQ %M CQ"},
-    {"HisCall Exchange",      "%H %E"},
-    {"TU CQ",                 "%H TU CQ %M CQ"},
-    {"MyCall",                "%M"},
-    {"HisCall",               "%H"},
-    {"Now QueuedCall Exchange","TU NOW %Q %E"},
-    {"HisCall AGN ?",         "%H AGN?"},
-    {"Exchange",              "%E"},
-  };
-}
-
 QString JttyPanel::defaultMacro (int key)
 {
-  return (key >= 1 && key <= 8) ? QString::fromLatin1 (macros[key - 1].tpl) : QString {};
+  return JttySettings::defaultMacro (key);
 }
 
 JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
@@ -44,6 +29,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   , entry_ {new QLineEdit}
   , send_ {new QPushButton {tr ("Send message")}}
   , halt_ {new QPushButton {tr ("Halt")}}
+  , autoCq_ {new QPushButton {tr ("Auto CQ")}}
   , callNext_ {new QLineEdit}
   , serial_ {new QSpinBox}
 {
@@ -51,15 +37,12 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   int const ftol = settings_->value ("Ftol", 100).toInt ();
   lowerCase_->setChecked (settings_->value ("LowerCase", false).toBool ());
   includeTime_->setChecked (settings_->value ("IncludeTime", true).toBool ());
-  for (int i = 0; i < 8; ++i)
-    {
-      macros_[i] = new QLineEdit {settings_->value (QString {"Msg%1"}.arg (i + 1), defaultMacro (i + 1)).toString ()};
-      macros_[i]->setToolTip (tr (macros[i].tip));
-    }
+  for (int i = 0; i < 8; ++i) macros_[i] = new QLineEdit;
   serial_->setRange (0, 9999);
   serial_->setSpecialValueText (tr ("none"));   // 0: non-contest, %E sends just 599
   serial_->setValue (settings_->value ("SerialNumber", 1).toInt ());
   settings_->endGroup ();
+  reloadMacros ();               // the active macro set (Settings > JTTY)
 
   // same tolerance ladder as WSJT-X's sbFtol_2
   for (int hz : {2, 5, 10, 20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500})
@@ -101,7 +84,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
     {
       auto b = new QPushButton {QString {"F%1"}.arg (key)};
       b->setFocusPolicy (Qt::NoFocus);
-      b->setToolTip (tr (macros[key - 1].tip));
+      b->setToolTip (JttySettings::macroTip (key));
       b->setSizePolicy (QSizePolicy::Expanding, QSizePolicy::Fixed);
       connect (b, &QPushButton::clicked, this, [this, key] {Q_EMIT macroRequested (key);});
       int const row = key <= 4 ? 1 : 3;
@@ -114,6 +97,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   sendRow->setSpacing (4);
   sendRow->addWidget (send_);
   sendRow->addWidget (entry_, 1);
+  sendRow->addWidget (autoCq_);
   sendRow->addWidget (halt_);
   grid->addLayout (sendRow, 5, 0, 1, 4);
 
@@ -145,9 +129,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   for (int i = 0; i < 8; ++i)
     {
       connect (macros_[i], &QLineEdit::editingFinished, this, [this, i] {
-          settings_->beginGroup ("JTTY");
-          settings_->setValue (QString {"Msg%1"}.arg (i + 1), macros_[i]->text ().trimmed ());
-          settings_->endGroup ();
+          JttySettings::setActiveMacro (settings_, i + 1, macros_[i]->text ().trimmed ());
         });
     }
   connect (serial_, QOverload<int>::of (&QSpinBox::valueChanged), this, [this] (int n) {
@@ -158,6 +140,11 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   connect (entry_, &QLineEdit::returnPressed, this, &JttyPanel::submitEntry);
   connect (send_, &QPushButton::clicked, this, &JttyPanel::submitEntry);
   connect (halt_, &QPushButton::clicked, this, [this] {Q_EMIT haltRequested ();});
+  autoCq_->setCheckable (true);
+  autoCq_->setFocusPolicy (Qt::NoFocus);
+  autoCq_->setToolTip (tr ("Call CQ again and again, with a gap after each call (Settings > JTTY).\n"
+                           "Halt, Esc, sending anything else or picking a DX call stops it."));
+  connect (autoCq_, &QPushButton::toggled, this, [this] (bool on) {Q_EMIT autoCqToggled (on);});
 
   // F1-F8 and Esc ahead of the menu shortcuts (F1 help, F2 settings, ...)
   qApp->installEventFilter (this);
@@ -192,6 +179,28 @@ void JttyPanel::submitEntry ()
   if (text.isEmpty ()) return;
   entry_->clear ();
   Q_EMIT transmitRequested (text);
+}
+
+void JttyPanel::reloadMacros ()
+{
+  auto const set = JttySettings::activeSet (settings_);
+  for (int i = 0; i < 8; ++i)
+    {
+      macros_[i]->setText (set.macros[i]);
+      macros_[i]->setToolTip (tr ("%1 (set: %2)").arg (JttySettings::macroTip (i + 1), set.name));
+    }
+}
+
+void JttyPanel::setAutoCq (bool on)
+{
+  QSignalBlocker block {autoCq_};
+  autoCq_->setChecked (on);
+  autoCq_->setStyleSheet (on ? "QPushButton {background-color: #00ff00;}" : QString {});
+}
+
+bool JttyPanel::autoCq () const
+{
+  return autoCq_->isChecked ();
 }
 
 void JttyPanel::setTransmitting (bool on)

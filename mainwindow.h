@@ -692,6 +692,11 @@ private:
   qint64 m_jttyTxRequestedUntil {0};    // ms epoch: Send requested, waiting for PTT + modulator
   qint64 m_jttyTxEndMs {0};             // ms epoch: latest end of the playing wave (0 = not started)
   int m_jttyTxLineSeq {0};
+  // JTDX-VU: JTTY Auto CQ (Settings > JTTY)
+  bool m_jttyAutoCq {false};
+  bool m_jttyAutoCqSending {false};     // the send in progress is Auto CQ's own
+  int m_jttyAutoCqCount {0};
+  QTimer * m_jttyAutoCqTimer {nullptr};
   int m_jttyStackIndex {-1};            // page of controls_stack_widget holding the JTTY panel              // negative ids for Tx lines in the Rx Frequency pane
 
   QTimer m_guiTimer;
@@ -841,6 +846,11 @@ private:
   void jtty_tx (QString message);       // encode + generate wave, then let guiUpdate key up
   void jttyMacro (int key);             // F1..F8: expand %M %H %Q %E, then jtty_tx
   void jttyHalt ();
+  void jttyAutoCqToggled (bool on);
+  void jttyAutoCqFire ();
+  void jttyAutoCqAfterTx ();
+  void jttyAutoCqStop (QString const& why);
+  void jttyAutoCqCheckDecode (QString const& text);
   bool jttyPickCall (QTextCursor cursor, bool quiet);   // word or selection -> DX Call
   void jttyClickOnCall (bool secondPane);
   bool jttyModulatorActive () const;

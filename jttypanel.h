@@ -47,12 +47,16 @@ public:
   static QString defaultMacro (int key);
 
   void setTransmitting (bool on);  // Halt reflects state; Send stays enabled
+  void setAutoCq (bool on);        // reflect Auto CQ state without re-emitting
+  bool autoCq () const;
+  void reloadMacros ();            // the active macro set changed in Settings
 
   Q_SIGNAL void ftolChanged (int hz) const;
   Q_SIGNAL void displayOptionsChanged () const;
   Q_SIGNAL void transmitRequested (QString const& text) const;   // free text from the entry
   Q_SIGNAL void macroRequested (int key) const;                  // F1..F8
   Q_SIGNAL void haltRequested () const;
+  Q_SIGNAL void autoCqToggled (bool on) const;
 
 protected:
   bool eventFilter (QObject *, QEvent *) override;
@@ -68,6 +72,7 @@ private:
   QLineEdit * entry_;
   QPushButton * send_;
   QPushButton * halt_;
+  QPushButton * autoCq_;
   QLineEdit * callNext_;
   QSpinBox * serial_;
 };

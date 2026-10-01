@@ -1107,6 +1107,11 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     connect (m_jttyPanel, &JttyPanel::transmitRequested, this, &MainWindow::jtty_tx);
     connect (m_jttyPanel, &JttyPanel::macroRequested, this, &MainWindow::jttyMacro);
     connect (m_jttyPanel, &JttyPanel::haltRequested, this, &MainWindow::jttyHalt);
+    connect (m_jttyPanel, &JttyPanel::autoCqToggled, this, &MainWindow::jttyAutoCqToggled);
+    connect (&m_config, &Configuration::jtty_settings_changed, m_jttyPanel, &JttyPanel::reloadMacros);
+    m_jttyAutoCqTimer = new QTimer {this};
+    m_jttyAutoCqTimer->setSingleShot (true);
+    connect (m_jttyAutoCqTimer, &QTimer::timeout, this, &MainWindow::jttyAutoCqFire);
     vbox->addWidget (central, 1);
     setCentralWidget (wrap);
     auto action = new QAction {tr ("Band && Mode Buttons..."), this};
@@ -6137,7 +6142,10 @@ void MainWindow::on_dxCallEntry_textChanged(const QString &t) //dxCall changed
   } else m_hisCall=t.toUpper().trimmed();
   // JTDX-VU: JTTY has no auto-sequencer to stamp the QSO start; take it from
   // when the DX call was picked or typed, or every QSO logs a stale start
-  if (m_mode == "JTTY" && !m_hisCall.isEmpty()) m_dateTimeQSOOn = m_jtdxtime->currentDateTimeUtc2();
+  if (m_mode == "JTTY" && !m_hisCall.isEmpty()) {
+    m_dateTimeQSOOn = m_jtdxtime->currentDateTimeUtc2();
+    if (m_jttyAutoCq) jttyAutoCqStop (tr ("DX call %1 picked").arg (m_hisCall));
+  }
   m_hisCallCompound=(!m_hisCall.isEmpty() && m_hisCall.contains("/")); // && !m_hisCall.endsWith("/P") && !m_hisCall.endsWith("/R"));
   if(m_myCallCompound && m_hisCallCompound) {
     if(m_skipTx1) { m_skipTx1=false; ui->skipTx1->setChecked(false); ui->skipGrid->setChecked(false); on_txb1_clicked(); }

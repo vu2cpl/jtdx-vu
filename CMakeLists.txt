@@ -247,6 +247,7 @@ set (wsjtx_CXXSRCS
   clublog.cpp
   bandmodeswitcher.cpp
   jttypanel.cpp
+  jttysettings.cpp
   mainwindow_jtty.cpp
   wsprnet.cpp
   WSPRBandHopping.cpp

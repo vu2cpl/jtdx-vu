@@ -386,6 +386,9 @@ public:
   //
   Q_SIGNAL void decoded_text_font_changed (QFont);
 
+  // JTDX-VU: Settings > JTTY was accepted (auto CQ, exchange, macro sets)
+  Q_SIGNAL void jtty_settings_changed ();
+
   //
   // This signal is emitted when the UDP server changes
   //
