@@ -89,6 +89,40 @@ Last updated: 2026-09-30
 
 ## What changed
 
+### 2026-10-01 — Auto CQ button in the column; per-set exchange; %OP %QTH %TX %ANT
+
+Manoj, while trying the first Auto CQ build: drop the serial in
+ragchew; map Auto CQ onto CNS so there is one button; Halt next to it;
+move it down; call it "Auto CQ"; add %OP/%QTH/%TX/%ANT; bigger Send
+message box.
+
+- **One "Auto CQ" button** (was the top-row CNS): now in the right-hand
+  column under AnsB4 (`verticalLayout_2`), sized like its neighbours.
+  In the FT modes it is Call Non-Stop exactly as before (same
+  `JTDXVU/NonStop` setting and AutoSeq menu item); in JTTY it toggles
+  JTTY Auto CQ. `updateCnsButton()` shows whichever applies and swaps
+  the tooltip; the mode hook calls it and stops JTTY Auto CQ on leaving
+  JTTY. The panel's own Auto CQ button is gone.
+- **Halt** moved from the panel's send row to the column, under Auto CQ,
+  visible only in JTTY (`JttyPanel::haltButton()` handed to MainWindow).
+- **Exchange per macro set** (`MacroSet::exchange`, array key
+  `exchange`). Migration: built-in sets take theirs ("599 %N" contest,
+  "599" ragchew), other sets the old global `Exchange` (Manoj's was
+  "599"). The global Exchange box is gone; "%E sends" sits under the
+  set's macros. **Serial Number** (label + box) on the panel shows only
+  when the active set uses %N in its exchange or a macro.
+- **%OP %QTH %TX %ANT**: `[JTTY] OpName, Qth, Radio, Antenna`, edited in
+  a "Station details (for macros)" box on the tab, stored upper case.
+  `jttyMacro` now expands %E first, then these, then %M/%H/%Q/%N, so
+  %QTH is not eaten by %Q. An empty one blocks the send with a status
+  message naming the field.
+- **Send message** entry: font ×1.15 and 6 px taller.
+- Verified in throwaway instances: layout in JTTY (Auto CQ + Halt under
+  AnsB4, no serial with a "599" set) and FT8 (Auto CQ only); F4 =
+  "OP %OP QTH %QTH RIG %TX ANT %ANT" sent "OP MANOJ QTH BANGALORE RIG
+  FLEX 6600 ANT HEXBEAM"; Halt in the column stopped it; the tab shows
+  station details and the per-set exchange.
+
 ### 2026-10-01 — JTTY Auto CQ and a Settings > JTTY tab
 
 Manoj: JTTY only sends once; wants auto CQ with a settable gap (default

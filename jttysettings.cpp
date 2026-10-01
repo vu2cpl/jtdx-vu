@@ -53,6 +53,9 @@ namespace
     QSettings * s_;
   };
 
+  QString const contestExchange {"599 %N"};
+  QString const ragchewExchange {"599"};
+
   QStringList normalised (QStringList list)
   {
     while (list.size () < 8) list << QString {};
@@ -72,10 +75,17 @@ namespace JttySettings
     return (key >= 1 && key <= 8) ? QString::fromLatin1 (native[key - 1].tip) : QString {};
   }
 
+  bool usesSerial (MacroSet const& set)
+  {
+    if (set.exchange.contains ("%N")) return true;
+    for (auto const& m : set.macros) if (m.contains ("%N")) return true;
+    return false;
+  }
+
   QVector<MacroSet> builtInSets ()
   {
-    MacroSet contest {contestName, {}};
-    MacroSet chat {ragchewName, {}};
+    MacroSet contest {contestName, {}, contestExchange};
+    MacroSet chat {ragchewName, {}, ragchewExchange};
     for (int key = 1; key <= 8; ++key)
       {
         contest.macros << defaultMacro (key);
@@ -97,19 +107,39 @@ namespace JttySettings
           set.name = s->value ("name").toString ().trimmed ();
           for (int key = 1; key <= 8; ++key)
             set.macros << s->value (QString {"Msg%1"}.arg (key)).toString ();
+          set.exchange = s->value ("exchange").toString ().trimmed ();
           if (!set.name.isEmpty ()) sets << set;
         }
       s->endArray ();
     }
+    // sets saved before each carried its own exchange: built-in ones take
+    // theirs, others the old global Exchange
+    bool migrated {false};
+    for (auto& set : sets)
+      if (set.exchange.isEmpty ())
+        {
+          migrated = true;
+          if (set.name == contestName) set.exchange = contestExchange;
+          else if (set.name == ragchewName) set.exchange = ragchewExchange;
+          else
+            {
+              GroupGuard g {s};
+              set.exchange = s->value ("Exchange", contestExchange).toString ().trimmed ();
+              if (set.exchange.isEmpty ()) set.exchange = contestExchange;
+            }
+        }
+    if (migrated) writeSets (s, sets);
     if (sets.isEmpty ())
       {
         // first use: the panel's old single set becomes "Default", the
         // built-in sets follow
-        MacroSet old {QObject::tr ("Default"), {}};
+        MacroSet old {QObject::tr ("Default"), {}, contestExchange};
         {
           GroupGuard g {s};
           for (int key = 1; key <= 8; ++key)
             old.macros << s->value (QString {"Msg%1"}.arg (key), defaultMacro (key)).toString ();
+          auto const e = s->value ("Exchange").toString ().trimmed ();
+          if (!e.isEmpty ()) old.exchange = e;
         }
         sets << old << builtInSets ();
         writeSets (s, sets);
@@ -130,6 +160,7 @@ namespace JttySettings
         auto const macros = normalised (sets[i].macros);
         for (int key = 1; key <= 8; ++key)
           s->setValue (QString {"Msg%1"}.arg (key), macros[key - 1]);
+        s->setValue ("exchange", sets[i].exchange.isEmpty () ? contestExchange : sets[i].exchange);
       }
     s->endArray ();
   }
@@ -151,8 +182,8 @@ namespace JttySettings
     auto const sets = readSets (s);
     auto const name = activeSetName (s);
     for (auto const& set : sets)
-      if (set.name == name) return {set.name, normalised (set.macros)};
-    return {sets.front ().name, normalised (sets.front ().macros)};
+      if (set.name == name) return {set.name, normalised (set.macros), set.exchange};
+    return {sets.front ().name, normalised (sets.front ().macros), sets.front ().exchange};
   }
 
   void setActiveMacro (QSettings * s, int key, QString const& text)
@@ -173,11 +204,23 @@ namespace JttySettings
   int autoCqGap (QSettings * s) {GroupGuard g {s}; return qBound (1, s->value ("AutoCqGap", 10).toInt (), 300);}
   int autoCqMax (QSettings * s) {GroupGuard g {s}; return qMax (0, s->value ("AutoCqMax", 0).toInt ());}
   bool autoCqStopOnMyCall (QSettings * s) {GroupGuard g {s}; return s->value ("AutoCqStopOnMyCall", true).toBool ();}
-  QString exchange (QSettings * s)
+  StationVar const stationVars[4] = {
+    {"%OP",  "OpName",  QT_TRANSLATE_NOOP ("JttySettings", "Name (%OP)")},
+    {"%QTH", "Qth",     QT_TRANSLATE_NOOP ("JttySettings", "QTH (%QTH)")},
+    {"%TX",  "Radio",   QT_TRANSLATE_NOOP ("JttySettings", "Radio (%TX)")},
+    {"%ANT", "Antenna", QT_TRANSLATE_NOOP ("JttySettings", "Antenna (%ANT)")},
+  };
+
+  QString stationValue (QSettings * s, char const * key)
   {
     GroupGuard g {s};
-    auto const e = s->value ("Exchange", "599 %N").toString ().trimmed ();
-    return e.isEmpty () ? QString {"599 %N"} : e;
+    return s->value (key).toString ().trimmed ().toUpper ();
+  }
+
+  QString exchange (QSettings * s)
+  {
+    auto const e = activeSet (s).exchange;
+    return e.isEmpty () ? contestExchange : e;
   }
 }
 
@@ -196,6 +239,7 @@ JttySettingsPage::JttySettingsPage (QWidget * parent)
   , deleteSet_ {new QPushButton {tr ("Delete")}}
   , resetSet_ {new QPushButton {tr ("Reset to built-in")}}
 {
+  for (auto*& e : station_) e = new QLineEdit;
   for (int key = 1; key <= 8; ++key) autoCqKey_->addItem (QString {"F%1"}.arg (key), key);
   autoCqGap_->setRange (1, 300);
   autoCqGap_->setSuffix (tr (" s"));
@@ -206,8 +250,8 @@ JttySettingsPage::JttySettingsPage (QWidget * parent)
                               "or picking a DX call stops Auto CQ anyway."));
   stopOnMyCall_->setToolTip (tr ("Stop calling as soon as a decode on any frequency contains my call."));
   autoCqKey_->setToolTip (tr ("The F-key macro Auto CQ sends."));
-  exchange_->setToolTip (tr ("What %E sends. %N is the serial number; it is left out when\n"
-                             "Serial Number on the JTTY panel is set to none."));
+  exchange_->setToolTip (tr ("What %E sends with this set. %N is the serial number; it is left\n"
+                             "out when Serial Number on the JTTY panel is set to none."));
 
   auto autoBox = new QGroupBox {tr ("Auto CQ")};
   auto autoForm = new QFormLayout {autoBox};
@@ -216,9 +260,6 @@ JttySettingsPage::JttySettingsPage (QWidget * parent)
   autoForm->addRow (tr ("Stop after"), autoCqMax_);
   autoForm->addRow (stopOnMyCall_);
 
-  auto exchangeBox = new QGroupBox {tr ("Exchange")};
-  auto exchangeForm = new QFormLayout {exchangeBox};
-  exchangeForm->addRow (tr ("%E sends"), exchange_);
 
   auto setsBox = new QGroupBox {tr ("Macro sets")};
   auto setsLayout = new QVBoxLayout {setsBox};
@@ -242,12 +283,30 @@ JttySettingsPage::JttySettingsPage (QWidget * parent)
   grid->setColumnStretch (1, 1);
   grid->setColumnStretch (3, 1);
   setsLayout->addLayout (grid);
-  setsLayout->addWidget (new QLabel {tr ("%M my call, %H DX call, %Q Call next (or DX call), %N serial, %E exchange.\n"
-                                         "The set chosen here is the one the F-keys use; edits on the JTTY panel go into it.")});
+  auto exchangeRow = new QHBoxLayout;
+  exchangeRow->addWidget (new QLabel {tr ("%E sends")});
+  exchangeRow->addWidget (exchange_, 1);
+  setsLayout->addLayout (exchangeRow);
+  setsLayout->addWidget (new QLabel {tr ("%M my call, %H DX call, %Q Call next (or DX call), %N serial, %E exchange,\n"
+                                         "%OP name, %QTH location, %TX radio, %ANT antenna (Station details above).\n"
+                                         "The set chosen here is the one the F-keys use; edits on the JTTY panel go into it.\n"
+                                         "The panel shows Serial Number only when the set uses %N.")});
+
+  auto stationBox = new QGroupBox {tr ("Station details (for macros)")};
+  auto stationForm = new QFormLayout {stationBox};
+  for (int i = 0; i < 4; ++i)
+    {
+      station_[i]->setMaxLength (40);
+      stationForm->addRow (tr (stationVars[i].label), station_[i]);
+    }
+  station_[0]->setPlaceholderText (tr ("e.g. MANOJ"));
+  station_[1]->setPlaceholderText (tr ("e.g. BANGALORE"));
+  station_[2]->setPlaceholderText (tr ("e.g. FLEX 6600"));
+  station_[3]->setPlaceholderText (tr ("e.g. HEXBEAM"));
 
   auto top = new QHBoxLayout;
   top->addWidget (autoBox);
-  top->addWidget (exchangeBox, 1);
+  top->addWidget (stationBox, 1);
   auto page = new QVBoxLayout {this};
   page->addLayout (top);
   page->addWidget (setsBox);
@@ -265,7 +324,8 @@ JttySettingsPage::JttySettingsPage (QWidget * parent)
       for (auto const& set : sets_)
         if (set.name == name) {QMessageBox::warning (this, tr ("Macro sets"), tr ("There is already a set called %1.").arg (name)); return;}
       // start from the set on screen, so a variant is quick to make
-      sets_ << MacroSet {name, current_ >= 0 ? sets_[current_].macros : builtInSets ().front ().macros};
+      sets_ << (current_ >= 0 ? MacroSet {name, sets_[current_].macros, sets_[current_].exchange}
+                              : MacroSet {name, builtInSets ().front ().macros, builtInSets ().front ().exchange});
       current_ = -1;
       refreshSetCombo ();
       setCombo_->setCurrentIndex (sets_.size () - 1);
@@ -296,9 +356,10 @@ JttySettingsPage::JttySettingsPage (QWidget * parent)
       if (current_ < 0) return;
       // a built-in set by name gets its own text back, any other set the
       // WSJT-X contest set
-      auto macros = builtInSets ().front ().macros;
-      for (auto const& b : builtInSets ()) if (b.name == sets_[current_].name) macros = b.macros;
-      for (int i = 0; i < 8; ++i) macros_[i]->setText (macros[i]);
+      auto base = builtInSets ().front ();
+      for (auto const& b : builtInSets ()) if (b.name == sets_[current_].name) base = b;
+      for (int i = 0; i < 8; ++i) macros_[i]->setText (base.macros[i]);
+      exchange_->setText (base.exchange);
     });
 }
 
@@ -316,6 +377,8 @@ void JttySettingsPage::keepEdits ()
   QStringList macros;
   for (auto * edit : macros_) macros << edit->text ().trimmed ();
   sets_[current_].macros = macros;
+  auto const e = exchange_->text ().trimmed ();
+  sets_[current_].exchange = e.isEmpty () ? contestExchange : e;
 }
 
 void JttySettingsPage::showSet (int index)
@@ -325,6 +388,7 @@ void JttySettingsPage::showSet (int index)
   auto macros = sets_[index].macros;
   while (macros.size () < 8) macros << QString {};
   for (int i = 0; i < 8; ++i) macros_[i]->setText (macros[i]);
+  exchange_->setText (sets_[index].exchange);
 }
 
 void JttySettingsPage::load (QSettings * s)
@@ -333,7 +397,7 @@ void JttySettingsPage::load (QSettings * s)
   autoCqGap_->setValue (autoCqGap (s));
   autoCqMax_->setValue (autoCqMax (s));
   stopOnMyCall_->setChecked (autoCqStopOnMyCall (s));
-  exchange_->setText (exchange (s));
+  for (int i = 0; i < 4; ++i) station_[i]->setText (stationValue (s, stationVars[i].key));
   sets_ = readSets (s);
   auto const active = activeSet (s).name;
   current_ = -1;
@@ -357,6 +421,6 @@ void JttySettingsPage::save (QSettings * s)
   s->setValue ("AutoCqGap", autoCqGap_->value ());
   s->setValue ("AutoCqMax", autoCqMax_->value ());
   s->setValue ("AutoCqStopOnMyCall", stopOnMyCall_->isChecked ());
-  s->setValue ("Exchange", exchange_->text ().trimmed ().isEmpty () ? QString {"599 %N"} : exchange_->text ().trimmed ());
+  for (int i = 0; i < 4; ++i) s->setValue (stationVars[i].key, station_[i]->text ().trimmed ().toUpper ());
   s->endGroup ();
 }

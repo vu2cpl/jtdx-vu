@@ -467,6 +467,22 @@ void MainWindow::jttyMacro (int key)
   auto queued = m_jttyPanel->callNext ();
   if (queued.isEmpty ()) queued = his;
   auto const serial = QString {"%1"}.arg (m_jttyPanel->serialNumber (), 3, 10, QLatin1Char {'0'});
+  // %E first (an exchange may use any variable), then the station details:
+  // they must go before %Q / %M, or %QTH would read as %Q + "TH"
+  auto exchange = JttySettings::exchange (m_settings);
+  if (m_jttyPanel->serialNumber () <= 0) exchange = exchange.remove ("%N").simplified ();
+  tpl.replace ("%E", exchange);
+  for (auto const& v : JttySettings::stationVars)
+    {
+      if (!tpl.contains (QLatin1String {v.token})) continue;
+      auto const value = JttySettings::stationValue (m_settings, v.key);
+      if (value.isEmpty ())
+        {
+          statusBar ()->showMessage (tr ("JTTY: set %1 in Settings > JTTY first").arg (tr (v.label)), 5000);
+          return;
+        }
+      tpl.replace (QLatin1String {v.token}, value);
+    }
   if (tpl.contains ("%M") && my.isEmpty ())
     {
       statusBar ()->showMessage (tr ("JTTY: set your callsign in Settings first"), 5000);
@@ -482,10 +498,6 @@ void MainWindow::jttyMacro (int key)
       statusBar ()->showMessage (tr ("JTTY: fill in Call next (or the DX call) first"), 5000);
       return;
     }
-  // %E from Settings > JTTY; with Serial Number "none" the %N part goes
-  auto exchange = JttySettings::exchange (m_settings);
-  if (m_jttyPanel->serialNumber () <= 0) exchange = exchange.remove ("%N").simplified ();
-  tpl.replace ("%E", exchange);
   tpl.replace ("%M", my).replace ("%H", his).replace ("%Q", queued).replace ("%N", serial);
   jtty_tx (tpl);
 }
@@ -580,12 +592,12 @@ void MainWindow::jttyAutoCqToggled (bool on)
     }
   if (m_mode != "JTTY" || !m_jttyPanel)
     {
-      m_jttyPanel->setAutoCq (false);
+      updateCnsButton ();
       return;
     }
   m_jttyAutoCq = true;
   m_jttyAutoCqCount = 0;
-  m_jttyPanel->setAutoCq (true);
+  updateCnsButton ();
   if (!jttyTxBusy ()) jttyAutoCqFire ();      // else it starts when this transmission ends
 }
 
@@ -613,7 +625,7 @@ void MainWindow::jttyAutoCqFire ()
       // status message says why
       m_jttyAutoCq = false;
       m_jttyAutoCqTimer->stop ();
-      m_jttyPanel->setAutoCq (false);
+      updateCnsButton ();
       return;
     }
   ++m_jttyAutoCqCount;
@@ -632,7 +644,7 @@ void MainWindow::jttyAutoCqStop (QString const& why)
   bool const was = m_jttyAutoCq;
   m_jttyAutoCq = false;
   if (m_jttyAutoCqTimer) m_jttyAutoCqTimer->stop ();
-  if (m_jttyPanel) m_jttyPanel->setAutoCq (false);
+  updateCnsButton ();
   if (was) statusBar ()->showMessage (tr ("Auto CQ stopped: %1").arg (why), 8000);
 }
 

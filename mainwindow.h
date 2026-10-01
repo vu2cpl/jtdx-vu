@@ -851,6 +851,8 @@ private:
   void jttyAutoCqAfterTx ();
   void jttyAutoCqStop (QString const& why);
   void jttyAutoCqCheckDecode (QString const& text);
+  void updateCnsButton ();              // CNS = Call Non-Stop, or JTTY Auto CQ in JTTY
+  QPushButton * m_cnsButton {nullptr};
   bool jttyPickCall (QTextCursor cursor, bool quiet);   // word or selection -> DX Call
   void jttyClickOnCall (bool secondPane);
   bool jttyModulatorActive () const;

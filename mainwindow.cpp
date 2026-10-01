@@ -1107,7 +1107,6 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     connect (m_jttyPanel, &JttyPanel::transmitRequested, this, &MainWindow::jtty_tx);
     connect (m_jttyPanel, &JttyPanel::macroRequested, this, &MainWindow::jttyMacro);
     connect (m_jttyPanel, &JttyPanel::haltRequested, this, &MainWindow::jttyHalt);
-    connect (m_jttyPanel, &JttyPanel::autoCqToggled, this, &MainWindow::jttyAutoCqToggled);
     connect (&m_config, &Configuration::jtty_settings_changed, m_jttyPanel, &JttyPanel::reloadMacros);
     m_jttyAutoCqTimer = new QTimer {this};
     m_jttyAutoCqTimer->setSingleShot (true);
@@ -1122,7 +1121,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   }
   connect (m_switcher, &BandModeSwitcher::band_clicked, this, &MainWindow::switch_to_band);
   {
-    // JTDX-VU Non-stop toggle: AutoSeq menu + a button at the end of the row
+    // JTDX-VU Non-stop toggle: AutoSeq menu + the "Auto CQ" button
     m_nonstop = m_settings->value ("JTDXVU/NonStop", false).toBool ();
     auto action = new QAction {tr ("CNS - Call Non-Stop (10 min Tx watchdog)"), this};
     action->setCheckable (true);
@@ -1132,30 +1131,41 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
                             "counters, as usual. The Tx watchdog (10 min while CNS is on) still stops Tx."));
     ui->menuAutoSeq->addSeparator ();
     ui->menuAutoSeq->addAction (action);
-    auto button = new QPushButton {tr ("CNS")};  // Call Non-Stop
+    // "Auto CQ": Call Non-Stop in the FT modes, JTTY Auto CQ in JTTY.  It sits
+    // in the right-hand button column under AnsB4, with JTTY's Halt below it.
+    auto button = new QPushButton {tr ("Auto CQ")};
     button->setCheckable (true);
-    button->setChecked (m_nonstop);
     button->setFocusPolicy (Qt::NoFocus);
-    button->setToolTip (action->toolTip ());
-    auto style = [this, button] (bool on) {
-        button->setStyleSheet (on ? (m_useDarkStyle ? "QPushButton{background-color:rgb(64,130,0);color:white;}"
-                                                    : "QPushButton{background-color:rgb(140,240,140);color:black;}")
-                                  : QString {});
-      };
-    style (m_nonstop);
-    m_switcher->add_trailing_widget (button);
-    auto set = [this, action, button, style] (bool on) {
+    button->setSizePolicy (ui->AnsB4Button->sizePolicy ());
+    button->setMinimumSize (ui->AnsB4Button->minimumSize ());
+    button->setMaximumSize (80, 45);
+    m_cnsButton = button;
+    int const column_index = ui->verticalLayout_2->indexOf (ui->AnsB4Button) + 1;
+    ui->verticalLayout_2->insertWidget (column_index, button);
+    if (m_jttyPanel)
+      {
+        auto * const halt = m_jttyPanel->haltButton ();
+        halt->setSizePolicy (ui->AnsB4Button->sizePolicy ());
+        halt->setMinimumSize (ui->AnsB4Button->minimumSize ());
+        halt->setMaximumSize (80, 45);
+        ui->verticalLayout_2->insertWidget (column_index + 1, halt);
+        halt->setVisible (false);
+      }
+    auto set = [this, action] (bool on) {
         m_nonstop = on;
         m_settings->setValue ("JTDXVU/NonStop", on);
-        QSignalBlocker b1 {action}, b2 {button};
+        QSignalBlocker b1 {action};
         action->setChecked (on);
-        button->setChecked (on);
-        style (on);
+        updateCnsButton ();
         if (m_idleMinutes > watchdog_minutes ()) m_idleMinutes = 0;
         update_watchdog_label ();
       };
     connect (action, &QAction::toggled, this, set);
-    connect (button, &QPushButton::toggled, this, set);
+    connect (button, &QPushButton::toggled, this, [this, set] (bool on) {
+        if (m_mode == "JTTY") jttyAutoCqToggled (on);
+        else set (on);
+      });
+    updateCnsButton ();
   }
   ui->decodedTextBrowser->setNewOnly (m_switcher->new_only ());  // Band Activity only
   connect (m_switcher, &BandModeSwitcher::new_only_changed, ui->decodedTextBrowser, &DisplayText::setNewOnly);
@@ -6531,6 +6541,9 @@ void MainWindow::commonActions ()
     {
       if (m_mode == "JTTY") ui->controls_stack_widget->setCurrentIndex (m_jttyStackIndex);
       else if (ui->controls_stack_widget->currentIndex () == m_jttyStackIndex) ui->controls_stack_widget->setCurrentIndex (0);
+      m_jttyPanel->haltButton ()->setVisible (m_mode == "JTTY");
+      if (m_mode != "JTTY" && m_jttyAutoCq) jttyAutoCqStop (tr ("left JTTY"));
+      updateCnsButton ();
     }
   m_wideGraph->setMode(m_mode);
   m_wideGraph->setModeTx(m_modeTx);
@@ -8413,4 +8426,24 @@ void MainWindow::dynamicButtonsInit()
     else if(height > 475 && height <= 500) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->hide(); }
     else if(height > 500) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->show(); }
   }
+}
+
+// JTDX-VU: one "Auto CQ" button, two jobs - Call Non-Stop in the FT modes,
+// Auto CQ in JTTY.  Shows the state of whichever applies to the current mode.
+void MainWindow::updateCnsButton ()
+{
+  if (!m_cnsButton) return;
+  bool const jtty = m_mode == "JTTY";
+  bool const on = jtty ? m_jttyAutoCq : m_nonstop;
+  QSignalBlocker block {m_cnsButton};
+  m_cnsButton->setChecked (on);
+  m_cnsButton->setStyleSheet (on ? (m_useDarkStyle ? "QPushButton{background-color:rgb(64,130,0);color:white;}"
+                                                   : "QPushButton{background-color:rgb(140,240,140);color:black;}")
+                                 : QString {});
+  m_cnsButton->setToolTip (jtty
+    ? tr ("Auto CQ (JTTY): send the CQ macro, listen for the gap, call again (Settings > JTTY).\n"
+          "Halt, Esc, sending anything else or picking a DX call stops it.")
+    : tr ("Auto CQ (Call Non-Stop): after each logged QSO go straight back to CQ / the next caller "
+          "instead of halting Tx. A station that does not answer is dropped after the AutoSeq "
+          "counters, as usual. The Tx watchdog (10 min while this is on) still stops Tx."));
 }

@@ -4,14 +4,17 @@
 //   Auto CQ   - which F-key macro to repeat, the gap after each call, an
 //               optional limit on the number of calls, and whether a decode
 //               containing my call stops it
-//   Exchange  - what %E expands to ("599 %N" by default; %N is dropped when
-//               the panel's Serial Number is "none")
-//   Macro sets - named sets of the eight F-key macros; the panel shows and
-//               edits the active one
+//   Macro sets - named sets of the eight F-key macros and the exchange %E
+//               expands to (%N is dropped when Serial Number is "none");
+//               the panel shows and edits the active set, and shows Serial
+//               Number only when that set uses %N
 //
 // Storage, group [JTTY]:
-//   AutoCqKey, AutoCqGap, AutoCqMax, AutoCqStopOnMyCall, Exchange,
-//   ActiveMacroSet, and the array MacroSets/<n>/{name, Msg1..Msg8}.
+//   AutoCqKey, AutoCqGap, AutoCqMax, AutoCqStopOnMyCall, ActiveMacroSet,
+//   OpName, Qth, Radio, Antenna (%OP %QTH %TX %ANT),
+//   and the array MacroSets/<n>/{name, Msg1..Msg8, exchange}.  A set saved
+//   before sets carried an exchange takes the old global Exchange value
+//   (built-in sets take their own).
 //   Before macro sets existed the panel kept Msg1..Msg8 directly in [JTTY];
 //   those become the "Default" set the first time the sets are read.
 
@@ -36,7 +39,9 @@ namespace JttySettings
   {
     QString name;
     QStringList macros;         // always 8 entries, F1..F8
+    QString exchange;           // what %E sends with this set
   };
+  bool usesSerial (MacroSet const&);                   // %N in the exchange or a macro
 
   QString defaultMacro (int key);                      // WSJT-X 3.2's native templates
   QString macroTip (int key);                          // what each native key is for
@@ -52,7 +57,12 @@ namespace JttySettings
   int autoCqGap (QSettings *);          // seconds, default 10
   int autoCqMax (QSettings *);          // 0 = no limit
   bool autoCqStopOnMyCall (QSettings *);
-  QString exchange (QSettings *);       // default "599 %N"
+  QString exchange (QSettings *);       // the active set's exchange
+
+  // station details for macros: %OP name, %QTH location, %TX radio, %ANT antenna
+  struct StationVar {char const * token; char const * key; char const * label;};
+  extern StationVar const stationVars[4];
+  QString stationValue (QSettings *, char const * key);
 }
 
 class JttySettingsPage final
@@ -75,7 +85,8 @@ private:
   QSpinBox * autoCqGap_;
   QSpinBox * autoCqMax_;
   QCheckBox * stopOnMyCall_;
-  QLineEdit * exchange_;
+  QLineEdit * exchange_;      // the shown set's exchange
+  QLineEdit * station_[4];    // %OP %QTH %TX %ANT
   QComboBox * setCombo_;
   QPushButton * newSet_;
   QPushButton * renameSet_;

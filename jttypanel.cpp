@@ -29,9 +29,9 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   , entry_ {new QLineEdit}
   , send_ {new QPushButton {tr ("Send message")}}
   , halt_ {new QPushButton {tr ("Halt")}}
-  , autoCq_ {new QPushButton {tr ("Auto CQ")}}
   , callNext_ {new QLineEdit}
   , serial_ {new QSpinBox}
+  , serialLabel_ {new QLabel {tr ("Serial Number")}}
 {
   settings_->beginGroup ("JTTY");
   int const ftol = settings_->value ("Ftol", 100).toInt ();
@@ -57,6 +57,14 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   entry_->setPlaceholderText (tr ("Press Enter to send and clear the message"));
   entry_->setToolTip (tr ("Press Enter to send and clear the message."));
   entry_->setMaxLength (80);
+  {
+    // JTDX-VU: a little larger than the other controls - it's where the
+    // operator types during a QSO
+    auto f = entry_->font ();
+    f.setPointSizeF (f.pointSizeF () * 1.15);
+    entry_->setFont (f);
+    entry_->setMinimumHeight (entry_->sizeHint ().height () + 6);
+  }
   send_->setToolTip (tr ("Send and clear the message. Press Enter in the field."));
   halt_->setToolTip (tr ("Stop transmitting (Esc)"));
   halt_->setEnabled (false);
@@ -97,8 +105,6 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   sendRow->setSpacing (4);
   sendRow->addWidget (send_);
   sendRow->addWidget (entry_, 1);
-  sendRow->addWidget (autoCq_);
-  sendRow->addWidget (halt_);
   grid->addLayout (sendRow, 5, 0, 1, 4);
 
   auto contestRow = new QHBoxLayout;
@@ -106,7 +112,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   contestRow->addWidget (new QLabel {tr ("Call next")});
   contestRow->addWidget (callNext_);
   contestRow->addStretch ();
-  contestRow->addWidget (new QLabel {tr ("Serial Number")});
+  contestRow->addWidget (serialLabel_);
   contestRow->addWidget (serial_);
   grid->addLayout (contestRow, 6, 0, 1, 4);
 
@@ -130,6 +136,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
     {
       connect (macros_[i], &QLineEdit::editingFinished, this, [this, i] {
           JttySettings::setActiveMacro (settings_, i + 1, macros_[i]->text ().trimmed ());
+          updateSerialVisibility ();
         });
     }
   connect (serial_, QOverload<int>::of (&QSpinBox::valueChanged), this, [this] (int n) {
@@ -140,11 +147,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   connect (entry_, &QLineEdit::returnPressed, this, &JttyPanel::submitEntry);
   connect (send_, &QPushButton::clicked, this, &JttyPanel::submitEntry);
   connect (halt_, &QPushButton::clicked, this, [this] {Q_EMIT haltRequested ();});
-  autoCq_->setCheckable (true);
-  autoCq_->setFocusPolicy (Qt::NoFocus);
-  autoCq_->setToolTip (tr ("Call CQ again and again, with a gap after each call (Settings > JTTY).\n"
-                           "Halt, Esc, sending anything else or picking a DX call stops it."));
-  connect (autoCq_, &QPushButton::toggled, this, [this] (bool on) {Q_EMIT autoCqToggled (on);});
+  updateSerialVisibility ();
 
   // F1-F8 and Esc ahead of the menu shortcuts (F1 help, F2 settings, ...)
   qApp->installEventFilter (this);
@@ -189,18 +192,15 @@ void JttyPanel::reloadMacros ()
       macros_[i]->setText (set.macros[i]);
       macros_[i]->setToolTip (tr ("%1 (set: %2)").arg (JttySettings::macroTip (i + 1), set.name));
     }
+  updateSerialVisibility ();
 }
 
-void JttyPanel::setAutoCq (bool on)
+void JttyPanel::updateSerialVisibility ()
 {
-  QSignalBlocker block {autoCq_};
-  autoCq_->setChecked (on);
-  autoCq_->setStyleSheet (on ? "QPushButton {background-color: #00ff00;}" : QString {});
-}
-
-bool JttyPanel::autoCq () const
-{
-  return autoCq_->isChecked ();
+  if (!serial_->parentWidget ()) return;   // still being built; the constructor calls this again
+  bool const on = JttySettings::usesSerial (JttySettings::activeSet (settings_));
+  serialLabel_->setVisible (on);
+  serial_->setVisible (on);
 }
 
 void JttyPanel::setTransmitting (bool on)
