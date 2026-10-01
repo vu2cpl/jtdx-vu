@@ -105,7 +105,10 @@ Last updated: 2026-09-30
   20m. Mode → MFSK / submode JTTY; LZ2HV's reports were logged -15 / -15
   and should be 599 / 599. Their start times are wrong too; RUMlog keeps
   the end time since 2026-08-28, which is right. Reading RUMlog's store
-  from Claude's shell is blocked by macOS container privacy ("Operation
+  from Claude's shell is blocked by macOS container privacy, even with
+  Full Disk Access on Claude.app (the `disclaimer` helper makes the
+  versioned claude-code binary the responsible process); checked through
+  RUMlog's window with computer-use instead ("Operation
   not permitted" on the container even outside Claude's sandbox), so the
   RUMlog side was not checked. It needs the Claude app allowed under
   System Settings > Privacy & Security (Full Disk Access, or "App
@@ -938,8 +941,12 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       on their real window manager.
 - [ ] **JTTY click-to-pick on live text:** confirm on air that a
       growing line holds still and a single click grabs the call.
-- [ ] **RUMlog: fix the seven JTTY QSOs** (mode MFSK/JTTY, LZ2HV RST
-      599) before any LoTW upload of them.
+- [ ] **JTTY to LoTW:** RUMlog holds the seven JTTY QSOs (checked in
+      its window 2026-10-01): mode JTTY, 599/599 (LZ2HV included), end
+      times correct, LoTW/eQSL still W. RUMlog shows FT4 as mode "FT4",
+      so it keeps the submode as its mode and maps on export; don't hand-
+      edit these to MFSK. Before uploading, check what RUMlog sends TQSL
+      for JTTY (TQSL config update may be needed).
 - [ ] **JTTY start-time fix** installed 2026-10-01; check the next
       JTTY QSO logs a sensible start time.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
