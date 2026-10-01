@@ -16,9 +16,19 @@ Last updated: 2026-09-30
   variables), click-to-pick calls, the one "Auto CQ" button, and fixes
   the TCI quit crash, the Settings dialog on small screens and JTTY
   logging (599, MFSK/JTTY, start time).
-- **Release v0.4.0: IN PROGRESS 2026-10-01** — version bumped and tagged;
-  CI (Windows, macOS arm64, macOS Intel) runs on the tag; Pi `.deb` from
-  meridianpi5 by hand; notes from the v0.3.0 template.
+- **Release v0.4.0: COMPLETE 2026-10-01** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.4.0,
+  tag `v0.4.0` on `bf707bc8`. All four builds plus `.sha256` attached
+  and verified (anonymous download, every checksum OK, arm64 app reports
+  0.4.0); copies in `~/Desktop/jdxvu/v0.4.0/`.
+  - CI run 36880480905 (macOS) and 36880480879 (Windows), all green.
+    **The Intel keg cache works:** the Intel job took 10 min (14:57→15:08
+    UTC) instead of 2.5–3.5 h. The arm64 job was the slow one (~50 min
+    in Dependencies) but passed.
+  - Pi `.deb` built on meridianpi5 with `CMAKE_INSTALL_PREFIX=/usr/local`
+    (same as v0.3.0 — the README had said `/usr`, corrected), `apt-get
+    install -s` clean, 8 s headless start OK, uploaded by hand.
+  - Website updated the same evening (card + page, downloads table on
+    v0.4.0), pushed after all assets answered.
 - **Installed app:** `/Applications/JTDX-VU.app` is current: all app
   code up to `4642e1ee`, installed 2026-09-28. It was built locally, so
   it runs on macOS 26+ only. Settings are in
@@ -1080,10 +1090,7 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       and costs about 10 min.
 - [ ] **Windows on Manoj's PC:** Club Log, Telegram and Desktop alerts
       are confirmed. Still to check: audio, CAT and OmniRig on air.
-- [ ] **Settings dialog small-screen fix (2026-09-30)** is unreleased.
-      It ships in the next minor version bump with other fixes, not as
-      a one-off build. Once it's out, ask the Linux reporter to confirm
-      on their real window manager.
+- [x] ~~Settings dialog small-screen fix~~ — released in v0.4.0.
 - [ ] **JTTY click-to-pick on live text:** confirm on air that a
       growing line holds still and a single click grabs the call.
 - [ ] **JTTY to LoTW:** RUMlog holds the seven JTTY QSOs (checked in
