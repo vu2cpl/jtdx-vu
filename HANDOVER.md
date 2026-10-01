@@ -8,10 +8,17 @@ Last updated: 2026-09-30
   secret scan, see below). Default branch `jtdx-vu`. The `upstream`
   remote is `jtdx-project/jtdx`; upstream has been dormant since
   2022-03 at tag 159.
-- **Version:** JTDX-VU **0.3.0** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.4.0** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
-  AutoSeq give-up counters again.
+  AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
+  JTTY Auto CQ, Settings > JTTY (macro sets, per-set exchange, station
+  variables), click-to-pick calls, the one "Auto CQ" button, and fixes
+  the TCI quit crash, the Settings dialog on small screens and JTTY
+  logging (599, MFSK/JTTY, start time).
+- **Release v0.4.0: IN PROGRESS 2026-10-01** — version bumped and tagged;
+  CI (Windows, macOS arm64, macOS Intel) runs on the tag; Pi `.deb` from
+  meridianpi5 by hand; notes from the v0.3.0 template.
 - **Installed app:** `/Applications/JTDX-VU.app` is current: all app
   code up to `4642e1ee`, installed 2026-09-28. It was built locally, so
   it runs on macOS 26+ only. Settings are in
