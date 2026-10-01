@@ -114,6 +114,15 @@ Last updated: 2026-09-30
   binary segfaulted with the same stack; the fixed build exited 0 with no
   crash report at 0.1, 0.5, 1.0, 1.4 and 1.7 s.
 - Installed 2026-10-01 (live app had been down since the 10:35 crash).
+- **Also on Linux (meridianpi5, Xvfb):** `tools/run_quit_test_linux.sh`
+  (File > Exit by xdotool clicks, since keys don't reach the window
+  without a window manager). The v0.3.0 `.deb` binary segfaulted (exit
+  139) at 0.4 and 0.9 s after connect; the fixed build exited 0 at 0.4,
+  0.7, 1.1 and 1.5 s. The fake server makes start-up fail at ~1.7 s with
+  a modal "Rig Control Error", so quits have to land before that.
+- Three orphaned `jtdxjt9 -s "JTDX-VU - fittest"` helpers from the
+  09-30 Settings tests were found still running on the Pi and killed.
+  Test scripts must stop the helper too, not just jtdx.
 
 ### 2026-10-01 — JTTY QSO start time
 
