@@ -104,6 +104,14 @@ protected:
   virtual void do_stop () = 0;
   virtual void do_post_stop () {}
 
+  // JTDX-VU: a sub class that waits in nested event loops (TCI) reports it
+  // here.  A stop() that arrives inside such a wait must not tear the rig
+  // down under the waiting code: it sets stop_aborting_, asks the waits to
+  // end (abort_waits) and re-queues itself to run once they have unwound.
+  virtual bool in_nested_wait () const {return false;}
+  virtual void abort_waits () {}
+  bool stop_aborting () const {return stop_aborting_;}
+
   virtual void do_frequency (Frequency, MODE, bool no_ignore) = 0;
   virtual void do_post_frequency (Frequency, MODE) {}
 
@@ -149,6 +157,7 @@ protected:
 private:
   void startup ();
   void shutdown ();
+  bool stop_aborting_ {false};
   bool maybe_low_resolution (Frequency low_res, Frequency high_res);
   JTDXDateTime * jtdxtime_;
   // use this convenience class to notify in update methods

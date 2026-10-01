@@ -49,9 +49,9 @@ Last updated: 2026-09-30
   fixed workflow. Website updated the same morning (card + page,
   downloads table on v0.3.0; all three attached assets answer 206 to
   an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
-  `/Applications/JTDX-VU.app` is now a local build of `c0440d8d`
-  (v0.3.0 + the Settings small-screen fix + the JTTY click/%E/RST fixes,
-  MFSK/JTTY ADIF and the JTTY start-time fix), installed 2026-10-01 for
+  `/Applications/JTDX-VU.app` is a local build of the TCI quit-crash fix
+  commit (v0.3.0 + Settings small-screen fix + JTTY click/%E/RST, MFSK/JTTY
+  ADIF, JTTY start time, TCI quit crash), installed 2026-10-01 for
   on-air testing. The previous v0.3.0 bundle is
   in `~/Desktop/jdxvu/prev-install/`.
 - **Release v0.2.1: COMPLETE 2026-09-28**. It's at
@@ -88,6 +88,32 @@ Last updated: 2026-09-30
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-01 — crash when quitting during TCI start-up (inherited from JTDX)
+
+- **Crash:** SIGSEGV in `QEventLoop::exec` under `TCITransceiver::do_start`
+  on quit (10:35 today; two identical ones from the stock 2.2.159 build
+  on 09-28). TCI's `mysleep1/2/3` wait in nested `QEventLoop`s on the rig
+  thread; the queued `stop()` from `close_rig()` ran *inside* that wait,
+  `do_stop()` deleted the very loop (and timers, commander) the waiting
+  code then returned into. Happens whenever TCI is (re)connecting at quit,
+  e.g. the TCI server was closed first.
+- **Fix:** `TransceiverBase::stop()` checks a new virtual
+  `in_nested_wait()`. If set, it sets `stop_aborting_`, calls
+  `abort_waits()` (TCI: stop timers, quit running loops) and re-queues
+  itself with `QTimer::singleShot(0)`. While aborting, TCI sleeps return at
+  once, so the interrupted operation unwinds in milliseconds; the
+  re-queued stop then tears down normally (flag cleared first, so its own
+  waits work). `offline()` doesn't emit `failure` while aborting, so no
+  "Rig failure" box on quit. Other rigs don't override the hooks.
+- **Verified** with `tools/silent_tci.py` (a websocket server that
+  completes the handshake and never answers) and
+  `tools/run_quit_test.sh <jtdx binary> <delay>` (throwaway `-r tcitest`
+  instance, quits through that PID's own Quit menu item N s after the TCI
+  connect, reports exit status and new crash reports): the old v0.3.0
+  binary segfaulted with the same stack; the fixed build exited 0 with no
+  crash report at 0.1, 0.5, 1.0, 1.4 and 1.7 s.
+- Installed 2026-10-01 (live app had been down since the 10:35 crash).
 
 ### 2026-10-01 — JTTY QSO start time
 

@@ -1685,8 +1685,11 @@ void TCITransceiver::mysleep1 (int ms)
 {
 //  tci_timer1->setSingleShot(true);
 //  printf("%s(%0.1f) TCI sleep1 start %d %d\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),ms,tci_timer1_->isActive());
+  if (stop_aborting ()) return;   // JTDX-VU: a stop is pending - don't wait
   if (ms) tci_timer1_->start(ms);
+  ++nested_waits_;
   tci_loop1_->exec();
+  --nested_waits_;
 #if JTDX_DEBUG_TO_FILE
   FILE * pFile = fopen (debug_file_.c_str(),"a");
   fprintf (pFile,"%s(%0.1f) TCI sleep1 %d\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),tci_timer1_->isActive());
@@ -1699,8 +1702,11 @@ void TCITransceiver::mysleep2 (int ms)
 {
 //  tci_timer2->setSingleShot(true);
 //  printf("%s(%0.1f) TCI sleep2 start %d %d\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),ms,tci_timer2_->isActive());
+  if (stop_aborting ()) return;   // JTDX-VU: a stop is pending - don't wait
   if (ms) tci_timer2_->start(ms);
+  ++nested_waits_;
   tci_loop2_->exec();
+  --nested_waits_;
 #if JTDX_DEBUG_TO_FILE
   FILE * pFile = fopen (debug_file_.c_str(),"a");
   fprintf (pFile,"%s(%0.1f) TCI sleep2 %d\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),tci_timer2_->isActive());
@@ -1713,8 +1719,11 @@ void TCITransceiver::mysleep3 (int ms)
 {
 //  tci_timer3->setSingleShot(true);
 //  printf("%s(%0.1f) TCI sleep3 start %d %d\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),ms,tci_timer3_->isActive());
+  if (stop_aborting ()) return;   // JTDX-VU: a stop is pending - don't wait
   if (ms) tci_timer3_->start(ms);
+  ++nested_waits_;
   tci_loop3_->exec();
+  --nested_waits_;
 #if JTDX_DEBUG_TO_FILE
   FILE * pFile = fopen (debug_file_.c_str(),"a");
   fprintf (pFile,"%s(%0.1f) TCI sleep3 %d\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),tci_timer3_->isActive());
@@ -1722,6 +1731,12 @@ void TCITransceiver::mysleep3 (int ms)
 #endif
 //  printf("%s(%0.1f) TCI sleep3 end %d\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),tci_timer3_->isActive());
   if (tci_timer3_->isActive()) tci_timer3_->stop();
+}
+// JTDX-VU: end every wait in progress so a pending stop can run
+void TCITransceiver::abort_waits ()
+{
+  for (auto * t : {tci_timer1_, tci_timer2_, tci_timer3_}) if (t && t->isActive ()) t->stop ();
+  for (auto * l : {tci_loop1_, tci_loop2_, tci_loop3_}) if (l && l->isRunning ()) l->quit ();
 }
 // Modulator part
 

@@ -201,6 +201,10 @@ private:
   void mysleep1 (int ms = 1);
   void mysleep2 (int ms = 1);
   void mysleep3 (int ms = 1);
+  // JTDX-VU: see TransceiverBase::in_nested_wait
+  bool in_nested_wait () const override {return nested_waits_ > 0;}
+  void abort_waits () override;
+  int nested_waits_ {0};
   QString mode_to_command (QString) const;
   std::unique_ptr<TransceiverBase> wrapped_; // may be null
   QString rx_;

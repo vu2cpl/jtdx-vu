@@ -551,6 +551,18 @@ void TransceiverBase::shutdown ()
 
 void TransceiverBase::stop () noexcept
 {
+  // JTDX-VU: delivered inside a nested wait of an operation still in
+  // progress (TCI start-up, typically when quitting while TCI is still
+  // connecting): end the wait and run this stop once it has unwound.
+  // Tearing down here deleted the event loop the waiting code returns into.
+  if (in_nested_wait ())
+    {
+      stop_aborting_ = true;
+      abort_waits ();
+      QTimer::singleShot (0, this, [this] {stop ();});
+      return;
+    }
+  stop_aborting_ = false;       // nothing is nested now: tear down normally
   QString message;
 #if JTDX_DEBUG_TO_FILE
   FILE * pFile = fopen (debug_file_.c_str(),"a");
@@ -657,7 +669,8 @@ void TransceiverBase::offline (QString const& reason)
     fprintf(pFile,"%s Transceiver offline %s\n",jtdxtime_->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),reason.toStdString().c_str());
   fclose (pFile);
 #endif
-  Q_EMIT failure (reason);
+  // JTDX-VU: an operation cut short by a pending stop is not a rig failure
+  if (!stop_aborting_) Q_EMIT failure (reason);
   try
     {
       shutdown ();
