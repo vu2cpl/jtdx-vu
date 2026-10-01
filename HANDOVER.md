@@ -49,10 +49,10 @@ Last updated: 2026-09-30
   fixed workflow. Website updated the same morning (card + page,
   downloads table on v0.3.0; all three attached assets answer 206 to
   an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
-  `/Applications/JTDX-VU.app` is a local build of the TCI quit-crash fix
-  commit (v0.3.0 + Settings small-screen fix + JTTY click/%E/RST, MFSK/JTTY
-  ADIF, JTTY start time, TCI quit crash), installed 2026-10-01 for
-  on-air testing. The previous v0.3.0 bundle is
+  `/Applications/JTDX-VU.app` is a local build of `0db73507` (v0.3.0 +
+  Settings small-screen fix + JTTY click/%E/RST, MFSK/JTTY ADIF, JTTY
+  start time, TCI quit crash, JTTY Auto CQ + Settings > JTTY), installed
+  2026-10-01 13:14 for on-air testing. The previous v0.3.0 bundle is
   in `~/Desktop/jdxvu/prev-install/`.
 - **Release v0.2.1: COMPLETE 2026-09-28**. It's at
   https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.1 with all four
@@ -1018,8 +1018,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       for JTTY (TQSL config update may be needed).
 - [ ] **JTTY start-time fix** installed 2026-10-01; check the next
       JTTY QSO logs a sensible start time.
-- [ ] **JTTY Auto CQ on air:** check stop-on-my-call and that a
-      reply is never missed during the gap; not yet installed.
+- [ ] **JTTY Auto CQ on air:** installed 2026-10-01; check
+      stop-on-my-call and stop-on-pick with real replies.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
       headless start have been done so far.
 - [ ] **Other Macs:**
