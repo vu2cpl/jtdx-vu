@@ -49,9 +49,10 @@ Last updated: 2026-09-30
   fixed workflow. Website updated the same morning (card + page,
   downloads table on v0.3.0; all three attached assets answer 206 to
   an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
-  `/Applications/JTDX-VU.app` is now a local build of `b6480391`
-  (v0.3.0 + the Settings small-screen fix + the JTTY click/%E/RST fixes),
-  installed 2026-09-30 for on-air testing. The previous v0.3.0 bundle is
+  `/Applications/JTDX-VU.app` is now a local build of `c0440d8d`
+  (v0.3.0 + the Settings small-screen fix + the JTTY click/%E/RST fixes,
+  MFSK/JTTY ADIF and the JTTY start-time fix), installed 2026-10-01 for
+  on-air testing. The previous v0.3.0 bundle is
   in `~/Desktop/jdxvu/prev-install/`.
 - **Release v0.2.1: COMPLETE 2026-09-28**. It's at
   https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.1 with all four
@@ -104,8 +105,11 @@ Last updated: 2026-09-30
   20m. Mode → MFSK / submode JTTY; LZ2HV's reports were logged -15 / -15
   and should be 599 / 599. Their start times are wrong too; RUMlog keeps
   the end time since 2026-08-28, which is right. Reading RUMlog's store
-  from Claude's shell is blocked by macOS (container privacy), so the
-  RUMlog side was not checked.
+  from Claude's shell is blocked by macOS container privacy ("Operation
+  not permitted" on the container even outside Claude's sandbox), so the
+  RUMlog side was not checked. It needs the Claude app allowed under
+  System Settings > Privacy & Security (Full Disk Access, or "App
+  Management"/data from other apps) — Manoj's call.
 
 ### 2026-10-01 — JTTY logs as ADIF MFSK / JTTY
 
@@ -936,7 +940,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       growing line holds still and a single click grabs the call.
 - [ ] **RUMlog: fix the seven JTTY QSOs** (mode MFSK/JTTY, LZ2HV RST
       599) before any LoTW upload of them.
-- [ ] **JTTY start-time fix** not yet GUI-tested or installed.
+- [ ] **JTTY start-time fix** installed 2026-10-01; check the next
+      JTTY QSO logs a sensible start time.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
       headless start have been done so far.
 - [ ] **Other Macs:**
