@@ -447,7 +447,6 @@ bool MainWindow::jttyUpdateTxState ()
     {
       m_jttyTxEndMs = 0;
       m_jttyTxRequestedUntil = 0;
-      if (m_jttyPanel) m_jttyPanel->setTransmitting (false);
       jttyAutoCqAfterTx ();
     }
   return wanted;
@@ -563,16 +562,19 @@ void MainWindow::jtty_tx (QString message)
   line.messageStartUtc = m_jtdxtime->currentDateTimeUtc2 ();
   m_jttyQsoLines.append (line);
   renderJttyQsoLines ();
-  m_jttyPanel->setTransmitting (true);
 }
 
 void MainWindow::jttyHalt ()
 {
+  jttyClearTx ();
+  haltTx ("JTTY halt ");                 // calls on_stopTxButton_clicked -> jttyClearTx again, harmless
+}
+
+void MainWindow::jttyClearTx ()
+{
   if (m_jttyAutoCq) jttyAutoCqStop (tr ("halted"));
   m_jttyTxRequestedUntil = 0;
   m_jttyTxEndMs = 0;
-  haltTx ("JTTY halt ");
-  if (m_jttyPanel) m_jttyPanel->setTransmitting (false);
 }
 
 // ---- Auto CQ -----------------------------------------------------------------
@@ -587,7 +589,10 @@ void MainWindow::jttyAutoCqToggled (bool on)
   if (!m_jttyPanel) return;
   if (!on)
     {
+      // pressing it again while it runs is a Halt as well: stop calling
+      // and cut the CQ that may be on the air
       jttyAutoCqStop (tr ("switched off"));
+      if (jttyTxBusy ()) jttyHalt ();
       return;
     }
   if (m_mode != "JTTY" || !m_jttyPanel)

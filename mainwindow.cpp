@@ -1132,7 +1132,8 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     ui->menuAutoSeq->addSeparator ();
     ui->menuAutoSeq->addAction (action);
     // "Auto CQ": Call Non-Stop in the FT modes, JTTY Auto CQ in JTTY.  It sits
-    // in the right-hand button column under AnsB4, with JTTY's Halt below it.
+    // in the right-hand button column under AnsB4.  In JTTY, pressing it
+    // while it runs is also the halt (Esc and Halt Tx still work too).
     auto button = new QPushButton {tr ("Auto CQ")};
     button->setCheckable (true);
     button->setFocusPolicy (Qt::NoFocus);
@@ -1142,15 +1143,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     m_cnsButton = button;
     int const column_index = ui->verticalLayout_2->indexOf (ui->AnsB4Button) + 1;
     ui->verticalLayout_2->insertWidget (column_index, button);
-    if (m_jttyPanel)
-      {
-        auto * const halt = m_jttyPanel->haltButton ();
-        halt->setSizePolicy (ui->AnsB4Button->sizePolicy ());
-        halt->setMinimumSize (ui->AnsB4Button->minimumSize ());
-        halt->setMaximumSize (80, 45);
-        ui->verticalLayout_2->insertWidget (column_index + 1, halt);
-        halt->setVisible (false);
-      }
+
     auto set = [this, action] (bool on) {
         m_nonstop = on;
         m_settings->setValue ("JTDXVU/NonStop", on);
@@ -6541,7 +6534,6 @@ void MainWindow::commonActions ()
     {
       if (m_mode == "JTTY") ui->controls_stack_widget->setCurrentIndex (m_jttyStackIndex);
       else if (ui->controls_stack_widget->currentIndex () == m_jttyStackIndex) ui->controls_stack_widget->setCurrentIndex (0);
-      m_jttyPanel->haltButton ()->setVisible (m_mode == "JTTY");
       if (m_mode != "JTTY" && m_jttyAutoCq) jttyAutoCqStop (tr ("left JTTY"));
       updateCnsButton ();
     }
@@ -7233,6 +7225,7 @@ void MainWindow::stopTuneATU() { on_tuneButton_clicked(false); m_bTxTime=false; 
 
 void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
 {
+  if (m_mode == "JTTY") jttyClearTx ();          // JTDX-VU: Halt Tx stops a JTTY send too
   if (m_transmitting || m_tune) m_addtx = -1;
   if (m_tune) stop_tuning ();
   if (m_enableTx and !m_tuneup) enableTx_mode (false);
@@ -8442,7 +8435,8 @@ void MainWindow::updateCnsButton ()
                                  : QString {});
   m_cnsButton->setToolTip (jtty
     ? tr ("Auto CQ (JTTY): send the CQ macro, listen for the gap, call again (Settings > JTTY).\n"
-          "Halt, Esc, sending anything else or picking a DX call stops it.")
+          "Press it again to stop - that also halts a CQ in progress.\n"
+          "Esc, Halt Tx, sending anything else or picking a DX call stops it too.")
     : tr ("Auto CQ (Call Non-Stop): after each logged QSO go straight back to CQ / the next caller "
           "instead of halting Tx. A station that does not answer is dropped after the AutoSeq "
           "counters, as usual. The Tx watchdog (10 min while this is on) still stops Tx."));

@@ -47,10 +47,7 @@ public:
   // WSJT-X 3.2's native templates, key 1..8
   static QString defaultMacro (int key);
 
-  void setTransmitting (bool on);  // Halt reflects state; Send stays enabled
   void reloadMacros ();            // the active macro set changed in Settings
-  // the main window shows Halt in the top row, beside CNS (Auto CQ in JTTY)
-  QPushButton * haltButton () const {return halt_;}
 
   Q_SIGNAL void ftolChanged (int hz) const;
   Q_SIGNAL void displayOptionsChanged () const;
@@ -71,7 +68,6 @@ private:
   QLineEdit * macros_[8];
   QLineEdit * entry_;
   QPushButton * send_;
-  QPushButton * halt_;
   QLineEdit * callNext_;
   QSpinBox * serial_;
   QLabel * serialLabel_;

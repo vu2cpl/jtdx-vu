@@ -86,9 +86,10 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   next and Serial Number. Click, double-click or select a callsign in
   either decode pane to put it in DX Call, as in N1MM; punctuation around
   it is ignored. Set Serial Number to "none" for a non-contest QSO and
-  %E sends just 599. **Auto CQ** (right-hand button column, Halt below
-  it in JTTY) repeats a macro with a gap after each call, 10 s by
-  default; in the FT modes the same button is Call Non-Stop. Settings >
+  %E sends just 599. **Auto CQ** (right-hand button column) repeats a
+  macro with a gap after each call, 10 s by default; pressing it again
+  turns it off and halts a CQ on the air (Esc and Halt Tx stop any JTTY
+  send). In the FT modes the same button is Call Non-Stop. Settings >
   JTTY sets the macro, gap, call limit and stop-on-my-call; station
   details for the macro variables %OP (name), %QTH, %TX (radio) and %ANT
   (antenna); and named **macro sets**, each with its own %E exchange

@@ -28,7 +28,6 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   , includeTime_ {new QCheckBox {tr ("Include time")}}
   , entry_ {new QLineEdit}
   , send_ {new QPushButton {tr ("Send message")}}
-  , halt_ {new QPushButton {tr ("Halt")}}
   , callNext_ {new QLineEdit}
   , serial_ {new QSpinBox}
   , serialLabel_ {new QLabel {tr ("Serial Number")}}
@@ -51,8 +50,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   ftol_->setCurrentIndex (idx >= 0 ? idx : ftol_->findData (100));
   ftol_->setToolTip (tr ("F Tol: decodes within this many Hz of the Rx frequency go to the Rx Frequency pane"));
   for (QWidget * w : {static_cast<QWidget *> (ftol_), static_cast<QWidget *> (lowerCase_),
-                      static_cast<QWidget *> (includeTime_), static_cast<QWidget *> (send_),
-                      static_cast<QWidget *> (halt_)})
+                      static_cast<QWidget *> (includeTime_), static_cast<QWidget *> (send_)})
     w->setFocusPolicy (Qt::NoFocus);
   entry_->setPlaceholderText (tr ("Press Enter to send and clear the message"));
   entry_->setToolTip (tr ("Press Enter to send and clear the message."));
@@ -66,8 +64,6 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
     entry_->setMinimumHeight (entry_->sizeHint ().height () + 6);
   }
   send_->setToolTip (tr ("Send and clear the message. Press Enter in the field."));
-  halt_->setToolTip (tr ("Stop transmitting (Esc)"));
-  halt_->setEnabled (false);
   callNext_->setToolTip (tr ("Callsign to be worked next (%Q)."));
   callNext_->setMaximumWidth (110);
   serial_->setToolTip (tr ("Serial number of QSO for contest exchange (%N; %E sends 599 %N).\n"
@@ -146,7 +142,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
     });
   connect (entry_, &QLineEdit::returnPressed, this, &JttyPanel::submitEntry);
   connect (send_, &QPushButton::clicked, this, &JttyPanel::submitEntry);
-  connect (halt_, &QPushButton::clicked, this, [this] {Q_EMIT haltRequested ();});
+
   updateSerialVisibility ();
 
   // F1-F8 and Esc ahead of the menu shortcuts (F1 help, F2 settings, ...)
@@ -201,11 +197,6 @@ void JttyPanel::updateSerialVisibility ()
   bool const on = JttySettings::usesSerial (JttySettings::activeSet (settings_));
   serialLabel_->setVisible (on);
   serial_->setVisible (on);
-}
-
-void JttyPanel::setTransmitting (bool on)
-{
-  halt_->setEnabled (on);
 }
 
 int JttyPanel::ftol () const

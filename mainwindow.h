@@ -846,6 +846,7 @@ private:
   void jtty_tx (QString message);       // encode + generate wave, then let guiUpdate key up
   void jttyMacro (int key);             // F1..F8: expand %M %H %Q %E, then jtty_tx
   void jttyHalt ();
+  void jttyClearTx ();                  // JTTY part of a halt: Auto CQ off, Tx state cleared
   void jttyAutoCqToggled (bool on);
   void jttyAutoCqFire ();
   void jttyAutoCqAfterTx ();

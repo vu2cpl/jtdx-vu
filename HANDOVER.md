@@ -92,6 +92,26 @@ Last updated: 2026-09-30
 
 ## What changed
 
+### 2026-10-01 — JTTY: Auto CQ is its own halt; Halt button removed
+
+Manoj: Auto CQ grey → green, and pressing it again should halt (grey);
+then no separate Halt button is needed in JTTY. Keep Stop.
+
+- `jttyAutoCqToggled(false)` stops Auto CQ and, if a send is in
+  progress, calls `jttyHalt()`.
+- The JTTY Halt button is gone (panel's `halt_`, `haltButton()`,
+  `setTransmitting()` removed). Esc still emits `haltRequested`.
+- **Halt Tx** (left button group) now also halts a JTTY send:
+  `on_stopTxButton_clicked` calls new `jttyClearTx()` (Auto CQ off,
+  `m_jttyTxRequestedUntil`/`m_jttyTxEndMs` cleared) in JTTY. `jttyHalt()`
+  = `jttyClearTx()` + `haltTx()`, which lands in `on_stopTxButton_clicked`
+  again, harmlessly.
+- Stop (Monitor off) is unchanged.
+- Verified in a throwaway instance: Auto CQ press → green + CQ; press
+  again → grey, CQ cut, "Auto CQ stopped: switched off", nothing sent in
+  the next 13 s; F1 by hand then Halt Tx → stopped. An extra CQ in an
+  earlier run was Manoj clicking the test window, not a bug.
+
 ### 2026-10-01 — Auto CQ button in the column; per-set exchange; %OP %QTH %TX %ANT
 
 Manoj, while trying the first Auto CQ build: drop the serial in
