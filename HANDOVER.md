@@ -91,6 +91,21 @@ Last updated: 2026-09-30
 
 ## What changed
 
+### 2026-10-01 — Stop button hidden; Monitor is the start/stop
+
+Manoj: "stop button is redundant. monitor can be used to start and stop
+monitoring" (all modes).
+
+- `ui->stopButton` is hidden at start-up and `dynamicButtonsInit` no
+  longer shows it at any window height (its three `show()` calls became
+  `hide()`). The widget and `on_stopButton_clicked` stay, because code
+  still clicks/calls it (Decode-remaining-files and the file-open path).
+- Monitor is checkable and already stopped monitoring when unchecked;
+  unchecking it now also clears `m_loopall`, the one extra thing Stop
+  did (ends a "Decode remaining files in directory" run).
+- Verified in a throwaway instance with a 640 px tall window: no Stop;
+  Monitor off → grey, meter and progress stop; on → green, receiving.
+
 ### 2026-10-01 — JTTY: Auto CQ is its own halt; Halt button removed
 
 Manoj: Auto CQ grey → green, and pressing it again should halt (grey);

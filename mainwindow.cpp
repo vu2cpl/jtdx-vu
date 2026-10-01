@@ -977,6 +977,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   ui->singleQSOButton->setMaximumSize(80,45);
   ui->AnsB4Button->setMaximumSize(80,45);
   ui->stopButton->setMaximumSize(80,45);
+  ui->stopButton->hide();   // JTDX-VU: Monitor starts and stops monitoring; Stop is redundant
   dynamicButtonsInit();
 
   m_audioThread.start (m_audioThreadPriority);
@@ -2331,6 +2332,9 @@ void MainWindow::on_monitorButton_clicked (bool checked)
     {
       auto prior = m_monitoring;
       m_monitoroff = !checked;
+      // JTDX-VU: Monitor is the only start/stop control (Stop is hidden), so
+      // switching it off also ends a "Decode remaining files" run, as Stop did
+      if (!checked) m_loopall = false;
       monitor (checked);
 
       if (checked && !prior)
@@ -8404,20 +8408,20 @@ void MainWindow::dynamicButtonsInit()
       else if(height > 435 && height <= 475) { ui->bypassButton->show(); ui->singleQSOButton->hide(); ui->AnsB4Button->hide(); ui->stopButton->hide(); }
       else if(height > 475 && height <= 500) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->hide(); ui->stopButton->hide(); }
       else if(height > 500 && height <= 525) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->hide(); }
-      else if(height > 525) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->show(); }
+      else if(height > 525) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->hide(); }
     } else {
       if(height <= 415) { ui->bypassButton->hide(); ui->singleQSOButton->hide(); ui->AnsB4Button->hide(); ui->stopButton->hide(); }
       else if(height > 415 && height <= 450) { ui->bypassButton->show(); ui->singleQSOButton->hide(); ui->AnsB4Button->hide(); ui->stopButton->hide(); }
       else if(height > 450 && height <= 485) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->hide(); ui->stopButton->hide(); }
       else if(height > 485 && height <= 520) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->hide(); }
-      else if(height > 520) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->show(); }
+      else if(height > 520) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->hide(); }
     }
   } else {
     if(height <= 425) { ui->bypassButton->hide(); ui->singleQSOButton->hide(); ui->AnsB4Button->hide(); ui->stopButton->hide(); }
     else if(height > 425 && height <= 450) { ui->bypassButton->show(); ui->singleQSOButton->hide(); ui->AnsB4Button->hide(); ui->stopButton->hide(); }
     else if(height > 450 && height <= 475) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->hide(); ui->stopButton->hide(); }
     else if(height > 475 && height <= 500) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->hide(); }
-    else if(height > 500) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->show(); }
+    else if(height > 500) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->hide(); }
   }
 }
 
