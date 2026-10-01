@@ -69,12 +69,14 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   changing it re-filters every decode already on screen, and a
   just-worked station drops out. Traffic with your call and your QSO
   partner always shows, and the Rx Frequency pane is never filtered.
-- **CNS (Call Non-Stop):** a button at the end of the row, also in the
-  AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
+- **Call Non-Stop:** the **Auto CQ** button in the right-hand button
+  column (under AnsB4), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
   or the next caller instead of halting Tx. A station that doesn't
   answer is dropped after the AutoSeq counters (Settings > Sequencing),
   as usual. The Tx watchdog is fixed at 10 minutes while CNS is on, so
   unanswered CQ still stops.
+- **No Stop button:** Monitor is the one start/stop control for
+  monitoring (switching it off also ends a "Decode remaining files" run).
 - **Needed-DXCC alerts** when a decoded station is ATNO, a new band or
   a new mode (in this mode on no band yet), as in MSHV. Alerts go to macOS notifications and/or Telegram,
   with a per-call/band cooldown (5–60 min).
