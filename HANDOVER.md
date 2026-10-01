@@ -56,12 +56,10 @@ Last updated: 2026-09-30
   fixed workflow. Website updated the same morning (card + page,
   downloads table on v0.3.0; all three attached assets answer 206 to
   an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
-  `/Applications/JTDX-VU.app` is a local build of `37b4fc30` (v0.3.0 +
-  Settings small-screen fix + JTTY click/%E/RST, MFSK/JTTY ADIF, JTTY
-  start time, TCI quit crash, JTTY Auto CQ + Settings > JTTY, one Auto CQ
-  button that is also the JTTY halt, per-set exchange, %OP/%QTH/%TX/%ANT,
-  Stop hidden), installed 2026-10-01 15:45 for on-air testing. Macro sets
-  migrated (Default/Ragchew "599", Contest "599 %N", active Ragchew / DX). The previous v0.3.0 bundle is
+  `/Applications/JTDX-VU.app` is **v0.4.0** (local build of tag `v0.4.0`;
+  title "JTDX-VU for VUCG V0.4.0"), installed 2026-10-01 20:36. Macro
+  sets migrated (Default/Ragchew "599", Contest "599 %N", active
+  Ragchew / DX). The previous v0.3.0 bundle is
   in `~/Desktop/jdxvu/prev-install/`.
 - **Release v0.2.1: COMPLETE 2026-09-28**. It's at
   https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.1 with all four
