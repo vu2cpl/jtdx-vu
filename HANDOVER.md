@@ -88,6 +88,25 @@ Last updated: 2026-09-30
 
 ## What changed
 
+### 2026-10-01 — JTTY QSO start time
+
+- JTTY never set `m_dateTimeQSOOn` (FT8's auto-sequencer does that), so
+  every JTTY QSO logged a stale start: four QSOs on 09-30 all have
+  TIME_ON 17:32:11, and IK0QKN has start = end. `on_dxCallEntry_textChanged`
+  now stamps the start whenever the DX call changes in JTTY (picked or
+  typed). The log handler's "more than 10 periods apart → start = end"
+  rule still applies (1200 s for JTTY's nominal 120 s period).
+- Built, not yet tested in a GUI instance (Manoj was on air) and not
+  installed.
+- **RUMlog clean-up of existing JTTY QSOs** is Manoj's to do in RUMlog
+  (never write its database). From `wsjtx_log.adi` there are seven:
+  EA1BAF, IK3CHK (09-28), IK0QKN, YO4CVV, EA3NE, N8DC, LZ2HV (09-30), all
+  20m. Mode → MFSK / submode JTTY; LZ2HV's reports were logged -15 / -15
+  and should be 599 / 599. Their start times are wrong too; RUMlog keeps
+  the end time since 2026-08-28, which is right. Reading RUMlog's store
+  from Claude's shell is blocked by macOS (container privacy), so the
+  RUMlog side was not checked.
+
 ### 2026-10-01 — JTTY logs as ADIF MFSK / JTTY
 
 - JTTY QSOs were written as `<MODE:4>JTTY`, which LoTW/TQSL don't know
@@ -915,6 +934,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       on their real window manager.
 - [ ] **JTTY click-to-pick on live text:** confirm on air that a
       growing line holds still and a single click grabs the call.
+- [ ] **RUMlog: fix the seven JTTY QSOs** (mode MFSK/JTTY, LZ2HV RST
+      599) before any LoTW upload of them.
+- [ ] **JTTY start-time fix** not yet GUI-tested or installed.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a
       headless start have been done so far.
 - [ ] **Other Macs:**

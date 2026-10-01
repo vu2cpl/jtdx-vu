@@ -6135,6 +6135,9 @@ void MainWindow::on_dxCallEntry_textChanged(const QString &t) //dxCall changed
       if (m_hisCall.isEmpty()) { m_hisCallCompound=false; return; }
       else m_hisCall.clear();
   } else m_hisCall=t.toUpper().trimmed();
+  // JTDX-VU: JTTY has no auto-sequencer to stamp the QSO start; take it from
+  // when the DX call was picked or typed, or every QSO logs a stale start
+  if (m_mode == "JTTY" && !m_hisCall.isEmpty()) m_dateTimeQSOOn = m_jtdxtime->currentDateTimeUtc2();
   m_hisCallCompound=(!m_hisCall.isEmpty() && m_hisCall.contains("/")); // && !m_hisCall.endsWith("/P") && !m_hisCall.endsWith("/R"));
   if(m_myCallCompound && m_hisCallCompound) {
     if(m_skipTx1) { m_skipTx1=false; ui->skipTx1->setChecked(false); ui->skipGrid->setChecked(false); on_txb1_clicked(); }
