@@ -1360,11 +1360,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       decodes, Shift / Option F-keys on the Mac keyboard, type-ahead
       with PTT through TCI. Manoj to fill labels for his own "Default"
       set in Settings > JTTY if he uses it.
-- [ ] **Even decode-pane split** (after v0.5.0): installed 2026-10-02;
-      check a live mode switch evens it; ship with the resize fix.
-- [ ] **Main-window resize fix** (after v0.5.0): installed 2026-10-02;
-      use on the Mac, ship in the next release; check the minimum on a Linux / Windows
-      font.
+- [ ] **Even decode-pane split + resize fix** (after v0.5.0): installed
+      2026-10-02, Manoj: "its fine now". Ship in the next release; check
+      the minimum on a Linux / Windows font.
 - [ ] **Auto CQ time limit** (after v0.5.0): ship in the next release;
       check on air in JTTY and with CNS in FT8.
 - [ ] **JTTY Auto CQ on air:** installed 2026-10-01; check
