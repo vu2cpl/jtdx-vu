@@ -55,6 +55,8 @@ public:
   int serialNumber () const;       // %N
   void setSerialNumber (int);
   void setQueue (QStringList const& messages);   // waiting to go out after the current one
+  void flashKey (int key);         // a macro refused: blink its button (or its bank's)
+  static void flash (QWidget *);   // blink a widget red three times
 
   // WSJT-X 3.2's native templates, key 1..8
   static QString defaultMacro (int key);

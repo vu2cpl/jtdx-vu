@@ -482,6 +482,13 @@ void MainWindow::jttyMacro (int key)
   if (!m_jttyPanel) return;
   auto tpl = m_jttyPanel->macro (key);
   if (tpl.isEmpty ()) return;
+  // JTDX-VU: a refused macro says why in the status bar and blinks its
+  // key (and the field to fill in), so a silent key isn't taken for broken
+  auto refuse = [this, key] (QString const& why, QWidget * field = nullptr) {
+    statusBar ()->showMessage (why, 5000);
+    m_jttyPanel->flashKey (key);
+    JttyPanel::flash (field);
+  };
   auto const my = m_config.my_callsign ().trimmed ().toUpper ();
   auto const his = ui->dxCallEntry->text ().trimmed ().toUpper ();
   auto queued = m_jttyPanel->callNext ();
@@ -498,7 +505,7 @@ void MainWindow::jttyMacro (int key)
       auto const name = m_jttyName ? m_jttyName->text ().simplified ().toUpper () : QString {};
       if (name.isEmpty ())
         {
-          statusBar ()->showMessage (tr ("JTTY: fill in his name first (the Name field)"), 5000);
+          refuse (tr ("JTTY: fill in his name first (the Name field)"), m_jttyName);
           return;
         }
       tpl.replace ("%NAME", name);
@@ -512,24 +519,24 @@ void MainWindow::jttyMacro (int key)
       auto const value = JttySettings::stationValue (m_settings, v.key);
       if (value.isEmpty ())
         {
-          statusBar ()->showMessage (tr ("JTTY: set %1 in Settings > JTTY first").arg (tr (v.label)), 5000);
+          refuse (tr ("JTTY: set %1 in Settings > JTTY first").arg (tr (v.label)));
           return;
         }
       tpl.replace (QLatin1String {v.token}, value);
     }
   if (tpl.contains ("%M") && my.isEmpty ())
     {
-      statusBar ()->showMessage (tr ("JTTY: set your callsign in Settings first"), 5000);
+      refuse (tr ("JTTY: set your callsign in Settings first"));
       return;
     }
   if (tpl.contains ("%H") && his.isEmpty ())
     {
-      statusBar ()->showMessage (tr ("JTTY: enter the DX call first (double-click a decode)"), 5000);
+      refuse (tr ("JTTY: enter the DX call first (click a call in the decodes or Calls heard)"), ui->dxCallEntry);
       return;
     }
   if (tpl.contains ("%Q") && queued.isEmpty ())
     {
-      statusBar ()->showMessage (tr ("JTTY: fill in Call next (or the DX call) first"), 5000);
+      refuse (tr ("JTTY: fill in Call next (or the DX call) first"), ui->dxCallEntry);
       return;
     }
   tpl.replace ("%M", my).replace ("%H", his).replace ("%Q", queued).replace ("%N", serial);

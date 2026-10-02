@@ -16,6 +16,8 @@
 #include <QListWidget>
 #include <QApplication>
 #include <QKeyEvent>
+#include <QTimer>
+#include <QPointer>
 
 namespace
 {
@@ -278,6 +280,29 @@ void JttyPanel::setQueue (QStringList const& messages)
   auto text = tr ("Next: %1").arg (first.size () > 28 ? first.left (27) + QChar {0x2026} : first);
   if (messages.size () > 1) text += tr ("  (+%1)").arg (messages.size () - 1);
   queue_->setText (text);
+}
+
+void JttyPanel::flash (QWidget * w)
+{
+  if (!w || w->property ("jttyFlashing").toBool ()) return;
+  w->setProperty ("jttyFlashing", true);
+  auto const original = w->styleSheet ();
+  QPointer<QWidget> guard {w};
+  for (int step = 0; step < 6; ++step)
+    QTimer::singleShot (step * 160, w, [guard, original, step] {
+        if (!guard) return;
+        guard->setStyleSheet (step % 2 ? original : original
+                              + QStringLiteral ("QPushButton,QLineEdit{background-color:rgb(200,40,40);color:white;}"));
+        if (step == 5) guard->setProperty ("jttyFlashing", false);
+      });
+}
+
+void JttyPanel::flashKey (int key)
+{
+  if (key < 1 || key > JttySettings::macroCount) return;
+  int const bank = (key - 1) / JttySettings::keysPerBank;
+  flash (bank == bank_ ? static_cast<QWidget *> (buttons_[(key - 1) % JttySettings::keysPerBank])
+                       : static_cast<QWidget *> (bankButtons_[bank]));
 }
 
 void JttyPanel::updateSerialVisibility ()

@@ -112,6 +112,17 @@ Last updated: 2026-10-02
 
 ## What changed
 
+### 2026-10-02 — JTTY: a refused macro blinks its key
+
+Manoj: "make the F keys flash when DX call is missing". Every refusal in
+`jttyMacro` (no DX call, no name for %NAME, no Call next, a station
+detail or my call unset) now goes through one `refuse` lambda: status-bar
+message as before, plus `JttyPanel::flashKey(key)` - the key's button
+blinks red three times (160 ms steps), or its Bank button when that bank
+isn't on screen - and `JttyPanel::flash()` on the field to fill in (DX
+Call, or Name). Verified with a burst of window captures after F2 with no
+DX call: the F2 button red / normal / red / normal / red. Installed.
+
 ### 2026-10-02 — JTTY: no CW ID after a macro; shorter calls-heard list
 
 - **Regression from the redesign, fixed:** Manoj heard Morse ("VI" -
