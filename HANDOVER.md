@@ -39,7 +39,8 @@ Last updated: 2026-10-02
   (local build, still reports 0.5.0). Main-window resize fix (2026-10-02
   entry) **installed** 2026-10-02 21:56; the app it replaced is in
   `~/Desktop/jdxvu/prev-install/JTDX-VU.app.before-resize`. Even
-  decode-pane split (same day) built and tested, not yet installed.
+  decode-pane split (same day) **installed** 2026-10-02 22:50; the app
+  it replaced is `~/Desktop/jdxvu/prev-install/JTDX-VU-before-split.app`.
 - **Release v0.4.0: COMPLETE 2026-10-01** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.4.0,
   tag `v0.4.0` on `bf707bc8`. All four builds plus `.sha256` attached
   and verified (anonymous download, every checksum OK, arm64 app reports
@@ -163,6 +164,8 @@ equal ... all modes", without shrinking buttons, fonts or labels.
 - Test gotcha: after a test instance is killed, the next one can show
   "Subprocess failed with exit code 2"; that dialog swallows all input.
   Kill both processes, wait a few seconds, and relaunch.
+- **Installed** 2026-10-02 22:50; TCI audio came straight back this time
+  (AetherSDR not restarted).
 
 ### 2026-10-02 — Main window resizes properly (JTTY spare height; no overlap when small)
 
@@ -1357,8 +1360,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       decodes, Shift / Option F-keys on the Mac keyboard, type-ahead
       with PTT through TCI. Manoj to fill labels for his own "Default"
       set in Settings > JTTY if he uses it.
-- [ ] **Even decode-pane split** (after v0.5.0): built and tested,
-      not yet installed; ship with the resize fix.
+- [ ] **Even decode-pane split** (after v0.5.0): installed 2026-10-02;
+      check a live mode switch evens it; ship with the resize fix.
 - [ ] **Main-window resize fix** (after v0.5.0): installed 2026-10-02;
       use on the Mac, ship in the next release; check the minimum on a Linux / Windows
       font.
