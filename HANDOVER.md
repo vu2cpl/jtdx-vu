@@ -32,7 +32,10 @@ Last updated: 2026-10-02
 - **Unreleased on `jtdx-vu` after v0.4.0:** the JTTY screen redesign
   (2026-10-02 entry): FT-only controls hidden in JTTY, S / R / Name
   fields, calls heard, 24 macros in 3 banks, set picker, type-ahead.
-  Built and tested in a throwaway instance; not installed yet.
+  Built and tested in a throwaway instance; **installed 2026-10-02
+  11:40** (bundle of `6ae5e051`'s code). Previous v0.4.0 app and the
+  pre-migration .ini (`JTDX-VU.ini.before-redesign`) are in
+  `~/Desktop/jdxvu/prev-install/`.
 - **Installed app:** `/Applications/JTDX-VU.app` is current: all app
   code up to `4642e1ee`, installed 2026-09-28. It was built locally, so
   it runs on macOS 26+ only. Settings are in
@@ -190,9 +193,9 @@ macro editing only in Settings, and queue-while-transmitting.
   empty) refused; Option+F7 sent "PSE QRS"; Settings > JTTY shows the
   three bank tabs with labels. **Not yet tested:** Log QSO with edited
   S / R / Name, Erase during live decoding, on air.
-- **Not installed:** `/Applications/JTDX-VU.app` is still v0.4.0. (It
-  was quit at 11:29 on 2026-10-02 during the test, cleanly - its .ini is
-  unchanged.)
+- **Installed** 2026-10-02 after the tests (the live app had been quit
+  cleanly at 11:29). The first launch runs the macro-set migration; the
+  .ini from before it is in `~/Desktop/jdxvu/prev-install/`.
 
 ### 2026-10-01 — Stop button hidden; Monitor is the start/stop
 
@@ -1191,7 +1194,7 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       for JTTY (TQSL config update may be needed).
 - [ ] **JTTY start-time fix** installed 2026-10-01; check the next
       JTTY QSO logs a sensible start time.
-- [ ] **JTTY screen redesign (2026-10-02):** install and try on air -
+- [ ] **JTTY screen redesign (2026-10-02):** installed; try on air -
       Log QSO with edited S / R / Name, calls-heard colours with live
       decodes, Shift / Option F-keys on the Mac keyboard, type-ahead
       with PTT through TCI. Manoj to fill labels for his own "Default"
