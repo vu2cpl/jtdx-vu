@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-01
+Last updated: 2026-10-02
 
 ## Current state
 
@@ -29,6 +29,10 @@ Last updated: 2026-10-01
     install -s` clean, 8 s headless start OK, uploaded by hand.
   - Website updated the same evening (card + page, downloads table on
     v0.4.0), pushed after all assets answered.
+- **Unreleased on `jtdx-vu` after v0.4.0:** the JTTY screen redesign
+  (2026-10-02 entry): FT-only controls hidden in JTTY, S / R / Name
+  fields, calls heard, 24 macros in 3 banks, set picker, type-ahead.
+  Built and tested in a throwaway instance; not installed yet.
 - **Installed app:** `/Applications/JTDX-VU.app` is current: all app
   code up to `4642e1ee`, installed 2026-09-28. It was built locally, so
   it runs on macOS 26+ only. Settings are in
@@ -104,6 +108,91 @@ Last updated: 2026-10-01
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-02 — JTTY screen redesign: FT-only controls hidden, QSO fields, calls heard, 24 macros, type-ahead
+
+Manoj: redesign the UI for JTTY only - lots of unused / non-functional
+buttons; use the space for more memory macros etc. He chose all four
+proposals (24 macros in 3 banks, set picker on the panel, QSO strip with
+RST + name, calls-heard list) plus calls coloured from the Club Log data,
+macro editing only in Settings, and queue-while-transmitting.
+
+- **Audit first** (code trace, every control): in JTTY these do nothing
+  - TX Even, Report, CL, DT, Hound, the "Tx JTTY" label, AutoTX, Wanted,
+  AutoSeq, the wanted-call filters + Clr, Bypass, 1 QSO, AnsB4, Enable Tx
+  (a JTTY send keys up without it), Hint, Sync, SWL, AGCc, Filter, Decode,
+  and the progress bar (counts the nominal 120 s buffer).
+- **`jttyApplyLayout()`** (`mainwindow_jtty.cpp`) hides them in JTTY and
+  shows them again elsewhere. Called at the end of `commonActions`,
+  `dynamicButtonsInit` and `on_cbShowWanted_toggled` (both re-show some),
+  plus a once-a-second check in `guiUpdate` for modes set up without
+  `commonActions` (WSPR). Halt Tx / Log QSO / Erase / Clear DX move into
+  one column of `gridLayout_9` and `horizontalLayout_4`'s stretch goes
+  0,1,0 so the macro panel gets the width; all restored on leaving.
+  Verified: FT8 afterwards shows every control as before (Hint hidden,
+  Sync shown, as FT8 does).
+- **QSO fields** (`jttySetupUi()`): S / R / Name in the middle column of
+  `gridLayout` (where Report / CL / Tx mode sit). New DX call → RST back
+  to 599, Name = `m_name` (looked up from the log); editing Name sets
+  `m_name`. Log QSO in JTTY now takes S / R instead of a fixed 599 / 599.
+  No received-serial field: ADIF SRX would need plumbing through four log
+  paths - in a contest type "599 012" into R.
+- **Calls heard** (`JttyHeardList` in `jttypanel.{h,cpp}`), inserted in
+  `verticalLayout_9` above the Rx Frequency pane. Every callsign-shaped
+  word in a decode (not my call; the last word of a still-growing message
+  is skipped as possibly half a call; each message counts a call once via
+  `JttyDecodeLine::heardCalls`), newest first, updated in place, 40 max,
+  cleared on a band change. Colour (`jttyHeardStatus`): new DXCC > new
+  DXCC on band > new DXCC in JTTY > new call > not on band in JTTY >
+  worked, using the Settings colours and `LogBook` (so Club Log).
+  Recoloured on `ClubLog::log_updated` and after a QSO is logged.
+  Click = DX Call + Rx frequency. Font = the decode panes'.
+- **Macros**: `MacroSet` now has 24 macros + 24 labels (`Msg1..24`,
+  `Label1..24`). Keys: F1-F8, Shift+F1-F8, Option(Alt)+F1-F8, fixed per
+  bank whatever bank is shown. The panel has no edit boxes any more: Set
+  picker, Bank 1/2/3, eight labelled buttons (label or a short form of
+  the macro: variables, DE, K and repeats dropped), tooltips show the key
+  and template. Settings > JTTY has a tab per bank with label + macro.
+  Auto CQ can use any of the 24.
+  **One-off migration** (`Banks=3` in `[JTTY]`): sets named like the
+  built-ins get banks 2-3 (contest fills; ragchew rpt/name/QTH/rig/QSL/
+  73/QRS...) and labels where the macro is still the built-in text, and
+  exchange "599" → "%RST", "599 %N" → "%RST %N" (same text while S is
+  599). Manoj's own "Default" set keeps everything, empty banks 2-3.
+- **%RST / %NAME**: from the QSO fields; %NAME empty blocks the send with
+  a status message. Expanded after %E and before %N (`%N(?!AME)` when
+  dropping the serial; `usesSerial` ignores %NAME).
+- **Type-ahead**: `jtty_tx` while busy appends to `m_jttyTxQueue` (panel
+  shows "Next: ..."); `jttyUpdateTxState` sends the head when a message
+  ends (`jttySendQueued`, retries every 200 ms while PTT drops). Halt /
+  Esc / leaving JTTY clear it. Auto CQ never queues.
+- **Bugs fixed on the way** (found in the audit):
+  - Erase in JTTY left the renderer holding `QTextBlock`s of the cleared
+    documents → `flushJttyDecodeLines()` after Erase.
+  - At JTTY key-up the FT "Calculate Tx tones" block ran: it read the
+    hidden FT Tx box (could halt with "empty message"), overwrote
+    `m_curMsgTx` / LastTx with a stale FT message, and could run the 73 →
+    log logic. Now skipped for JTTY (not Tune); `m_curMsgTx` = the JTTY
+    text. The FT-style "Tx @ ..." line in the Rx pane is skipped too
+    (JTTY writes its own "Tx:" line).
+  - `decode()` returns at once in JTTY (could start jtdxjt9 if primed).
+  - Picking a call cleared the grid *after* the log had filled it; now
+    the grid is cleared first.
+- **Verified** in a throwaway `-r jttyui` instance (copy of the .ini,
+  Rig None, alerts off, audio out to the Mac mini speakers, Club Log
+  cache copied) fed a mixed wav made with a scratch copy of
+  `txtest_jtty` taking a frequency (five stations, 1100-1900 Hz; the GUI
+  decoded the three inside the waterfall span): calls heard filled and
+  coloured (3B8CW new DXCC red, IK0QKN / LZ2HV worked green); click →
+  DX Call + grid from log + Rx 1300; FT8 and back; Bank 2 = migrated
+  ragchew banks; F1 then F3 → "Next: LZ2HV TU 73 DE VU2CPL SK", sent
+  10.7 s later when the CQ ended (ALL.TXT); Shift+F5 (uses %NAME, Name
+  empty) refused; Option+F7 sent "PSE QRS"; Settings > JTTY shows the
+  three bank tabs with labels. **Not yet tested:** Log QSO with edited
+  S / R / Name, Erase during live decoding, on air.
+- **Not installed:** `/Applications/JTDX-VU.app` is still v0.4.0. (It
+  was quit at 11:29 on 2026-10-02 during the test, cleanly - its .ini is
+  unchanged.)
 
 ### 2026-10-01 — Stop button hidden; Monitor is the start/stop
 
@@ -1102,6 +1191,11 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       for JTTY (TQSL config update may be needed).
 - [ ] **JTTY start-time fix** installed 2026-10-01; check the next
       JTTY QSO logs a sensible start time.
+- [ ] **JTTY screen redesign (2026-10-02):** install and try on air -
+      Log QSO with edited S / R / Name, calls-heard colours with live
+      decodes, Shift / Option F-keys on the Mac keyboard, type-ahead
+      with PTT through TCI. Manoj to fill labels for his own "Default"
+      set in Settings > JTTY if he uses it.
 - [ ] **JTTY Auto CQ on air:** installed 2026-10-01; check
       stop-on-my-call and stop-on-pick with real replies.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a

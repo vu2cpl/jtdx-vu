@@ -4,15 +4,19 @@
 //   Auto CQ   - which F-key macro to repeat, the gap after each call, an
 //               optional limit on the number of calls, and whether a decode
 //               containing my call stops it
-//   Macro sets - named sets of the eight F-key macros and the exchange %E
-//               expands to (%N is dropped when Serial Number is "none");
-//               the panel shows and edits the active set, and shows Serial
-//               Number only when that set uses %N
+//   Macro sets - named sets of 24 macros in three banks (F1-F8,
+//               Shift+F1-F8, Option/Alt+F1-F8), each with a short label for
+//               its panel button, and the exchange %E expands to (%N is
+//               dropped when Serial Number is "none"); the panel shows the
+//               active set as buttons, and shows Serial Number only when
+//               that set uses %N
 //
 // Storage, group [JTTY]:
 //   AutoCqKey, AutoCqGap, AutoCqMax, AutoCqStopOnMyCall, ActiveMacroSet,
 //   OpName, Qth, Radio, Antenna (%OP %QTH %TX %ANT),
-//   and the array MacroSets/<n>/{name, Msg1..Msg8, exchange}.  A set saved
+//   and the array MacroSets/<n>/{name, Msg1..Msg24, Label1..Label24,
+//   exchange}.  Banks=3 marks the one-off migration that gave the built-in
+//   sets their bank 2-3 macros, labels and the %RST exchange.  A set saved
 //   before sets carried an exchange takes the old global Exchange value
 //   (built-in sets take their own).
 //   Before macro sets existed the panel kept Msg1..Msg8 directly in [JTTY];
@@ -38,22 +42,27 @@ namespace JttySettings
   struct MacroSet
   {
     QString name;
-    QStringList macros;         // always 8 entries, F1..F8
+    QStringList macros;         // always macroCount entries: F1..F8, Shift+F1..F8, Opt+F1..F8
+    QStringList labels;         // the same count; empty = derived from the macro
     QString exchange;           // what %E sends with this set
   };
+  int const keysPerBank = 8;
+  int const bankCount = 3;
+  int const macroCount = keysPerBank * bankCount;
+  QString keyName (int key);                           // 1..24 -> "F1", "Shift+F1", "Opt+F1"
+  QString buttonLabel (MacroSet const&, int key);      // the label, or a short form of the macro
   bool usesSerial (MacroSet const&);                   // %N in the exchange or a macro
 
-  QString defaultMacro (int key);                      // WSJT-X 3.2's native templates
-  QString macroTip (int key);                          // what each native key is for
+  QString defaultMacro (int key);                      // WSJT-X 3.2's native templates (1..8)
+  QString macroTip (int key);                          // what each native key is for (1..8)
   QVector<MacroSet> builtInSets ();
   QVector<MacroSet> readSets (QSettings *);            // migrates Msg1..8 on first use
   void writeSets (QSettings *, QVector<MacroSet> const&);
   QString activeSetName (QSettings *);
   void setActiveSetName (QSettings *, QString const&);
   MacroSet activeSet (QSettings *);
-  void setActiveMacro (QSettings *, int key, QString const& text);   // panel edits
 
-  int autoCqKey (QSettings *);          // 1..8, default 1
+  int autoCqKey (QSettings *);          // 1..24, default 1
   int autoCqGap (QSettings *);          // seconds, default 10
   int autoCqMax (QSettings *);          // 0 = no limit
   bool autoCqStopOnMyCall (QSettings *);
@@ -92,7 +101,8 @@ private:
   QPushButton * renameSet_;
   QPushButton * deleteSet_;
   QPushButton * resetSet_;
-  QLineEdit * macros_[8];
+  QLineEdit * macros_[JttySettings::macroCount];
+  QLineEdit * labels_[JttySettings::macroCount];
   QVector<JttySettings::MacroSet> sets_;
   int current_ {-1};
 };

@@ -84,22 +84,44 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
     the macOS Keychain (service `JTDX-VU`), never in the .ini.
 - **JTTY** (new in v0.3.0): WSJT-X 3.2's
   period-free RTTY-style keyboard mode, ported from 3.2.0-rc1 — decoder,
-  transmit, an rc1-style controls page with editable F1–F8 macros, Call
-  next and Serial Number. Click, double-click or select a callsign in
-  either decode pane to put it in DX Call, as in N1MM; punctuation around
-  it is ignored. Set Serial Number to "none" for a non-contest QSO and
-  %E sends just 599. **Auto CQ** (right-hand button column) repeats a
-  macro with a gap after each call, 10 s by default; pressing it again
-  turns it off and halts a CQ on the air (Esc and Halt Tx stop any JTTY
-  send). In the FT modes the same button is Call Non-Stop. Settings >
-  JTTY sets the macro, gap, call limit and stop-on-my-call; station
-  details for the macro variables %OP (name), %QTH, %TX (radio) and %ANT
-  (antenna); and named **macro sets**, each with its own %E exchange
-  (the old macros become "Default"; "Contest (WSJT-X)" sends 599 %N and
-  "Ragchew / DX" sends 599). Serial Number shows only when the active set
-  uses %N. Log QSO fills RST 599 / 599 in JTTY, and JTTY QSOs
-  are logged as ADIF MODE MFSK / SUBMODE JTTY, like FT4. JTTY is by Joe
-  Taylor K1JT, Steve Franke K9AN, Rob G4KLA and the WSJT-X team.
+  transmit, macros, Call next and Serial Number. Click, double-click or
+  select a callsign in either decode pane to put it in DX Call, as in
+  N1MM; punctuation around it is ignored.
+  - **A JTTY screen of its own** (after v0.4.0): the FT-only controls
+    (Report, CL, Hound, AutoTX, AutoSeq, Wanted and the wanted filters,
+    Bypass, 1 QSO, AnsB4, Enable Tx, Hint, SWL, AGCc, Filter, Decode,
+    TX Even, the period progress bar) are hidden while JTTY is selected
+    and come back in the other modes. In their place: **S / R / Name**
+    QSO fields beside Tx / Rx (RST sent and received, logged instead of a
+    fixed 599; the name comes from the log when known), and a **Calls
+    heard** list of every call in the JTTY decodes, coloured like Band
+    Activity from the log / Club Log (new DXCC, new on the band, new in
+    JTTY, new call, worked). Click a call to make it DX Call and put Rx
+    on its frequency.
+  - **24 macros in three banks:** F1–F8, Shift+F1–F8 and Option
+    (Alt)+F1–F8, shown eight at a time as labelled buttons (Bank 1/2/3);
+    each key works whichever bank is on screen. A **Set** picker on the
+    panel switches macro sets. Macros and their button labels are edited
+    in Settings > JTTY.
+  - **Type-ahead:** a macro or typed message sent while another is on the
+    air is queued ("Next: …" on the panel) and goes out as soon as the
+    current one ends. Halt Tx or Esc clears the queue.
+  - **Variables:** %M my call, %H DX call, %Q Call next, %N serial, %E
+    the set's exchange, %RST the RST sent, %NAME his name, and station
+    details %OP (name), %QTH, %TX (radio), %ANT (antenna). Set Serial
+    Number to "none" for a non-contest QSO and %N is left out of %E.
+  - **Auto CQ** (right-hand button column) repeats a macro with a gap
+    after each call, 10 s by default; pressing it again turns it off and
+    halts a CQ on the air (Esc and Halt Tx stop any JTTY send). In the FT
+    modes the same button is Call Non-Stop. Settings > JTTY sets the
+    macro, gap, call limit and stop-on-my-call, the station details, and
+    named **macro sets**, each with its own %E exchange ("Contest
+    (WSJT-X)" sends %RST %N, "Ragchew / DX" sends %RST). Serial Number
+    shows only when the active set uses %N.
+  - JTTY QSOs are logged as ADIF MODE MFSK / SUBMODE JTTY, like FT4.
+
+  JTTY is by Joe Taylor K1JT, Steve Franke K9AN, Rob G4KLA and the
+  WSJT-X team.
 - **FT2** (new in v0.3.0): FT4's protocol at twice
   the speed — 3.75 s periods, 41.67 baud — as introduced in MSHV. The
   mode was created by Martino IU8LMC (ARI Caserta); MSHV's C++

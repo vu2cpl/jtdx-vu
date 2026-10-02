@@ -63,9 +63,11 @@ class EQSL;
 class ClubLog;
 class BandModeSwitcher;
 class JttyPanel;
+class JttyHeardList;
 class QAction;
 #include <QTextBlock>
 #include <QDateTime>
+#include <QColor>
 #include <QVector>
 
 // JTDX-VU: JTTY decode lines, keyed by the decoder's message id
@@ -78,6 +80,7 @@ struct JttyDecodeLine
   QDateTime messageStartUtc;
   bool complete {false};
   bool written {false};
+  QStringList heardCalls;     // calls already passed to the calls-heard list
 };
 struct JttyQsoLine
 {
@@ -697,7 +700,19 @@ private:
   bool m_jttyAutoCqSending {false};     // the send in progress is Auto CQ's own
   int m_jttyAutoCqCount {0};
   QTimer * m_jttyAutoCqTimer {nullptr};
-  int m_jttyStackIndex {-1};            // page of controls_stack_widget holding the JTTY panel              // negative ids for Tx lines in the Rx Frequency pane
+  int m_jttyStackIndex {-1};            // page of controls_stack_widget holding the JTTY panel
+  // JTDX-VU: JTTY screen layout (mainwindow_jtty.cpp)
+  bool m_jttyLayout {false};            // the FT-only controls are hidden for JTTY
+  QLineEdit * m_jttyRstSent {nullptr};  // QSO fields in place of Report / CL / Hound ...
+  QLineEdit * m_jttyRstRcvd {nullptr};
+  QLineEdit * m_jttyName {nullptr};
+  QWidget * m_jttyQsoFields {nullptr};
+  JttyHeardList * m_jttyHeard {nullptr}; // in place of the wanted-call filters
+  QString m_jttyHeardBand;
+  QString m_jttyFieldsCall;             // the DX call the QSO fields belong to
+  QStringList m_jttyTxQueue;            // type-ahead: sent as soon as the current message ends
+  bool m_jttyDequeuing {false};         // jttySendQueued is sending the queue's head
+  QVector<int> m_jttyStretchSaved;      // horizontalLayout_4's stretch outside JTTY
 
   QTimer m_guiTimer;
   QTimer ptt1Timer;                 //StartTx delay
@@ -859,6 +874,13 @@ private:
   bool jttyModulatorActive () const;
   bool jttyTxBusy () const;             // a Send is pending or playing
   bool jttyUpdateTxState ();            // guiUpdate's m_bTxTime for JTTY
+  void jttySetupUi ();                  // the QSO fields and calls-heard list, built once
+  void jttyApplyLayout ();              // hide / restore the FT-only controls for the mode
+  void jttyDxCallChanged ();            // new DX call: fresh RST, name from the log
+  void jttyHeardFromLine (JttyDecodeLine & line);
+  void jttyRestyleHeard ();             // the log changed: recolour the calls heard
+  void jttyHeardStatus (QString const& call, QColor & background, QString & status, QString & country);
+  void jttySendQueued ();               // next type-ahead message, if any
   void switch_mode (Mode);
   void commonActions();
   void WSPR_scheduling ();

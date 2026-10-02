@@ -1109,6 +1109,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     connect (m_jttyPanel, &JttyPanel::macroRequested, this, &MainWindow::jttyMacro);
     connect (m_jttyPanel, &JttyPanel::haltRequested, this, &MainWindow::jttyHalt);
     connect (&m_config, &Configuration::jtty_settings_changed, m_jttyPanel, &JttyPanel::reloadMacros);
+    jttySetupUi ();
     m_jttyAutoCqTimer = new QTimer {this};
     m_jttyAutoCqTimer->setSingleShot (true);
     connect (m_jttyAutoCqTimer, &QTimer::timeout, this, &MainWindow::jttyAutoCqFire);
@@ -3459,6 +3460,7 @@ void MainWindow::freezeDecode(int n)                          //freezeDecode()
 
 void MainWindow::decode()                                       //decode()
 {
+  if (m_mode == "JTTY") { m_manualDecode=false; return; }   // JTDX-VU: JTTY decodes in dataSink, never with jtdxjt9
   if(!m_dataAvailable or m_TRperiod==0.0) { m_manualDecode=false; return; }
   decodeBusy(true); // shall be second line
   if(m_autoErase) ui->decodedTextBrowser->clear();
@@ -4276,6 +4278,9 @@ void MainWindow::on_EraseButton_clicked()                          //Erase
     if((ms-m_msErase)<500) ui->decodedTextBrowser2->clear();
   }
   m_msErase=ms;
+  // JTDX-VU: the JTTY renderer keeps text blocks of the documents just
+  // cleared; start a fresh group or it edits blocks that are gone
+  if (m_mode == "JTTY") flushJttyDecodeLines ();
 }
 
 void MainWindow::on_ClearDxButton_clicked() { clearDX (" is cleared by ClearDxButton, user action"); } //Erase
@@ -4456,7 +4461,16 @@ void MainWindow::guiUpdate()
 
   bool haltedEmpty=false;
   // Calculate Tx tones when needed
-  if((g_iptt==1 && iptt0==0) || m_restart) {
+  if(((g_iptt==1 && iptt0==0) || m_restart) && m_mode=="JTTY" && !m_tune) {
+    // JTDX-VU: jtty_tx generated the wave and set the message; the FT message
+    // tabs, generators and report / 73 logic below don't apply (they showed
+    // a stale FT message, or halted on an empty hidden Tx box)
+    m_curMsgTx = m_currentMessage;
+    last_tx_label->setText(tr("LastTx: ") + m_currentMessage.trimmed());
+    m_restart=false;
+    m_startAnother=false;
+  }
+  else if((g_iptt==1 && iptt0==0) || m_restart) {
 //----------------------------------------------------------------------
 //    printf("%s(%0.1f) Timing transmission start %d %d\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),g_iptt,iptt0);
     QByteArray ba;
@@ -4732,7 +4746,8 @@ void MainWindow::guiUpdate()
       }
     }
 
-    if ((m_config.TX_messages () || m_autoseq) && !m_tune) {
+    // JTDX-VU: JTTY puts its own "Tx:" line in the Rx Frequency pane
+    if ((m_config.TX_messages () || m_autoseq) && !m_tune && m_mode != "JTTY") {
       if (0 == ui->tabWidget->currentIndex ()) {
         if (ui->txrb5->isChecked() && m_autoseq && m_Tx5setAutoSeqOff) { m_wasAutoSeq=true; on_AutoSeqButton_clicked(false); }
       }
@@ -4773,6 +4788,7 @@ void MainWindow::guiUpdate()
 
 //Once per second:
   if(nsec != m_sec0) {
+    if (m_jttyLayout != (m_mode == "JTTY")) jttyApplyLayout ();   // JTDX-VU: modes set up without commonActions (WSPR)
     if (watchdog_minutes () && !m_transmitting && !m_mode.startsWith ("WSPR")
         && m_idleMinutes >= watchdog_minutes ()) {
       txwatchdog (true);       // switch off Enable Tx button
@@ -6198,6 +6214,7 @@ void MainWindow::on_dxCallEntry_textChanged(const QString &t) //dxCall changed
       m_bHisCallStd=stdCall(m_hisCall);
       statusChanged();
   }
+  jttyDxCallChanged ();   // JTDX-VU: fresh RST and name for a new JTTY QSO
 }
 
 void MainWindow::on_dxGridEntry_textChanged(const QString &t) //dxGrid changed
@@ -6260,8 +6277,11 @@ void MainWindow::on_logQSOButton_clicked()
   if(m_logqso73) autolog = m_config.autolog();
   distance=ui->labDist->text();
   if (m_mode == "JTTY") {
-      // JTDX-VU: a keyboard (RTTY-style) mode logs RST, not FT8's dB report
-      m_logDlg->initLogQSO (m_hisCall, m_hisGrid, m_modeTx, "599", "599", distance, m_name,
+      // JTDX-VU: a keyboard (RTTY-style) mode logs RST, not FT8's dB report:
+      // the S / R fields beside Tx / Rx (599 unless changed)
+      auto const sent = m_jttyRstSent && !m_jttyRstSent->text ().trimmed ().isEmpty () ? m_jttyRstSent->text ().trimmed ().toUpper () : QString {"599"};
+      auto const rcvd = m_jttyRstRcvd && !m_jttyRstRcvd->text ().trimmed ().isEmpty () ? m_jttyRstRcvd->text ().trimmed ().toUpper () : QString {"599"};
+      m_logDlg->initLogQSO (m_hisCall, m_hisGrid, m_modeTx, sent, rcvd, distance, m_name,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),autolog);
       m_logqso73=false;
       return;
@@ -6292,6 +6312,7 @@ void MainWindow::acceptQSO2(QDateTime const& QSO_date_off, QString const& call, 
   QString date = QSO_date_on.toString("yyyyMMdd");
   m_qsoLogged=true;
   m_logBook.addAsWorked (call, m_config.bands ()->find (dial_freq), mode, date, grid, name);
+  if (m_mode == "JTTY") jttyRestyleHeard ();   // JTDX-VU: the call is worked now
   ui->decodedTextBrowser->refilter (m_logBook);  // JTDX-VU: a just-worked station drops out of "New ..." views
   QString operator_call = m_config.my_callsign(); QString my_call = m_config.my_callsign(); QString my_grid = m_config.my_grid();
   m_messageClient->qso_logged (QSO_date_off, call, grid, dial_freq, mode, rpt_sent, rpt_received, tx_power, comments, name, QSO_date_on, operator_call, my_call, my_grid);
@@ -6582,6 +6603,7 @@ void MainWindow::commonActions ()
     ui->syncButton->setVisible(true);
   }
   m_modeChanged=true;
+  jttyApplyLayout ();   // JTDX-VU: FT-only controls off in JTTY, back elsewhere
 }
 
 void MainWindow::WSPR_config(bool b)
@@ -8391,6 +8413,7 @@ void MainWindow::on_cbShowWanted_toggled(bool b)
   ui->labWantCall->setVisible(b); ui->wantedCall->setVisible(b); ui->labWantCountry->setVisible(b); ui->wantedCountry->setVisible(b);
   ui->labWantPfx->setVisible(b); ui->wantedPrefix->setVisible(b); ui->labWantGrid->setVisible(b); ui->wantedGrid->setVisible(b);
   ui->cbClearCallsign->setVisible(b); ui->cbClearGrid->setVisible(b); dynamicButtonsInit();
+  jttyApplyLayout ();   // JTDX-VU: no wanted filters in JTTY
 }
 
 void MainWindow::on_cbShowSpot_toggled(bool b) 
@@ -8423,6 +8446,7 @@ void MainWindow::dynamicButtonsInit()
     else if(height > 475 && height <= 500) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->hide(); }
     else if(height > 500) { ui->bypassButton->show(); ui->singleQSOButton->show(); ui->AnsB4Button->show(); ui->stopButton->hide(); }
   }
+  jttyApplyLayout ();   // JTDX-VU: Bypass / 1 QSO / AnsB4 stay hidden in JTTY
 }
 
 // JTDX-VU: one "Auto CQ" button, two jobs - Call Non-Stop in the FT modes,

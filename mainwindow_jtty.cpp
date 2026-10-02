@@ -23,6 +23,11 @@
 #include <QStatusBar>
 #include <QTimer>
 #include <QAction>
+#include <QLineEdit>
+#include <QLabel>
+#include <QGridLayout>
+#include <QSet>
+#include <QApplication>
 
 #include "commons.h"
 #include "jttypanel.h"
@@ -33,6 +38,8 @@
 #include "Modulator.hpp"
 #include "JTDXDateTime.h"
 #include "Radio.hpp"
+#include "Bands.hpp"
+#include "clublog.h"
 
 extern dec_data_t dec_data;   // the shared decoder buffer, defined in mainwindow.cpp
 
@@ -69,6 +76,14 @@ namespace
   bool shouldApplyToQsoHistory (bool alreadyPresent, float frequency, float rxFrequency, float tolerance)
   {
     return alreadyPresent || std::abs (frequency - rxFrequency) < tolerance;
+  }
+
+  // a word that looks like a callsign (VU2CPL, VU2OY/P, 9A/DL1ABC), not a
+  // report or a Q-code
+  bool looksLikeCall (QString const& token)
+  {
+    static QRegularExpression const callLike {"^[A-Z0-9]{1,3}[0-9][A-Z0-9]*[A-Z](/[A-Z0-9]+)?$|^[A-Z0-9]+/[A-Z0-9]{1,3}[0-9][A-Z0-9]*[A-Z]$"};
+    return token.size () >= 3 && callLike.match (token).hasMatch ();
   }
 }
 
@@ -209,6 +224,7 @@ bool MainWindow::jtty_decode (int k)
           line.sequenceStart = update.sequenceStart;
           line.messageStartUtc = lineDateTimeUtc (update.sequenceStart);
           line.complete = update.complete;
+          jttyHeardFromLine (line);
           m_jttyAllFreqLines.append (line);
           allChanged = true;
         }
@@ -219,6 +235,7 @@ bool MainWindow::jtty_decode (int k)
           known->text = update.text;
           known->frequency = update.frequency;
           known->complete = complete;
+          jttyHeardFromLine (*known);
         }
     }
   if (allChanged) renderJttyAllFreqLines ();
@@ -390,13 +407,13 @@ bool MainWindow::jttyPickCall (QTextCursor cursor, bool quiet)
   token = token.trimmed ().toUpper ();
   static QRegularExpression const edges {"^[^A-Z0-9]+|[^A-Z0-9]+$"};
   token.remove (edges);
-  static QRegularExpression const callLike {"^[A-Z0-9]{1,3}[0-9][A-Z0-9]*[A-Z](/[A-Z0-9]+)?$|^[A-Z0-9]+/[A-Z0-9]{1,3}[0-9][A-Z0-9]*[A-Z]$"};
-  if (token.size () >= 3 && callLike.match (token).hasMatch ())
+  if (looksLikeCall (token))
     {
       if (ui->dxCallEntry->text ().trimmed ().toUpper () != token)
         {
-          ui->dxCallEntry->setText (token);
+          // grid first: the new call fills it from the log, if known
           ui->dxGridEntry->clear ();
+          ui->dxCallEntry->setText (token);
         }
       return true;
     }
@@ -448,14 +465,16 @@ bool MainWindow::jttyUpdateTxState ()
       m_jttyTxEndMs = 0;
       m_jttyTxRequestedUntil = 0;
       jttyAutoCqAfterTx ();
+      if (!m_jttyTxQueue.isEmpty ()) QTimer::singleShot (0, this, &MainWindow::jttySendQueued);
     }
   return wanted;
 }
 
-// F1..F8: WSJT-X 3.2's macros - %M my call, %H his call (DX Call entry),
-// %Q the Call next field (his call when empty), %N the serial number,
-// %E the exchange from Settings > JTTY ("599 %N" by default), without %N
-// when Serial Number is 0 (none)
+// Macro keys 1..24 (F1-F8, Shift+, Option+): WSJT-X 3.2's macros - %M my
+// call, %H his call (DX Call entry), %Q the Call next field (his call when
+// empty), %N the serial number, %E the set's exchange ("%RST %N" in the
+// contest set), without %N when Serial Number is 0 (none) - plus JTDX-VU's
+// %RST / %NAME (the QSO fields) and %OP %QTH %TX %ANT (Settings > JTTY)
 void MainWindow::jttyMacro (int key)
 {
   if (!m_jttyPanel) return;
@@ -469,8 +488,22 @@ void MainWindow::jttyMacro (int key)
   // %E first (an exchange may use any variable), then the station details:
   // they must go before %Q / %M, or %QTH would read as %Q + "TH"
   auto exchange = JttySettings::exchange (m_settings);
-  if (m_jttyPanel->serialNumber () <= 0) exchange = exchange.remove ("%N").simplified ();
+  if (m_jttyPanel->serialNumber () <= 0) exchange = exchange.remove (QRegularExpression {"%N(?!AME)"}).simplified ();
   tpl.replace ("%E", exchange);
+  // the QSO fields, before %N (and %H / %M) could eat into them
+  if (tpl.contains ("%NAME"))
+    {
+      auto const name = m_jttyName ? m_jttyName->text ().simplified ().toUpper () : QString {};
+      if (name.isEmpty ())
+        {
+          statusBar ()->showMessage (tr ("JTTY: fill in his name first (the Name field)"), 5000);
+          return;
+        }
+      tpl.replace ("%NAME", name);
+    }
+  auto rst = m_jttyRstSent ? m_jttyRstSent->text ().simplified ().toUpper () : QString {};
+  if (rst.isEmpty ()) rst = "599";
+  tpl.replace ("%RST", rst);
   for (auto const& v : JttySettings::stationVars)
     {
       if (!tpl.contains (QLatin1String {v.token})) continue;
@@ -505,13 +538,19 @@ void MainWindow::jtty_tx (QString message)
 {
   if (m_mode != "JTTY" || !m_jttyPanel) return;
   if (m_jttyAutoCq && !m_jttyAutoCqSending) jttyAutoCqStop (tr ("another message sent"));
-  if (jttyTxBusy ())
-    {
-      statusBar ()->showMessage (tr ("JTTY: still transmitting - wait for the message to finish"), 4000);
-      return;
-    }
   message = message.trimmed ().left (jttyMessageSize);
   if (message.isEmpty ()) return;
+  if (jttyTxBusy () || (!m_jttyTxQueue.isEmpty () && !m_jttyDequeuing))
+    {
+      // type-ahead: goes out as soon as what is on the air (and anything
+      // queued before it) has gone
+      if (m_jttyAutoCqSending) return;           // Auto CQ waits for a clear channel instead
+      m_jttyTxQueue << message;
+      m_jttyPanel->setQueue (m_jttyTxQueue);
+      statusBar ()->showMessage (tr ("JTTY: queued (%1) - goes out when the current message ends").arg (m_jttyTxQueue.size ()), 4000);
+      if (!jttyTxBusy ()) QTimer::singleShot (0, this, &MainWindow::jttySendQueued);
+      return;
+    }
   if (m_jttyPanel->lowerCase ()) message = message.toLower ();   // as WSJT-X: the option covers Tx too
 
   // genjtty takes a fixed 80-character frame and normalises case and
@@ -573,6 +612,8 @@ void MainWindow::jttyHalt ()
 void MainWindow::jttyClearTx ()
 {
   if (m_jttyAutoCq) jttyAutoCqStop (tr ("halted"));
+  m_jttyTxQueue.clear ();
+  if (m_jttyPanel) m_jttyPanel->setQueue ({});
   m_jttyTxRequestedUntil = 0;
   m_jttyTxEndMs = 0;
 }
@@ -669,4 +710,276 @@ void MainWindow::jttyAutoCqCheckDecode (QString const& text)
         QApplication::alert (this);
         return;
       }
+}
+
+// ---- type-ahead --------------------------------------------------------------
+
+void MainWindow::jttySendQueued ()
+{
+  if (m_jttyTxQueue.isEmpty ()) return;
+  if (m_mode != "JTTY" || !m_jttyPanel)
+    {
+      m_jttyTxQueue.clear ();
+      return;
+    }
+  if (jttyTxBusy ())
+    {
+      // PTT may still be dropping after the last message
+      QTimer::singleShot (200, this, &MainWindow::jttySendQueued);
+      return;
+    }
+  auto const next = m_jttyTxQueue.takeFirst ();
+  m_jttyPanel->setQueue (m_jttyTxQueue);
+  m_jttyDequeuing = true;
+  jtty_tx (next);
+  m_jttyDequeuing = false;
+}
+
+// ---- JTTY screen layout ------------------------------------------------------
+//
+// JTDX-VU: in JTTY about half the main window's controls belong to the FT
+// modes (Report, CL, Hound, AutoTX, AutoSeq, Wanted, Bypass, 1 QSO, AnsB4,
+// Enable Tx, Hint, SWL, AGCc, Filter, Decode, TX Even, the wanted-call
+// filters).  They are hidden while JTTY is selected and come back on leaving
+// it.  Their space holds the QSO fields (RST sent / received, name) and the
+// calls-heard list; the four buttons that matter in JTTY (Halt Tx, Log QSO,
+// Erase, Clear DX) stack in one column so the macro panel gets the width.
+
+void MainWindow::jttySetupUi ()
+{
+  // QSO fields, in the middle column of the Tx/Rx grid (Report, CL, Tx mode)
+  m_jttyRstSent = new QLineEdit {"599"};
+  m_jttyRstRcvd = new QLineEdit {"599"};
+  m_jttyName = new QLineEdit;
+  for (auto * e : {m_jttyRstSent, m_jttyRstRcvd})
+    {
+      e->setMaxLength (12);
+      e->setAlignment (Qt::AlignCenter);
+    }
+  m_jttyRstSent->setToolTip (tr ("RST you send (%RST in macros), logged as RST sent.\nBack to 599 for each new DX call."));
+  m_jttyRstRcvd->setToolTip (tr ("RST you received, logged as RST received.\nBack to 599 for each new DX call."));
+  m_jttyName->setMaxLength (30);
+  m_jttyName->setPlaceholderText (tr ("Name"));
+  m_jttyName->setToolTip (tr ("His name (%NAME in macros), logged with the QSO.\n"
+                              "Filled from the log when you have worked him before."));
+  m_jttyQsoFields = new QWidget;
+  {
+    auto grid = new QGridLayout {m_jttyQsoFields};
+    grid->setContentsMargins (0, 0, 0, 0);
+    grid->setHorizontalSpacing (3);
+    grid->setVerticalSpacing (3);
+    grid->addWidget (new QLabel {tr ("S")}, 0, 0);
+    grid->addWidget (m_jttyRstSent, 0, 1);
+    grid->addWidget (new QLabel {tr ("R")}, 0, 2);
+    grid->addWidget (m_jttyRstRcvd, 0, 3);
+    grid->addWidget (m_jttyName, 1, 0, 1, 4);
+  }
+  ui->gridLayout->addWidget (m_jttyQsoFields, 1, 1, 3, 1);
+  m_jttyQsoFields->hide ();
+  connect (m_jttyName, &QLineEdit::textEdited, this, [this] (QString const& text) {m_name = text.trimmed ();});
+
+  // calls heard, where the wanted-call filters sit in the FT modes
+  m_jttyHeard = new JttyHeardList;
+  int at = ui->verticalLayout_9->count ();
+  for (int i = 0; i < ui->verticalLayout_9->count (); ++i)
+    if (ui->verticalLayout_9->itemAt (i)->layout () == ui->verticalLayout) at = i;
+  ui->verticalLayout_9->insertWidget (at, m_jttyHeard);
+  m_jttyHeard->hide ();
+  connect (m_jttyHeard, &JttyHeardList::picked, this, [this] (QString const& call, int frequency) {
+      if (m_mode != "JTTY") return;
+      if (ui->dxCallEntry->text ().trimmed ().toUpper () != call)
+        {
+          ui->dxGridEntry->clear ();
+          ui->dxCallEntry->setText (call);
+        }
+      if (frequency > 0) ui->RxFreqSpinBox->setValue (frequency);
+    });
+  connect (m_clubLog, &ClubLog::log_updated, this, &MainWindow::jttyRestyleHeard);
+}
+
+void MainWindow::jttyApplyLayout ()
+{
+  if (!m_jttyPanel || !m_jttyQsoFields) return;
+  bool const jtty = m_mode == "JTTY";
+  QWidget * const ftOnly[] = {
+    ui->TxMinuteButton, ui->rptSpinBox, ui->candListSpinBox, ui->DTCenterSpinBox, ui->HoundButton,
+    ui->pbTxMode, ui->AutoTxButton, ui->cbShowWanted, ui->AutoSeqButton,
+    ui->enableTxButton, ui->hintButton, ui->syncButton, ui->swlButton, ui->AGCcButton,
+    ui->filterButton, ui->DecodeButton,
+    ui->bypassButton, ui->singleQSOButton, ui->AnsB4Button,
+    ui->labWantCall, ui->wantedCall, ui->labWantCountry, ui->wantedCountry, ui->labWantPfx,
+    ui->wantedPrefix, ui->labWantGrid, ui->wantedGrid, ui->cbClearCallsign, ui->cbClearGrid,
+    progressBar,       // counts JTTY's nominal 120 s buffer, which means nothing on the air
+  };
+  auto move = [this] (QWidget * w, int row, int column) {
+    ui->gridLayout_9->removeWidget (w);
+    ui->gridLayout_9->addWidget (w, row, column);
+  };
+  if (jtty)
+    {
+      // also on every dynamicButtonsInit / Wanted toggle, which show some again
+      for (auto * w : ftOnly) w->hide ();
+      if (m_jttyLayout) return;
+      m_jttyLayout = true;
+      move (ui->stopTxButton, 0, 0);
+      move (ui->EraseButton, 2, 0);
+      move (ui->ClearDxButton, 3, 0);
+      m_jttyStretchSaved.clear ();
+      for (int i = 0; i < ui->horizontalLayout_4->count (); ++i) m_jttyStretchSaved << ui->horizontalLayout_4->stretch (i);
+      ui->horizontalLayout_4->setStretch (0, 0);
+      ui->horizontalLayout_4->setStretch (1, 1);
+      if (ui->horizontalLayout_4->count () > 2) ui->horizontalLayout_4->setStretch (2, 0);
+      m_jttyQsoFields->show ();
+      m_jttyHeard->setListFont (ui->decodedTextBrowser->contentFont ());
+      m_jttyHeard->show ();
+      m_jttyFieldsCall = QStringLiteral ("\x01");   // not a call: fill the fields afresh
+      jttyDxCallChanged ();
+      return;
+    }
+  if (!m_jttyLayout) return;
+  m_jttyLayout = false;
+  m_jttyTxQueue.clear ();
+  m_jttyPanel->setQueue ({});
+  m_jttyQsoFields->hide ();
+  m_jttyHeard->hide ();
+  move (ui->stopTxButton, 0, 1);
+  move (ui->EraseButton, 1, 1);
+  move (ui->ClearDxButton, 5, 1);
+  for (int i = 0; i < m_jttyStretchSaved.size (); ++i) ui->horizontalLayout_4->setStretch (i, m_jttyStretchSaved[i]);
+  // what every mode shows; the mode's own set-up (run after this) hides
+  // its exceptions (FT8: Tx mode and Hint), commonActions did DT and Sync
+  for (QWidget * w : {static_cast<QWidget *> (ui->TxMinuteButton), static_cast<QWidget *> (ui->rptSpinBox),
+                      static_cast<QWidget *> (ui->candListSpinBox), static_cast<QWidget *> (ui->HoundButton),
+                      static_cast<QWidget *> (ui->pbTxMode), static_cast<QWidget *> (ui->AutoTxButton),
+                      static_cast<QWidget *> (ui->cbShowWanted), static_cast<QWidget *> (ui->AutoSeqButton),
+                      static_cast<QWidget *> (ui->enableTxButton), static_cast<QWidget *> (ui->hintButton),
+                      static_cast<QWidget *> (ui->swlButton), static_cast<QWidget *> (ui->AGCcButton),
+                      static_cast<QWidget *> (ui->filterButton), static_cast<QWidget *> (ui->DecodeButton),
+                      static_cast<QWidget *> (progressBar)})
+    w->show ();
+  on_cbShowWanted_toggled (m_wantedchkd);   // the wanted filters, then Bypass / 1 QSO / AnsB4 by height
+}
+
+// A new DX call (picked, typed or cleared): RST back to 599, the name from
+// the log (on_dxCallEntry_textChanged has looked it up into m_name).
+void MainWindow::jttyDxCallChanged ()
+{
+  if (!m_jttyQsoFields || m_mode != "JTTY" || m_hisCall == m_jttyFieldsCall) return;
+  m_jttyFieldsCall = m_hisCall;
+  m_jttyRstSent->setText ("599");
+  m_jttyRstRcvd->setText ("599");
+  m_jttyName->setText (m_hisCall.isEmpty () ? QString {} : m_name.trimmed ());
+}
+
+// ---- calls heard -------------------------------------------------------------
+
+namespace
+{
+  // the readable part of LogBook's "name,continent,prefix" country string
+  QString countryName (QString const& entity)
+  {
+    return entity.section (',', 0, 0).trimmed ();
+  }
+}
+
+void MainWindow::jttyHeardFromLine (JttyDecodeLine & line)
+{
+  if (!m_jttyHeard) return;
+  auto const band = m_config.bands ()->find (m_freqNominal);
+  if (band != m_jttyHeardBand)
+    {
+      m_jttyHeard->clear ();
+      m_jttyHeardBand = band;
+    }
+  auto words = line.text.toUpper ().split (QRegularExpression {"[^A-Z0-9/]+"}, Qt::SkipEmptyParts);
+  // the last word of a message still coming in may be half a call
+  if (!line.complete && !line.text.endsWith (' ') && !words.isEmpty ()) words.removeLast ();
+  auto const my = m_config.my_callsign ().trimmed ().toUpper ();
+  auto const now = m_jtdxtime->currentDateTimeUtc2 ();
+  for (auto const& word : words)
+    {
+      if (word == my || line.heardCalls.contains (word) || !looksLikeCall (word)) continue;
+      line.heardCalls << word;
+      JttyHeardList::Entry e;
+      e.call = word;
+      e.frequency = qRound (line.frequency);
+      e.lastHeard = now;
+      jttyHeardStatus (word, e.background, e.status, e.country);
+      m_jttyHeard->heard (e);
+    }
+}
+
+// as the Band Activity colours: new DXCC, on this band, in this mode, then
+// the call itself on this band in JTTY, then worked
+void MainWindow::jttyHeardStatus (QString const& call, QColor & background, QString & status, QString & country)
+{
+  auto const band = m_config.bands ()->find (m_freqNominal);
+  QString entity;
+  bool worked {true}, slot {true};
+  m_logBook.matchDXCC (call, entity, worked, slot);
+  bool const known = !entity.isEmpty () && !entity.startsWith ("  ,?,");
+  country = known ? countryName (entity) : QString {};
+  QColor colour;
+  if (known && !worked)
+    {
+      colour = m_config.color_NewDXCC ();
+      status = tr ("New DXCC");
+    }
+  if (!colour.isValid () && known)
+    {
+      QString e2;
+      bool w2 {true}, bandSlot {true};
+      m_logBook.matchDXCC (call, e2, w2, bandSlot, m_freqNominal);
+      if (!bandSlot)
+        {
+          colour = m_config.color_NewDXCCBand ();
+          status = tr ("New DXCC on %1").arg (band);
+        }
+    }
+  if (!colour.isValid () && known)
+    {
+      QString e3;
+      bool w3 {true}, modeSlot {true};
+      m_logBook.matchDXCC (call, e3, w3, modeSlot, 0, "JTTY");
+      if (!modeSlot)
+        {
+          colour = m_config.color_NewDXCCMode ();
+          status = tr ("New DXCC in JTTY");
+        }
+    }
+  if (!colour.isValid ())
+    {
+      QString e4;
+      bool callWorked {true}, callSlot {true};
+      m_logBook.matchCall (call, e4, callWorked, callSlot, m_freqNominal, "JTTY");
+      if (!callWorked)
+        {
+          colour = m_config.color_NewCall ();
+          status = tr ("New call");
+        }
+      else if (!callSlot)
+        {
+          colour = m_config.color_NewCallBand ();
+          status = tr ("Worked, but not on %1 in JTTY").arg (band);
+        }
+      else
+        {
+          colour = m_config.color_WorkedCall ();
+          status = tr ("Worked on %1 in JTTY").arg (band);
+        }
+    }
+  background = QColor {Radio::convert_dark (colour.name (), m_useDarkStyle)};
+}
+
+// the log changed (Club Log refresh, a QSO logged): recolour every call in place
+void MainWindow::jttyRestyleHeard ()
+{
+  if (!m_jttyHeard) return;
+  for (auto const& call : m_jttyHeard->calls ())
+    {
+      JttyHeardList::Entry e;
+      e.call = call;
+      jttyHeardStatus (call, e.background, e.status, e.country);
+      m_jttyHeard->restyle (e);
+    }
 }
