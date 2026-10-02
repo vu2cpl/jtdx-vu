@@ -386,6 +386,7 @@ JttyHeardList::JttyHeardList (QWidget * parent)
   box->setSpacing (1);
   box->addLayout (head);
   box->addWidget (list_);
+  setSizePolicy (QSizePolicy::Preferred, QSizePolicy::Fixed);   // two rows; spare height goes to the Rx pane
 
   connect (clearButton, &QPushButton::clicked, this, &JttyHeardList::clear);
   connect (list_, &QListWidget::itemClicked, this, [this] (QListWidgetItem * item) {

@@ -870,12 +870,24 @@ void MainWindow::jttyApplyLayout ()
           b->setSizePolicy (ui->tuneButton->sizePolicy ());
           ui->verticalLayout_2->insertWidget (index++, b);
         }
-      // the macro panel takes the bottom row
+      // spare height to the Rx pane; the top controls, calls heard and the
+      // macro panel keep their natural height. The macro panel takes the
+      // bottom row's width.
       m_jttyStretchSaved.clear ();
-      for (int i = 0; i < ui->horizontalLayout_4->count (); ++i) m_jttyStretchSaved << ui->horizontalLayout_4->stretch (i);
-      ui->horizontalLayout_4->setStretch (0, 0);
+      for (auto * l : {static_cast<QBoxLayout *> (ui->verticalLayout_12), static_cast<QBoxLayout *> (ui->verticalLayout_9),
+                       static_cast<QBoxLayout *> (ui->horizontalLayout_4)})
+        {
+          auto& saved = m_jttyStretchSaved[l];
+          for (int i = 0; i < l->count (); ++i)
+            {
+              saved << l->stretch (i);
+              l->setStretch (i, 0);
+            }
+        }
+      ui->verticalLayout_12->setStretch (1, 1);
+      for (int i = 0; i < ui->verticalLayout_9->count (); ++i)
+        if (ui->verticalLayout_9->itemAt (i)->layout () == ui->verticalLayout) ui->verticalLayout_9->setStretch (i, 1);
       ui->horizontalLayout_4->setStretch (1, 1);
-      if (ui->horizontalLayout_4->count () > 2) ui->horizontalLayout_4->setStretch (2, 0);
       m_jttyHeard->setListFont (ui->decodedTextBrowser->contentFont ());
       m_jttyHeard->show ();
       m_jttyFieldsCall = QStringLiteral ("\x01");   // not a call: fill the fields afresh
@@ -899,7 +911,8 @@ void MainWindow::jttyApplyLayout ()
       b->setSizePolicy (b->property ("jttyPolicy").value<QSizePolicy> ());
       ui->gridLayout_9->addWidget (b, h.row, h.column);
     }
-  for (int i = 0; i < m_jttyStretchSaved.size (); ++i) ui->horizontalLayout_4->setStretch (i, m_jttyStretchSaved[i]);
+  for (auto it = m_jttyStretchSaved.cbegin (); it != m_jttyStretchSaved.cend (); ++it)
+    for (int i = 0; i < it.value ().size () && i < it.key ()->count (); ++i) it.key ()->setStretch (i, it.value ()[i]);
   // what every mode shows; the mode's own set-up (run after this) hides
   // its exceptions (FT8: Tx mode and Hint), commonActions did DT and Sync
   for (QWidget * w : {static_cast<QWidget *> (ui->TxMinuteButton), static_cast<QWidget *> (ui->rptSpinBox),

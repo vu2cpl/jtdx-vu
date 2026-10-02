@@ -50,6 +50,7 @@ class QProcessEnvironment;
 class QSettings;
 class QNetworkAccessManager;
 class QLineEdit;
+class QBoxLayout;
 class QFont;
 class QHostInfo;
 class WideGraph;
@@ -714,7 +715,7 @@ private:
   QString m_jttyFieldsCall;             // the DX call the QSO fields belong to
   QStringList m_jttyTxQueue;            // type-ahead: sent as soon as the current message ends
   bool m_jttyDequeuing {false};         // jttySendQueued is sending the queue's head
-  QVector<int> m_jttyStretchSaved;      // horizontalLayout_4's stretch outside JTTY
+  QHash<QBoxLayout *, QVector<int>> m_jttyStretchSaved; // the FT modes' stretch of the layouts JTTY changes
 
   QTimer m_guiTimer;
   QTimer ptt1Timer;                 //StartTx delay

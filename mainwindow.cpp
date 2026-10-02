@@ -458,6 +458,10 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   m_manual {network_manager}
 {
   ui->setupUi(this);
+  // JTDX-VU: mainwindow.ui pins a 733x422 minimum, which overrides the
+  // layouts' own and let the window shrink until controls overlapped (worst
+  // in JTTY). The layout-derived minimum takes over.
+  setMinimumSize (0, 0);
   m_config.set_jtdxtime (m_jtdxtime);
   ui->decodedTextBrowser->setConfiguration (&m_config);
   ui->decodedTextBrowser2->setConfiguration (&m_config);
