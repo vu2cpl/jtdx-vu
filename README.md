@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.5.0
+# JTDX-VU for VUCG community — v0.5.1
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -127,7 +127,7 @@ or Pi 5 is recommended.
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.5.0"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.5.1"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -203,7 +203,7 @@ or Pi 5 is recommended.
     Number to "none" for a non-contest QSO and %N is left out of %E.
   - **Auto CQ** (right-hand button column) repeats a macro with a gap
     after each call, 10 s by default, and stops after the **time limit**
-    (5 minutes by default, after v0.5.0); pressing it again turns it off and
+    (5 minutes by default, since v0.5.1); pressing it again turns it off and
     halts a CQ on the air (Esc and Halt Tx stop any JTTY send). In the FT
     modes the same button is Call Non-Stop. Settings > JTTY sets the
     macro, gap, call limit and stop-on-my-call, the station details, and
