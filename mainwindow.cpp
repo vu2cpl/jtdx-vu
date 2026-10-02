@@ -1109,6 +1109,25 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     // JTTY is selected, as in WSJT-X 3.2
     m_jttyPanel = new JttyPanel {m_settings};
     m_jttyStackIndex = ui->controls_stack_widget->addWidget (m_jttyPanel);
+    // a stacked widget is as wide as its widest page, shown or not: the JTTY
+    // macro panel made the right pane of every FT mode 796 px wide, so the
+    // splitter could not be set near half. Hidden pages are sized out.
+    {
+      auto * stack = ui->controls_stack_widget;
+      for (int i = 0; i < stack->count (); ++i)
+        stack->widget (i)->setProperty ("stackPolicy", QVariant::fromValue (stack->widget (i)->sizePolicy ()));
+      auto fit = [stack] (int current) {
+        for (int i = 0; i < stack->count (); ++i)
+          {
+            auto * page = stack->widget (i);
+            page->setSizePolicy (i == current ? page->property ("stackPolicy").value<QSizePolicy> ()
+                                              : QSizePolicy {QSizePolicy::Ignored, QSizePolicy::Ignored});
+          }
+        stack->updateGeometry ();
+      };
+      connect (stack, &QStackedWidget::currentChanged, this, fit);
+      fit (stack->currentIndex ());
+    }
     connect (m_jttyPanel, &JttyPanel::displayOptionsChanged, this, &MainWindow::jttyRefreshDisplay);
     connect (m_jttyPanel, &JttyPanel::transmitRequested, this, &MainWindow::jtty_tx);
     connect (m_jttyPanel, &JttyPanel::macroRequested, this, &MainWindow::jttyMacro);
@@ -1446,6 +1465,7 @@ void MainWindow::readSettings()
   restoreGeometry(m_geometry);
   restoreState (m_settings->value ("state",saveState ()).toByteArray ());
   ui->splitter->restoreState(m_settings->value("vertSplitter").toByteArray());
+  QTimer::singleShot (0, this, &MainWindow::evenSplit);   // JTDX-VU: half each, whatever was saved
   m_path = m_settings->value("MRUdir",m_config.save_directory ().absolutePath ()).toString ();
 
   m_txFirst = m_settings->value("TxFirst",false).toBool();
@@ -7061,6 +7081,18 @@ void MainWindow::on_pbSendRRR_clicked()
 
 void MainWindow::resizeEvent(QResizeEvent *event) { 
   if(event->size().height() != event->oldSize().height()) dynamicButtonsInit(); 
+  if(event->size().width() != event->oldSize().width()) QTimer::singleShot (0, this, &MainWindow::evenSplit);   // JTDX-VU
+}
+
+// JTDX-VU: the band-activity and Rx panes share the width about equally in
+// every mode. QSplitter::setSizes keeps each side at least its minimum, so
+// when half is too narrow for one side's controls that side gets its
+// minimum and the other side the rest. Run after the layouts settle (the
+// minimum changes with the mode).
+void MainWindow::evenSplit ()
+{
+  int const total = ui->splitter->width () - ui->splitter->handleWidth ();
+  if (total > 0) ui->splitter->setSizes ({total / 2, total - total / 2});
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)             //mousePressEvent

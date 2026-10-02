@@ -829,6 +829,7 @@ void MainWindow::jttySetupUi ()
 void MainWindow::jttyApplyLayout ()
 {
   if (!m_jttyPanel || !m_jttyQsoFields) return;
+  QTimer::singleShot (0, this, &MainWindow::evenSplit);   // each mode has its own minimum widths
   bool const jtty = m_mode == "JTTY";
   QWidget * const ftOnly[] = {
     ui->TxMinuteButton, ui->rptSpinBox, ui->candListSpinBox, ui->DTCenterSpinBox, ui->HoundButton,

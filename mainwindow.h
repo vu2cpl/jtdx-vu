@@ -879,6 +879,7 @@ private:
   bool jttyUpdateTxState ();            // guiUpdate's m_bTxTime for JTTY
   void jttySetupUi ();                  // the QSO fields and calls-heard list, built once
   void jttyApplyLayout ();              // hide / restore the FT-only controls for the mode
+  void evenSplit ();                    // decode panes about half each, never below a side's minimum
   void jttyDxCallChanged ();            // new DX call: fresh RST, name from the log
   void jttyHeardFromLine (JttyDecodeLine & line);
   void jttyRestyleHeard ();             // the log changed: recolour the calls heard

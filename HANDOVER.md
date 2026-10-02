@@ -38,7 +38,8 @@ Last updated: 2026-10-02
   the 2026-10-02 "Auto CQ time limit" entry). **Installed** 2026-10-02
   (local build, still reports 0.5.0). Main-window resize fix (2026-10-02
   entry) **installed** 2026-10-02 21:56; the app it replaced is in
-  `~/Desktop/jdxvu/prev-install/JTDX-VU.app.before-resize`.
+  `~/Desktop/jdxvu/prev-install/JTDX-VU.app.before-resize`. Even
+  decode-pane split (same day) built and tested, not yet installed.
 - **Release v0.4.0: COMPLETE 2026-10-01** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.4.0,
   tag `v0.4.0` on `bf707bc8`. All four builds plus `.sha256` attached
   and verified (anonymous download, every checksum OK, arm64 app reports
@@ -134,6 +135,34 @@ Last updated: 2026-10-02
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-02 — Decode panes split about half each, in every mode
+
+Manoj, after the resize fix: "left pane and right pane should be almost
+equal ... all modes", without shrinking buttons, fonts or labels.
+
+- **Regression from the v0.5.0 JTTY screen, fixed:** a QStackedWidget is
+  as wide as its widest page, shown or not. The JTTY macro panel (585 px)
+  shares `controls_stack_widget` with the FT Tx-message tabs (281 px), so
+  every FT mode's right pane had a 796 px minimum and the splitter could
+  not go near half (a 1462 px window stopped at about 650 | 800). Hidden
+  pages now get an Ignored size policy (their own policy is restored when
+  shown). FT8 minimum window width 1063 -> 813.
+- **Even split:** `MainWindow::evenSplit()` sets the splitter to half
+  each, at start-up (after the saved `vertSplitter` state), on every mode
+  change (`jttyApplyLayout`, which every mode runs) and on width changes.
+  `QSplitter::setSizes` keeps each side at least its minimum, so nothing
+  is squeezed: in a narrow window the right pane gets its minimum and the
+  left the rest. The handle can still be dragged; the next resize or mode
+  change evens it again.
+- **Verified** in a throwaway `-r rsz` instance at Manoj's 1462x887: FT8,
+  FT2 and JTTY each 730 | 730; FT8 at 1000x700 keeps the right pane's
+  minimum; FT8 and JTTY minimums clean (no clipping). Each mode was
+  started from the .ini (Mode=), because synthetic menu clicks stopped
+  reaching the test instance.
+- Test gotcha: after a test instance is killed, the next one can show
+  "Subprocess failed with exit code 2"; that dialog swallows all input.
+  Kill both processes, wait a few seconds, and relaunch.
 
 ### 2026-10-02 — Main window resizes properly (JTTY spare height; no overlap when small)
 
@@ -1328,6 +1357,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       decodes, Shift / Option F-keys on the Mac keyboard, type-ahead
       with PTT through TCI. Manoj to fill labels for his own "Default"
       set in Settings > JTTY if he uses it.
+- [ ] **Even decode-pane split** (after v0.5.0): built and tested,
+      not yet installed; ship with the resize fix.
 - [ ] **Main-window resize fix** (after v0.5.0): installed 2026-10-02;
       use on the Mac, ship in the next release; check the minimum on a Linux / Windows
       font.
