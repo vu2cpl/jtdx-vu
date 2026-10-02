@@ -35,7 +35,8 @@ Last updated: 2026-10-02
     "Building" placeholder rows; direct links restored in `3d34286` once
     all eight URLs answered 206.
 - **After v0.5.0 on `jtdx-vu` (unreleased):** Auto CQ time limit (see
-  the 2026-10-02 "Auto CQ time limit" entry). Not installed.
+  the 2026-10-02 "Auto CQ time limit" entry). **Installed** 2026-10-02
+  (local build, still reports 0.5.0).
 - **Release v0.4.0: COMPLETE 2026-10-01** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.4.0,
   tag `v0.4.0` on `bf707bc8`. All four builds plus `.sha256` attached
   and verified (anonymous download, every checksum OK, arm64 app reports
@@ -148,7 +149,8 @@ the button, as a setting defaulting to 5.
 - Verified in a throwaway instance with the limit at 1 min and a 3 s
   gap: CNS off - five CQs 06:55:14..06:56:04, then no more ("WD 9m" =
   the normal watchdog); CNS on - "WD 1m" shown and the watchdog expired
-  at a minute. Not installed; goes out with the next release.
+  at a minute. Installed locally 2026-10-02; goes out with the next
+  release.
 
 ### 2026-10-02 — JTTY: a refused macro blinks its key
 
