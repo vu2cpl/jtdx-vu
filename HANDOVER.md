@@ -35,13 +35,18 @@ Last updated: 2026-10-03
     v0.5.0). Pushed early by the website session (`07b899a`) with two
     "Building" placeholder rows; direct links restored in `3d34286` once
     all eight URLs answered 206.
-- **Release v0.5.1: IN PROGRESS 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.1,
+- **Release v0.5.1: COMPLETE 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.1,
   tag `v0.5.1` on `89a3b8b5`. Ships the three fixes made after v0.5.0:
   Auto CQ time limit, main-window resize, even decode-pane split (see
   the 2026-10-02 entries). Notes = v0.5.1 changes + the v0.5.0 install
   guide with the version changed.
-  - CI run 37055496531 (macOS) and 37055496515 (Windows) started from
-    the tag; they attach their zips themselves.
+  - CI run 37055496531 (macOS) and 37055496515 (Windows), all green.
+    All four builds plus `.sha256` downloaded anonymously, every
+    checksum OK, arm64 app reports 0.5.1; copies in
+    `~/Desktop/jdxvu/v0.5.1/`.
+  - Website: card sentence + project page paragraph "Auto CQ time limit
+    and window fixes (v0.5.1)", table / release link / apt command on
+    v0.5.1; pushed (`7a9b778`) after all eight URLs answered 206.
   - Pi `.deb` built on meridianpi5 (rsync of `git ls-files`, prefix
     /usr/local, `nice make -j3`): `apt-get install -s` clean,
     Conflicts: jtdx, 8 s headless start OK, uploaded by hand with its
