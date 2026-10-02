@@ -33,7 +33,7 @@ Last updated: 2026-10-02
   (2026-10-02 entry): FT-only controls hidden in JTTY, S / R / Name
   fields, calls heard, 24 macros in 3 banks, set picker, type-ahead.
   Built and tested in a throwaway instance; **installed 2026-10-02
-  11:40, re-installed 11:45 with the tidied layout** (bundle of `6ae5e051`'s code). Previous v0.4.0 app and the
+  11:40, re-installed 11:45 (tidied layout) and 11:55 (no CW ID)** (bundle of `6ae5e051`'s code). Previous v0.4.0 app and the
   pre-migration .ini (`JTDX-VU.ini.before-redesign`) are in
   `~/Desktop/jdxvu/prev-install/`.
 - **Installed app:** `/Applications/JTDX-VU.app` is current: all app
