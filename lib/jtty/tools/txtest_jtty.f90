@@ -5,17 +5,22 @@ program txtest
   implicit none
   type(hdr) :: h
   character(len=80) :: msg
+  character(len=16) :: fstr
   integer :: itone(16*59),nsym,nsps4,icmplx,nwave,profile,i,n12
   real :: bt,fsample,f0
   real, allocatable :: wave(:)
   integer(2), allocatable :: iwave(:)
-  ! message from the command line, e.g. ./txtest "CQ PU5SIX DE VU2CPL, VU2OY/P K"
-  msg='CQ VU2CPL CQ'
+  ! message (and optional audio frequency, Hz, default 1500) from the command line,
+  ! e.g. ./txtest "CQ PU5SIX DE VU2CPL, VU2OY/P K" 1720
+  msg='CQ VU2CPL CQ'; f0=1500.0
   if (command_argument_count() >= 1) call get_command_argument(1,msg)
+  if (command_argument_count() >= 2) then
+     call get_command_argument(2,fstr); read(fstr,*) f0
+  endif
   profile=0
   call genjtty_profile(msg,profile,itone,nsym)
   print*,'nsym=',nsym
-  nsps4=1536; bt=2.0; fsample=48000.0; f0=1500.0; icmplx=0
+  nsps4=1536; bt=2.0; fsample=48000.0; icmplx=0
   nwave=nsps4*nsym
   allocate(wave(nwave))
   call gen_jttywave(itone,nsym,nsps4,bt,fsample,f0,wave,wave,icmplx,nwave)
