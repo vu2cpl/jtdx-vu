@@ -37,7 +37,8 @@ Last updated: 2026-10-02
 - **After v0.5.0 on `jtdx-vu` (unreleased):** Auto CQ time limit (see
   the 2026-10-02 "Auto CQ time limit" entry). **Installed** 2026-10-02
   (local build, still reports 0.5.0). Main-window resize fix (2026-10-02
-  entry), built and tested, not yet installed.
+  entry) **installed** 2026-10-02 21:56; the app it replaced is in
+  `~/Desktop/jdxvu/prev-install/JTDX-VU.app.before-resize`.
 - **Release v0.4.0: COMPLETE 2026-10-01** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.4.0,
   tag `v0.4.0` on `bf707bc8`. All four builds plus `.sha256` attached
   and verified (anonymous download, every checksum OK, arm64 app reports
@@ -152,6 +153,8 @@ Manoj: the main window "does not resize as needed" (on his Mac).
   constructor now calls `setMinimumSize (0, 0)`; the window stops at
   the layout minimum: about 1063x608 in FT8, 929x632 in JTTY (Mac font).
   Both fit a 1366x768 screen.
+- **Installed** 2026-10-02 21:56 (live app quit cleanly first; old app
+  in `~/Desktop/jdxvu/prev-install/JTDX-VU.app.before-resize`).
 - **Verified** in a throwaway `-r rsz` instance (copy of the .ini, Rig
   None): sizes from 300x200 (clamped) to 2400x1300 in FT8 and JTTY,
   and JTTY -> FT8 -> JTTY by the Mode menu; FT8 identical to before.
@@ -1315,8 +1318,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       decodes, Shift / Option F-keys on the Mac keyboard, type-ahead
       with PTT through TCI. Manoj to fill labels for his own "Default"
       set in Settings > JTTY if he uses it.
-- [ ] **Main-window resize fix** (after v0.5.0): install, use on the
-      Mac, ship in the next release; check the minimum on a Linux / Windows
+- [ ] **Main-window resize fix** (after v0.5.0): installed 2026-10-02;
+      use on the Mac, ship in the next release; check the minimum on a Linux / Windows
       font.
 - [ ] **Auto CQ time limit** (after v0.5.0): ship in the next release;
       check on air in JTTY and with CNS in FT8.
