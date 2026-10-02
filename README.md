@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.4.0
+# JTDX-VU for VUCG community — v0.5.0
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -25,12 +25,100 @@ private build.
 
 Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
 
-| Platform | File | Notes |
+| Platform | File | Runs on |
 |---|---|---|
-| macOS, Apple Silicon | `JTDX-VU-<ver>-macos-arm64.zip` | macOS 14+. Unzip, move to Applications, then right-click > Open the first time (not notarized). Needs the shared-memory step below. |
-| macOS, Intel | `JTDX-VU-<ver>-macos-x86_64.zip` | macOS 15+, same steps. |
-| Windows x64 | `JTDX-VU-<ver>-windows-x64.zip` | Unzip anywhere and run `bin\jtdx.exe`. |
-| Raspberry Pi / Linux arm64 | `jtdx-vu-<ver>-linux-arm64.deb` | Raspberry Pi OS / Debian 12 (bookworm): `sudo apt install ./jtdx-vu-<ver>-linux-arm64.deb`. Conflicts with a stock `jtdx` package. |
+| macOS, Apple Silicon | `JTDX-VU-<ver>-macos-arm64.zip` | macOS 14 Sonoma or later |
+| macOS, Intel | `JTDX-VU-<ver>-macos-x86_64.zip` | macOS 15 Sequoia or later |
+| Windows x64 | `JTDX-VU-<ver>-windows-x64.zip` | Windows 10 / 11, 64-bit |
+| Raspberry Pi / Linux arm64 | `jtdx-vu-<ver>-linux-arm64.deb` | Raspberry Pi OS / Debian 12 (bookworm), 64-bit |
+
+Each file has a matching `.sha256` checksum. JTDX-VU installs alongside a
+stock JTDX on macOS and Windows; on the Pi the package replaces a stock
+`jtdx` package.
+
+## How to install
+
+### macOS (Apple Silicon or Intel)
+
+1. Download the zip for your Mac (Apple menu > About This Mac: "Apple
+   M…" chip = arm64, "Intel" = x86_64) and double-click it to unzip.
+2. Drag **JTDX-VU** into **Applications**.
+3. **First launch.** The app is ad-hoc signed, not notarized, so macOS
+   blocks the first open:
+   - macOS 15 Sequoia and later: double-click JTDX-VU, click **Done** on
+     the warning, then open **System Settings > Privacy & Security**,
+     scroll down and click **Open Anyway** next to "JTDX-VU was
+     blocked", and confirm.
+   - macOS 14 Sonoma: right-click (Control-click) JTDX-VU > **Open** >
+     **Open**.
+   - Or, in Terminal: `xattr -dr com.apple.quarantine /Applications/JTDX-VU.app`
+4. **Allow the microphone** when asked; that is how macOS names access to
+   your radio's sound card. If you clicked Don't Allow, turn JTDX-VU on in
+   System Settings > Privacy & Security > Microphone.
+5. **Shared memory (one-time, every Mac).** The decoder needs more SysV
+   shared memory than the macOS default; without it JTDX-VU stops with
+   "Unable to create shared memory segment". In Terminal:
+   ```bash
+   sudo sysctl -w kern.sysv.shmall=32768 kern.sysv.shmmax=33554432
+   ```
+   That lasts until the next restart. To make it permanent, download
+   [`Darwin/com.jtdx.sysctl.plist`](Darwin/com.jtdx.sysctl.plist) from
+   this repo and run
+   `sudo cp com.jtdx.sysctl.plist /Library/LaunchDaemons/`.
+   It may need redoing after a macOS upgrade.
+6. Set up your callsign, radio and audio in **JTDX-VU > Settings…**
+   (Cmd+,).
+
+**Upgrading:** quit JTDX-VU, replace the app in Applications with the
+new one, and repeat step 3 if macOS asks. Settings
+(`~/Library/Preferences/JTDX-VU.ini`) and data
+(`~/Library/Application Support/JTDX-VU`) are kept.
+
+### Windows 10 / 11 (64-bit)
+
+1. Download `JTDX-VU-<ver>-windows-x64.zip`. Before unzipping,
+   right-click the zip > **Properties**, tick **Unblock**, OK; this saves
+   a warning for every file inside.
+2. Right-click > **Extract All…** to a folder of your choice, for example
+   `C:\JTDX-VU`. No installer and no administrator rights are needed.
+3. Run **`bin\jtdx.exe`** in that folder. If Windows SmartScreen says
+   "Windows protected your PC", click **More info > Run anyway** (the
+   program is not code-signed). Right-click `jtdx.exe` > Send to >
+   Desktop (create shortcut) for a desktop icon.
+4. If Windows Firewall asks, allow access on private networks (JTDX-VU
+   talks UDP to logging programs such as Log4OM, N1MM or JTAlert).
+5. For rig control through OmniRig, install
+   [OmniRig](https://www.dxatlas.com/OmniRig/) separately. Hamlib, TCI
+   and the other rig interfaces are built in.
+
+**Upgrading:** quit JTDX-VU and extract the new zip over the old folder
+(or into a new one). Settings are stored in your Windows profile, not
+in the program folder, so they are kept.
+
+### Raspberry Pi / Debian 12 (arm64)
+
+Needs a 64-bit Raspberry Pi OS (Bookworm) or Debian 12 on arm64 - a Pi 4
+or Pi 5 is recommended.
+
+1. Download `jtdx-vu-<ver>-linux-arm64.deb`, then in a terminal in the
+   download folder:
+   ```bash
+   sudo apt update
+   sudo apt install ./jtdx-vu-<ver>-linux-arm64.deb
+   ```
+   Keep the `./` - it tells apt to install the file rather than look for
+   a package by that name. apt pulls in Qt, Hamlib and FFTW. A stock
+   `jtdx` package can't be installed alongside; apt offers to remove it.
+2. For CAT control over a USB serial cable, give your user access to
+   serial ports once, then log out and back in:
+   ```bash
+   sudo usermod -aG dialout $USER
+   ```
+3. Start **JTDX-VU** from the menu (Sound & Video / Ham Radio), or run
+   `jtdx` in a terminal.
+
+**Upgrading:** install the new `.deb` the same way; settings are kept.
+**Removing:** `sudo apt remove jtdx-vu`.
 
 ## What's different from stock JTDX
 
@@ -39,7 +127,7 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.4.0"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.5.0"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -87,7 +175,7 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
   transmit, macros, Call next and Serial Number. Click, double-click or
   select a callsign in either decode pane to put it in DX Call, as in
   N1MM; punctuation around it is ignored.
-  - **A JTTY screen of its own** (after v0.4.0): the FT-only controls
+  - **A JTTY screen of its own** (new in v0.5.0): the FT-only controls
     (Report, CL, Hound, AutoTX, AutoSeq, Wanted and the wanted filters,
     Bypass, 1 QSO, AnsB4, Enable Tx, Hint, SWL, AGCc, Filter, Decode,
     TX Even, the period progress bar) are hidden while JTTY is selected
