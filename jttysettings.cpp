@@ -304,6 +304,7 @@ namespace JttySettings
   int autoCqKey (QSettings * s) {GroupGuard g {s}; return qBound (1, s->value ("AutoCqKey", 1).toInt (), macroCount);}
   int autoCqGap (QSettings * s) {GroupGuard g {s}; return qBound (1, s->value ("AutoCqGap", 10).toInt (), 300);}
   int autoCqMax (QSettings * s) {GroupGuard g {s}; return qMax (0, s->value ("AutoCqMax", 0).toInt ());}
+  int autoCqMinutes (QSettings * s) {GroupGuard g {s}; return qBound (1, s->value ("AutoCqMinutes", 5).toInt (), 60);}
   bool autoCqStopOnMyCall (QSettings * s) {GroupGuard g {s}; return s->value ("AutoCqStopOnMyCall", true).toBool ();}
   StationVar const stationVars[4] = {
     {"%OP",  "OpName",  QT_TRANSLATE_NOOP ("JttySettings", "Name (%OP)")},
@@ -332,6 +333,7 @@ JttySettingsPage::JttySettingsPage (QWidget * parent)
   , autoCqKey_ {new QComboBox}
   , autoCqGap_ {new QSpinBox}
   , autoCqMax_ {new QSpinBox}
+  , autoCqMinutes_ {new QSpinBox}
   , stopOnMyCall_ {new QCheckBox {tr ("Stop when my call is decoded")}}
   , exchange_ {new QLineEdit}
   , setCombo_ {new QComboBox}
@@ -349,6 +351,11 @@ JttySettingsPage::JttySettingsPage (QWidget * parent)
   autoCqMax_->setSpecialValueText (tr ("no limit"));
   autoCqMax_->setToolTip (tr ("Stop after this many calls. Halt, Esc, any other transmission\n"
                               "or picking a DX call stops Auto CQ anyway."));
+  autoCqMinutes_->setRange (1, 60);
+  autoCqMinutes_->setSuffix (tr (" min"));
+  autoCqMinutes_->setToolTip (tr ("Auto CQ stops this long after you start it.\n"
+                                  "In FT8 / FT4 / FT2 it is also the Tx watchdog while Call Non-Stop\n"
+                                  "(the same Auto CQ button) is on."));
   stopOnMyCall_->setToolTip (tr ("Stop calling as soon as a decode on any frequency contains my call."));
   autoCqKey_->setToolTip (tr ("The macro Auto CQ sends."));
   exchange_->setToolTip (tr ("What %E sends with this set. %N is the serial number; it is left\n"
@@ -359,6 +366,7 @@ JttySettingsPage::JttySettingsPage (QWidget * parent)
   autoForm->addRow (tr ("Macro"), autoCqKey_);
   autoForm->addRow (tr ("Gap after each call"), autoCqGap_);
   autoForm->addRow (tr ("Stop after"), autoCqMax_);
+  autoForm->addRow (tr ("Time limit"), autoCqMinutes_);
   autoForm->addRow (stopOnMyCall_);
 
 
@@ -528,6 +536,7 @@ void JttySettingsPage::load (QSettings * s)
   autoCqKey_->setCurrentIndex (autoCqKey (s) - 1);
   autoCqGap_->setValue (autoCqGap (s));
   autoCqMax_->setValue (autoCqMax (s));
+  autoCqMinutes_->setValue (autoCqMinutes (s));
   stopOnMyCall_->setChecked (autoCqStopOnMyCall (s));
   for (int i = 0; i < 4; ++i) station_[i]->setText (stationValue (s, stationVars[i].key));
   sets_ = readSets (s);
@@ -552,6 +561,7 @@ void JttySettingsPage::save (QSettings * s)
   s->setValue ("AutoCqKey", autoCqKey_->currentData ().toInt ());
   s->setValue ("AutoCqGap", autoCqGap_->value ());
   s->setValue ("AutoCqMax", autoCqMax_->value ());
+  s->setValue ("AutoCqMinutes", autoCqMinutes_->value ());
   s->setValue ("AutoCqStopOnMyCall", stopOnMyCall_->isChecked ());
   for (int i = 0; i < 4; ++i) s->setValue (stationVars[i].key, station_[i]->text ().trimmed ().toUpper ());
   s->endGroup ();

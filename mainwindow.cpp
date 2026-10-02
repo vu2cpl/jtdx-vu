@@ -56,6 +56,7 @@
 #include "clublog.h"
 #include "bandmodeswitcher.h"
 #include "jttypanel.h"
+#include "jttysettings.h"
 #include <QSignalBlocker>
 #include <QVBoxLayout>
 #include <QHash>
@@ -1125,12 +1126,13 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   {
     // JTDX-VU Non-stop toggle: AutoSeq menu + the "Auto CQ" button
     m_nonstop = m_settings->value ("JTDXVU/NonStop", false).toBool ();
-    auto action = new QAction {tr ("CNS - Call Non-Stop (10 min Tx watchdog)"), this};
+    auto action = new QAction {tr ("CNS - Call Non-Stop (Tx watchdog = Auto CQ time limit, 5 min)"), this};
     action->setCheckable (true);
     action->setChecked (m_nonstop);
     action->setToolTip (tr ("CNS - Call Non-Stop: after each logged QSO go straight back to CQ / the next caller "
                             "instead of halting Tx. A station that does not answer is dropped after the AutoSeq "
-                            "counters, as usual. The Tx watchdog (10 min while CNS is on) still stops Tx."));
+                            "counters, as usual. The Tx watchdog still stops Tx: while CNS is on it is the Auto CQ\n"
+                            "time limit in Settings > JTTY (5 min by default)."));
     ui->menuAutoSeq->addSeparator ();
     ui->menuAutoSeq->addAction (action);
     // "Auto CQ": Call Non-Stop in the FT modes, JTTY Auto CQ in JTTY.  It sits
@@ -3626,7 +3628,7 @@ void MainWindow::decode()                                       //decode()
 // is on (even if the watchdog is disabled in Settings), else the setting
 int MainWindow::watchdog_minutes () const
 {
-  return m_nonstop ? 10 : m_config.watchdog ();
+  return m_nonstop ? JttySettings::autoCqMinutes (m_settings) : m_config.watchdog ();
 }
 
 bool MainWindow::nonstop_continue ()
@@ -8468,5 +8470,6 @@ void MainWindow::updateCnsButton ()
           "Esc, Halt Tx, sending anything else or picking a DX call stops it too.")
     : tr ("Auto CQ (Call Non-Stop): after each logged QSO go straight back to CQ / the next caller "
           "instead of halting Tx. A station that does not answer is dropped after the AutoSeq "
-          "counters, as usual. The Tx watchdog (10 min while this is on) still stops Tx."));
+          "counters, as usual. The Tx watchdog still stops Tx: while this is on it is the Auto CQ\n"
+          "time limit in Settings > JTTY (5 min by default)."));
 }

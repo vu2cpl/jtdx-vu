@@ -699,6 +699,7 @@ private:
   bool m_jttyAutoCq {false};
   bool m_jttyAutoCqSending {false};     // the send in progress is Auto CQ's own
   int m_jttyAutoCqCount {0};
+  qint64 m_jttyAutoCqStartMs {0};       // when Auto CQ was switched on (time limit)
   QTimer * m_jttyAutoCqTimer {nullptr};
   int m_jttyStackIndex {-1};            // page of controls_stack_widget holding the JTTY panel
   // JTDX-VU: JTTY screen layout (mainwindow_jtty.cpp)
@@ -851,7 +852,7 @@ private:
   void init_logbook ();  // JTDX-VU: (re)load worked-before data, Club Log aware
   void switch_to_band (QString const& band);  // JTDX-VU band button
   bool nonstop_continue ();  // JTDX-VU Non-stop: keep going after a logged QSO
-  int watchdog_minutes () const;  // JTDX-VU: 10 while Non-stop, else Settings
+  int watchdog_minutes () const;  // JTDX-VU: the Auto CQ time limit while Non-stop, else Settings
   // JTDX-VU JTTY (mainwindow_jtty.cpp)
   bool jtty_decode (int k);
   void openWavFile (QString const&);   // JTDX-VU: File > Open body, also JTDXVU_OPEN_WAV

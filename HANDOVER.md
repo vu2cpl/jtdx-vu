@@ -8,14 +8,34 @@ Last updated: 2026-10-02
   secret scan, see below). Default branch `jtdx-vu`. The `upstream`
   remote is `jtdx-project/jtdx`; upstream has been dormant since
   2022-03 at tag 159.
-- **Version:** JTDX-VU **0.4.0** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.5.0** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
   JTTY Auto CQ, Settings > JTTY (macro sets, per-set exchange, station
   variables), click-to-pick calls, the one "Auto CQ" button, and fixes
   the TCI quit crash, the Settings dialog on small screens and JTTY
-  logging (599, MFSK/JTTY, start time).
+  logging (599, MFSK/JTTY, start time); v0.5.0 gives JTTY its own
+  screen (QSO fields, calls heard, 24 macros, type-ahead).
+- **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
+  tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
+  install" (same text as README's new section). All four builds plus
+  `.sha256` attached; every asset downloaded anonymously and its
+  checksum OK; arm64 app reports 0.5.0; copies in `~/Desktop/jdxvu/v0.5.0/`.
+  - CI run 36974037893 (macOS: Intel ~10 min on the keg cache, arm64
+    ~70 min) and 36974038144 (Windows), all green.
+  - Pi `.deb` on meridianpi5 (prefix /usr/local): `apt-get install -s`
+    clean, Conflicts: jtdx, 8 s headless start OK, uploaded by hand.
+    (Careful: `pkill -f "<pattern>"` inside `ssh '...'` matches the
+    remote shell's own command line and kills the session - use
+    `pkill -f "[j]tdx..."`.)
+  - Website: card sentence + project page (paragraph "JTTY screen
+    (v0.5.0)", install paragraph pointing at the README guide, table on
+    v0.5.0). Pushed early by the website session (`07b899a`) with two
+    "Building" placeholder rows; direct links restored in `3d34286` once
+    all eight URLs answered 206.
+- **After v0.5.0 on `jtdx-vu` (unreleased):** Auto CQ time limit (see
+  the 2026-10-02 "Auto CQ time limit" entry). Not installed.
 - **Release v0.4.0: COMPLETE 2026-10-01** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.4.0,
   tag `v0.4.0` on `bf707bc8`. All four builds plus `.sha256` attached
   and verified (anonymous download, every checksum OK, arm64 app reports
@@ -111,6 +131,24 @@ Last updated: 2026-10-02
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-02 — Auto CQ time limit, 5 min by default (for the next release)
+
+Manoj: "next release auto cq to be limited to 5 minutes" - both jobs of
+the button, as a setting defaulting to 5.
+
+- `[JTTY] AutoCqMinutes` (1-60, default 5), "Time limit" in Settings >
+  JTTY's Auto CQ box (`JttySettings::autoCqMinutes`).
+- JTTY: `m_jttyAutoCqStartMs` set when Auto CQ is switched on;
+  `jttyAutoCqFire` stops with "N min time limit (Settings > JTTY)"
+  instead of calling again once that much time has passed (a CQ already
+  on the air finishes).
+- FT modes: `watchdog_minutes()` is now this setting (was a fixed 10)
+  while Call Non-Stop is on; menu text and tooltips say so.
+- Verified in a throwaway instance with the limit at 1 min and a 3 s
+  gap: CNS off - five CQs 06:55:14..06:56:04, then no more ("WD 9m" =
+  the normal watchdog); CNS on - "WD 1m" shown and the watchdog expired
+  at a minute. Not installed; goes out with the next release.
 
 ### 2026-10-02 — JTTY: a refused macro blinks its key
 
@@ -1248,6 +1286,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       decodes, Shift / Option F-keys on the Mac keyboard, type-ahead
       with PTT through TCI. Manoj to fill labels for his own "Default"
       set in Settings > JTTY if he uses it.
+- [ ] **Auto CQ time limit** (after v0.5.0): ship in the next release;
+      check on air in JTTY and with CNS in FT8.
 - [ ] **JTTY Auto CQ on air:** installed 2026-10-01; check
       stop-on-my-call and stop-on-pick with real replies.
 - [ ] **Pi `.deb` untested on air.** Only a dry-run install and a

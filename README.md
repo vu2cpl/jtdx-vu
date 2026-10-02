@@ -161,8 +161,9 @@ or Pi 5 is recommended.
   column (under AnsB4), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
   or the next caller instead of halting Tx. A station that doesn't
   answer is dropped after the AutoSeq counters (Settings > Sequencing),
-  as usual. The Tx watchdog is fixed at 10 minutes while CNS is on, so
-  unanswered CQ still stops.
+  as usual. While CNS is on the Tx watchdog is the **Auto CQ time
+  limit** (Settings > JTTY, 5 minutes by default; 10 minutes fixed up to
+  v0.5.0), so unanswered CQ still stops.
 - **No Stop button:** Monitor is the one start/stop control for
   monitoring (switching it off also ends a "Decode remaining files" run).
 - **Needed-DXCC alerts** when a decoded station is ATNO, a new band or
@@ -201,7 +202,8 @@ or Pi 5 is recommended.
     details %OP (name), %QTH, %TX (radio), %ANT (antenna). Set Serial
     Number to "none" for a non-contest QSO and %N is left out of %E.
   - **Auto CQ** (right-hand button column) repeats a macro with a gap
-    after each call, 10 s by default; pressing it again turns it off and
+    after each call, 10 s by default, and stops after the **time limit**
+    (5 minutes by default, after v0.5.0); pressing it again turns it off and
     halts a CQ on the air (Esc and Halt Tx stop any JTTY send). In the FT
     modes the same button is Call Non-Stop. Settings > JTTY sets the
     macro, gap, call limit and stop-on-my-call, the station details, and

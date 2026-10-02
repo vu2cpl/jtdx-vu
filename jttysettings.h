@@ -12,7 +12,7 @@
 //               that set uses %N
 //
 // Storage, group [JTTY]:
-//   AutoCqKey, AutoCqGap, AutoCqMax, AutoCqStopOnMyCall, ActiveMacroSet,
+//   AutoCqKey, AutoCqGap, AutoCqMax, AutoCqMinutes, AutoCqStopOnMyCall, ActiveMacroSet,
 //   OpName, Qth, Radio, Antenna (%OP %QTH %TX %ANT),
 //   and the array MacroSets/<n>/{name, Msg1..Msg24, Label1..Label24,
 //   exchange}.  Banks=3 marks the one-off migration that gave the built-in
@@ -65,6 +65,8 @@ namespace JttySettings
   int autoCqKey (QSettings *);          // 1..24, default 1
   int autoCqGap (QSettings *);          // seconds, default 10
   int autoCqMax (QSettings *);          // 0 = no limit
+  int autoCqMinutes (QSettings *);      // 1..60, default 5: JTTY Auto CQ time limit, and the
+                                        // Tx watchdog while Call Non-Stop is on in the FT modes
   bool autoCqStopOnMyCall (QSettings *);
   QString exchange (QSettings *);       // the active set's exchange
 
@@ -93,6 +95,7 @@ private:
   QComboBox * autoCqKey_;
   QSpinBox * autoCqGap_;
   QSpinBox * autoCqMax_;
+  QSpinBox * autoCqMinutes_;
   QCheckBox * stopOnMyCall_;
   QLineEdit * exchange_;      // the shown set's exchange
   QLineEdit * station_[4];    // %OP %QTH %TX %ANT

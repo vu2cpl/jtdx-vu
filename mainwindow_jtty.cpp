@@ -652,6 +652,7 @@ void MainWindow::jttyAutoCqToggled (bool on)
     }
   m_jttyAutoCq = true;
   m_jttyAutoCqCount = 0;
+  m_jttyAutoCqStartMs = m_jtdxtime->currentMSecsSinceEpoch2 ();
   updateCnsButton ();
   if (!jttyTxBusy ()) jttyAutoCqFire ();      // else it starts when this transmission ends
 }
@@ -665,6 +666,12 @@ void MainWindow::jttyAutoCqFire ()
       return;
     }
   if (jttyTxBusy ()) return;                   // jttyAutoCqAfterTx reschedules
+  int const minutes = JttySettings::autoCqMinutes (m_settings);
+  if (m_jtdxtime->currentMSecsSinceEpoch2 () - m_jttyAutoCqStartMs >= qint64 (minutes) * 60000)
+    {
+      jttyAutoCqStop (tr ("%1 min time limit (Settings > JTTY)").arg (minutes));
+      return;
+    }
   int const max = JttySettings::autoCqMax (m_settings);
   if (max > 0 && m_jttyAutoCqCount >= max)
     {
