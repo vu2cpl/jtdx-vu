@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-02
+Last updated: 2026-10-03
 
 ## Current state
 
@@ -8,7 +8,7 @@ Last updated: 2026-10-02
   secret scan, see below). Default branch `jtdx-vu`. The `upstream`
   remote is `jtdx-project/jtdx`; upstream has been dormant since
   2022-03 at tag 159.
-- **Version:** JTDX-VU **0.5.0** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.5.1** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -16,7 +16,8 @@ Last updated: 2026-10-02
   variables), click-to-pick calls, the one "Auto CQ" button, and fixes
   the TCI quit crash, the Settings dialog on small screens and JTTY
   logging (599, MFSK/JTTY, start time); v0.5.0 gives JTTY its own
-  screen (QSO fields, calls heard, 24 macros, type-ahead).
+  screen (QSO fields, calls heard, 24 macros, type-ahead); v0.5.1 adds
+  the Auto CQ time limit and fixes window resizing and the pane split.
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -34,13 +35,22 @@ Last updated: 2026-10-02
     v0.5.0). Pushed early by the website session (`07b899a`) with two
     "Building" placeholder rows; direct links restored in `3d34286` once
     all eight URLs answered 206.
-- **After v0.5.0 on `jtdx-vu` (unreleased):** Auto CQ time limit (see
-  the 2026-10-02 "Auto CQ time limit" entry). **Installed** 2026-10-02
-  (local build, still reports 0.5.0). Main-window resize fix (2026-10-02
-  entry) **installed** 2026-10-02 21:56; the app it replaced is in
-  `~/Desktop/jdxvu/prev-install/JTDX-VU.app.before-resize`. Even
-  decode-pane split (same day) **installed** 2026-10-02 22:50; the app
-  it replaced is `~/Desktop/jdxvu/prev-install/JTDX-VU-before-split.app`.
+- **Release v0.5.1: IN PROGRESS 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.1,
+  tag `v0.5.1` on `89a3b8b5`. Ships the three fixes made after v0.5.0:
+  Auto CQ time limit, main-window resize, even decode-pane split (see
+  the 2026-10-02 entries). Notes = v0.5.1 changes + the v0.5.0 install
+  guide with the version changed.
+  - CI run 37055496531 (macOS) and 37055496515 (Windows) started from
+    the tag; they attach their zips themselves.
+  - Pi `.deb` built on meridianpi5 (rsync of `git ls-files`, prefix
+    /usr/local, `nice make -j3`): `apt-get install -s` clean,
+    Conflicts: jtdx, 8 s headless start OK, uploaded by hand with its
+    `.sha256`.
+  - **Installed on the Mac** 2026-10-03: local build of `89a3b8b5`
+    (reports 0.5.1, macOS 26+ only). The previous local 0.5.0+fixes app
+    is `~/Desktop/jdxvu/prev-install/JTDX-VU-0.5.0-local.app`. A stray
+    `jtdxjt9` (PPID 1, from 22:20 the night before, main app gone) was
+    holding the shared memory and was killed first.
 - **Release v0.4.0: COMPLETE 2026-10-01** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.4.0,
   tag `v0.4.0` on `bf707bc8`. All four builds plus `.sha256` attached
   and verified (anonymous download, every checksum OK, arm64 app reports
@@ -61,8 +71,8 @@ Last updated: 2026-10-02
   11:40, re-installed 11:45 (tidied layout) and 11:55 (no CW ID)** (bundle of `6ae5e051`'s code). Previous v0.4.0 app and the
   pre-migration .ini (`JTDX-VU.ini.before-redesign`) are in
   `~/Desktop/jdxvu/prev-install/`.
-- **Installed app:** `/Applications/JTDX-VU.app` is current: all app
-  code up to `4642e1ee`, installed 2026-09-28. It was built locally, so
+- **Installed app:** `/Applications/JTDX-VU.app` is v0.5.1 (`89a3b8b5`),
+  installed 2026-10-03. It was built locally, so
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -1360,10 +1370,10 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       decodes, Shift / Option F-keys on the Mac keyboard, type-ahead
       with PTT through TCI. Manoj to fill labels for his own "Default"
       set in Settings > JTTY if he uses it.
-- [ ] **Even decode-pane split + resize fix** (after v0.5.0): installed
-      2026-10-02, Manoj: "its fine now". Ship in the next release; check
+- [ ] **Even decode-pane split + resize fix:** released in v0.5.1,
+      Manoj: "its fine now". Check
       the minimum on a Linux / Windows font.
-- [ ] **Auto CQ time limit** (after v0.5.0): ship in the next release;
+- [ ] **Auto CQ time limit:** released in v0.5.1;
       check on air in JTTY and with CNS in FT8.
 - [ ] **JTTY Auto CQ on air:** installed 2026-10-01; check
       stop-on-my-call and stop-on-pick with real replies.
