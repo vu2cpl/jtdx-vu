@@ -4323,7 +4323,7 @@ void MainWindow::guiUpdate()
 
   double tx1=0.0;
   double tx2=txDuration;
-  if(m_mode.startsWith("FT")) icw[0]=0;                                   //No CW ID in FT8 mode
+  if(m_mode.startsWith("FT") || m_mode=="JTTY") icw[0]=0;                //No CW ID in FT8 mode (JTDX-VU: nor JTTY)
   if(icw[0]>0) tx2 += icw[0]*2560.0/48000.0;  //Full length including CW ID
   if(tx2>m_TRperiod) tx2=m_TRperiod;
   
@@ -4467,6 +4467,7 @@ void MainWindow::guiUpdate()
     // a stale FT message, or halted on an empty hidden Tx box)
     m_curMsgTx = m_currentMessage;
     last_tx_label->setText(tr("LastTx: ") + m_currentMessage.trimmed());
+    icw[0] = 0;          // no CW ID after a JTTY message (PTT-on arms one for every mode)
     m_restart=false;
     m_startAnother=false;
   }

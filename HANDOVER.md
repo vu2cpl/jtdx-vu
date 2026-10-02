@@ -112,6 +112,22 @@ Last updated: 2026-10-02
 
 ## What changed
 
+### 2026-10-02 — JTTY: no CW ID after a macro; shorter calls-heard list
+
+- **Regression from the redesign, fixed:** Manoj heard Morse ("VI" -
+  VU2CPL) after each JTTY macro. PTT-on in `guiUpdate` arms a CW ID for
+  every mode (`icw[0]=m_ncw`); the FT tone block used to clear it, and
+  the redesign skips that block for JTTY, so the Modulator (whose CW ID
+  test is `m_TRperiod > 16`, and JTTY's nominal period is 120 s) sent the
+  call in CW after the wave. Now `icw[0]=0` in the JTTY branch of the
+  tone block and in the "No CW ID in FT8" line (FT or JTTY).
+- Calls-heard list two rows high (scrolls beyond that).
+- "Many F keys not working" was the `%H` guard: in "Ragchew / DX" F2,
+  F3, F5 and F7 need a DX call, and say so only in the status bar.
+  Verified in a throwaway instance with real key events: F2 refused
+  ("enter the DX call first"), F4 sent; after picking LZ2HV, F5 sent
+  and F7 queued and sent.
+
 ### 2026-10-02 — JTTY layout tidied (rearranged, no gaps)
 
 Manoj on the first install: "needs a rearrangement of buttons, it's all

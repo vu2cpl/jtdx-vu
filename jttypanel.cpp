@@ -339,6 +339,7 @@ JttyHeardList::JttyHeardList (QWidget * parent)
   list_->setFocusPolicy (Qt::NoFocus);
   list_->setSelectionMode (QAbstractItemView::NoSelection);
   list_->setHorizontalScrollBarPolicy (Qt::ScrollBarAlwaysOff);
+  list_->setVerticalScrollBarPolicy (Qt::ScrollBarAsNeeded);
   {
     QFont f {"Courier New"};
     f.setStyleHint (QFont::Monospace);
@@ -373,7 +374,7 @@ void JttyHeardList::setListFont (QFont const& font)
   QFontMetrics const m {font};
   int const rowHeight = m.height () + 8;
   list_->setGridSize (QSize {m.horizontalAdvance ("WWWWWWWW 0000") + 14, rowHeight});
-  list_->setFixedHeight (3 * rowHeight + 8);
+  list_->setFixedHeight (2 * rowHeight + 6);
   for (int i = 0; i < list_->count (); ++i) list_->item (i)->setFont (font);
 }
 
