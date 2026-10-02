@@ -155,6 +155,16 @@ Manoj: the main window "does not resize as needed" (on his Mac).
   Both fit a 1366x768 screen.
 - **Installed** 2026-10-02 21:56 (live app quit cleanly first; old app
   in `~/Desktop/jdxvu/prev-install/JTDX-VU.app.before-resize`).
+- **After the install: no audio, black waterfall.** Not the build:
+  TCI was connected (AetherSDR, 127.0.0.1:50001) but AetherSDR sent no
+  audio (about 10 KB in total; a live stream is about 100 KB/s). The
+  previous build got no audio either. Restarting AetherSDR fixed it, and
+  the new build then received audio. If TCI audio stops after JTDX-VU
+  quits and restarts, restart AetherSDR first. `nettop -P -p <pid> -l 2
+  -s 3 -J bytes_in` shows whether audio is arriving.
+- Backup gotcha: `JTDX-VU.app.before-resize` is not a `.app` name, so
+  macOS won't launch it (`open` error 162, binary SIGKILLed). To run it,
+  `ditto` it to a `*.app` name first.
 - **Verified** in a throwaway `-r rsz` instance (copy of the .ini, Rig
   None): sizes from 300x200 (clamped) to 2400x1300 in FT8 and JTTY,
   and JTTY -> FT8 -> JTTY by the Mode menu; FT8 identical to before.
