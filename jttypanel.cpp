@@ -132,7 +132,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
       auto b = new QPushButton;
       b->setFocusPolicy (Qt::NoFocus);
       b->setSizePolicy (QSizePolicy::Expanding, QSizePolicy::Fixed);
-      b->setMinimumHeight (b->sizeHint ().height () + 8);
+      b->setMinimumHeight (b->sizeHint ().height () + 12);
       auto f = b->font ();
       f.setPointSizeF (f.pointSizeF () * 1.05);
       b->setFont (f);
@@ -159,6 +159,7 @@ JttyPanel::JttyPanel (QSettings * settings, QWidget * parent)
   contestRow->addWidget (serial_);
   grid->addLayout (contestRow, 4, 0, 1, 4);
   for (int c = 0; c < 4; ++c) grid->setColumnStretch (c, 1);
+  grid->setRowStretch (5, 1);      // spare height below, not between the rows
 
   connect (ftol_, QOverload<int>::of (&QComboBox::currentIndexChanged), this, [this] (int) {
       settings_->beginGroup ("JTTY");

@@ -706,7 +706,8 @@ private:
   QLineEdit * m_jttyRstSent {nullptr};  // QSO fields in place of Report / CL / Hound ...
   QLineEdit * m_jttyRstRcvd {nullptr};
   QLineEdit * m_jttyName {nullptr};
-  QWidget * m_jttyQsoFields {nullptr};
+  QWidget * m_jttyQsoFields {nullptr};  // "S" + RST sent
+  QWidget * m_jttyRcvdField {nullptr};  // "R" + RST received
   JttyHeardList * m_jttyHeard {nullptr}; // in place of the wanted-call filters
   QString m_jttyHeardBand;
   QString m_jttyFieldsCall;             // the DX call the QSO fields belong to

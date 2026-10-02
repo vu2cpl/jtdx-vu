@@ -91,8 +91,10 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
     (Report, CL, Hound, AutoTX, AutoSeq, Wanted and the wanted filters,
     Bypass, 1 QSO, AnsB4, Enable Tx, Hint, SWL, AGCc, Filter, Decode,
     TX Even, the period progress bar) are hidden while JTTY is selected
-    and come back in the other modes. In their place: **S / R / Name**
-    QSO fields beside Tx / Rx (RST sent and received, logged instead of a
+    and come back in the other modes. The rest is regrouped: all the
+    buttons (Tune, Monitor, Auto CQ, Halt Tx, Log QSO, Erase, Clear DX)
+    in the right-hand column, the macro panel across the bottom, and
+    **S / R / Name** QSO fields in a column beside Tx / Rx (RST sent and received, logged instead of a
     fixed 599; the name comes from the log when known), and a **Calls
     heard** list of every call in the JTTY decodes, coloured like Band
     Activity from the log / Club Log (new DXCC, new on the band, new in

@@ -26,6 +26,8 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QGridLayout>
+#include <QHBoxLayout>
+#include <QPushButton>
 #include <QSet>
 #include <QApplication>
 
@@ -741,13 +743,33 @@ void MainWindow::jttySendQueued ()
 // modes (Report, CL, Hound, AutoTX, AutoSeq, Wanted, Bypass, 1 QSO, AnsB4,
 // Enable Tx, Hint, SWL, AGCc, Filter, Decode, TX Even, the wanted-call
 // filters).  They are hidden while JTTY is selected and come back on leaving
-// it.  Their space holds the QSO fields (RST sent / received, name) and the
-// calls-heard list; the four buttons that matter in JTTY (Halt Tx, Log QSO,
-// Erase, Clear DX) stack in one column so the macro panel gets the width.
+// it.  Rearranged so nothing is left with gaps:
+//
+//   - the Tx/Rx grid becomes two tidy columns: Tx / arrows / Rx / Split and
+//     S (RST sent) / R (RST received) / Name / S meter
+//   - the calls-heard list sits where the wanted-call filters were
+//   - Halt Tx, Log QSO, Erase and Clear DX join Tune, Monitor and Auto CQ
+//     in the right-hand column, so every button is in one place and the
+//     macro panel has the whole bottom row
+
+namespace
+{
+  QWidget * labelled (QString const& label, QWidget * field)
+  {
+    auto w = new QWidget;
+    auto row = new QHBoxLayout {w};
+    row->setContentsMargins (0, 0, 0, 0);
+    row->setSpacing (4);
+    auto l = new QLabel {label};
+    l->setMinimumWidth (l->fontMetrics ().horizontalAdvance ("W") + 2);
+    row->addWidget (l);
+    row->addWidget (field, 1);
+    return w;
+  }
+}
 
 void MainWindow::jttySetupUi ()
 {
-  // QSO fields, in the middle column of the Tx/Rx grid (Report, CL, Tx mode)
   m_jttyRstSent = new QLineEdit {"599"};
   m_jttyRstRcvd = new QLineEdit {"599"};
   m_jttyName = new QLineEdit;
@@ -762,20 +784,13 @@ void MainWindow::jttySetupUi ()
   m_jttyName->setPlaceholderText (tr ("Name"));
   m_jttyName->setToolTip (tr ("His name (%NAME in macros), logged with the QSO.\n"
                               "Filled from the log when you have worked him before."));
-  m_jttyQsoFields = new QWidget;
-  {
-    auto grid = new QGridLayout {m_jttyQsoFields};
-    grid->setContentsMargins (0, 0, 0, 0);
-    grid->setHorizontalSpacing (3);
-    grid->setVerticalSpacing (3);
-    grid->addWidget (new QLabel {tr ("S")}, 0, 0);
-    grid->addWidget (m_jttyRstSent, 0, 1);
-    grid->addWidget (new QLabel {tr ("R")}, 0, 2);
-    grid->addWidget (m_jttyRstRcvd, 0, 3);
-    grid->addWidget (m_jttyName, 1, 0, 1, 4);
-  }
-  ui->gridLayout->addWidget (m_jttyQsoFields, 1, 1, 3, 1);
-  m_jttyQsoFields->hide ();
+  // the second column of the Tx/Rx grid, over the hidden Report / CL / Tx mode
+  m_jttyQsoFields = labelled (tr ("S"), m_jttyRstSent);
+  m_jttyRcvdField = labelled (tr ("R"), m_jttyRstRcvd);
+  ui->gridLayout->addWidget (m_jttyQsoFields, 1, 1);
+  ui->gridLayout->addWidget (m_jttyRcvdField, 2, 1);
+  ui->gridLayout->addWidget (m_jttyName, 3, 1);
+  for (auto * w : {m_jttyQsoFields, m_jttyRcvdField, static_cast<QWidget *> (m_jttyName)}) w->hide ();
   connect (m_jttyName, &QLineEdit::textEdited, this, [this] (QString const& text) {m_name = text.trimmed ();});
 
   // calls heard, where the wanted-call filters sit in the FT modes
@@ -811,25 +826,42 @@ void MainWindow::jttyApplyLayout ()
     ui->wantedPrefix, ui->labWantGrid, ui->wantedGrid, ui->cbClearCallsign, ui->cbClearGrid,
     progressBar,       // counts JTTY's nominal 120 s buffer, which means nothing on the air
   };
-  auto move = [this] (QWidget * w, int row, int column) {
-    ui->gridLayout_9->removeWidget (w);
-    ui->gridLayout_9->addWidget (w, row, column);
+  // the bottom-left buttons that matter in JTTY, and where they live otherwise
+  struct Home {QPushButton * button; int row; int column;};
+  Home const homes[] = {
+    {ui->stopTxButton, 0, 1}, {ui->logQSOButton, 1, 0}, {ui->EraseButton, 1, 1}, {ui->ClearDxButton, 5, 1},
   };
+  QWidget * const fields[] = {m_jttyQsoFields, m_jttyRcvdField, m_jttyName};
   if (jtty)
     {
       // also on every dynamicButtonsInit / Wanted toggle, which show some again
       for (auto * w : ftOnly) w->hide ();
       if (m_jttyLayout) return;
       m_jttyLayout = true;
-      move (ui->stopTxButton, 0, 0);
-      move (ui->EraseButton, 2, 0);
-      move (ui->ClearDxButton, 3, 0);
+      // S meter to the foot of the second column; the third column empties
+      ui->gridLayout->removeWidget (ui->S_meter_button);
+      ui->gridLayout->addWidget (ui->S_meter_button, 4, 1);
+      for (auto * w : fields) w->show ();
+      // into the right-hand column under Auto CQ, sized like Tune
+      int index = ui->verticalLayout_2->indexOf (m_cnsButton) + 1;
+      for (auto const& h : homes)
+        {
+          auto * b = h.button;
+          b->setProperty ("jttyMin", b->minimumSize ());
+          b->setProperty ("jttyMax", b->maximumSize ());
+          b->setProperty ("jttyPolicy", QVariant::fromValue (b->sizePolicy ()));
+          ui->gridLayout_9->removeWidget (b);
+          b->setMinimumSize (ui->tuneButton->minimumSize ());
+          b->setMaximumSize (ui->tuneButton->maximumSize ());
+          b->setSizePolicy (ui->tuneButton->sizePolicy ());
+          ui->verticalLayout_2->insertWidget (index++, b);
+        }
+      // the macro panel takes the bottom row
       m_jttyStretchSaved.clear ();
       for (int i = 0; i < ui->horizontalLayout_4->count (); ++i) m_jttyStretchSaved << ui->horizontalLayout_4->stretch (i);
       ui->horizontalLayout_4->setStretch (0, 0);
       ui->horizontalLayout_4->setStretch (1, 1);
       if (ui->horizontalLayout_4->count () > 2) ui->horizontalLayout_4->setStretch (2, 0);
-      m_jttyQsoFields->show ();
       m_jttyHeard->setListFont (ui->decodedTextBrowser->contentFont ());
       m_jttyHeard->show ();
       m_jttyFieldsCall = QStringLiteral ("\x01");   // not a call: fill the fields afresh
@@ -840,11 +872,19 @@ void MainWindow::jttyApplyLayout ()
   m_jttyLayout = false;
   m_jttyTxQueue.clear ();
   m_jttyPanel->setQueue ({});
-  m_jttyQsoFields->hide ();
+  for (auto * w : fields) w->hide ();
   m_jttyHeard->hide ();
-  move (ui->stopTxButton, 0, 1);
-  move (ui->EraseButton, 1, 1);
-  move (ui->ClearDxButton, 5, 1);
+  ui->gridLayout->removeWidget (ui->S_meter_button);
+  ui->gridLayout->addWidget (ui->S_meter_button, 1, 2);
+  for (auto const& h : homes)
+    {
+      auto * b = h.button;
+      ui->verticalLayout_2->removeWidget (b);
+      b->setMinimumSize (b->property ("jttyMin").toSize ());
+      b->setMaximumSize (b->property ("jttyMax").toSize ());
+      b->setSizePolicy (b->property ("jttyPolicy").value<QSizePolicy> ());
+      ui->gridLayout_9->addWidget (b, h.row, h.column);
+    }
   for (int i = 0; i < m_jttyStretchSaved.size (); ++i) ui->horizontalLayout_4->setStretch (i, m_jttyStretchSaved[i]);
   // what every mode shows; the mode's own set-up (run after this) hides
   // its exceptions (FT8: Tx mode and Hint), commonActions did DT and Sync

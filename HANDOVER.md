@@ -33,7 +33,7 @@ Last updated: 2026-10-02
   (2026-10-02 entry): FT-only controls hidden in JTTY, S / R / Name
   fields, calls heard, 24 macros in 3 banks, set picker, type-ahead.
   Built and tested in a throwaway instance; **installed 2026-10-02
-  11:40** (bundle of `6ae5e051`'s code). Previous v0.4.0 app and the
+  11:40, re-installed 11:45 with the tidied layout** (bundle of `6ae5e051`'s code). Previous v0.4.0 app and the
   pre-migration .ini (`JTDX-VU.ini.before-redesign`) are in
   `~/Desktop/jdxvu/prev-install/`.
 - **Installed app:** `/Applications/JTDX-VU.app` is current: all app
@@ -111,6 +111,28 @@ Last updated: 2026-10-02
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-02 — JTTY layout tidied (rearranged, no gaps)
+
+Manoj on the first install: "needs a rearrangement of buttons, it's all
+scattered" - hiding widgets inside the FT-built layouts left holes (S / R
+/ Name floating, empty third grid column, three buttons at the foot of a
+mostly empty right column, Halt / Log / Erase / Clear DX stretched tall
+in their own column, gaps between the panel rows).
+
+- **Tx/Rx grid** (`gridLayout`) in JTTY: column 0 Tx / arrows / Rx /
+  Split, column 1 S / R / Name / S meter (S meter moved from [1,2] to
+  [4,1] and back on leaving), so column 2 empties and collapses. S and R
+  are separate label+field widgets (`m_jttyQsoFields`, `m_jttyRcvdField`).
+- **All buttons in the right-hand column** (`verticalLayout_2`): Halt Tx,
+  Log QSO, Erase and Clear DX move under Auto CQ, taking Tune's size
+  limits and policy (their own saved as widget properties and restored,
+  with their `gridLayout_9` cells, on leaving JTTY). The macro panel now
+  has the whole bottom row.
+- **Panel:** rows packed to the top (spare height in a stretch row
+  below), macro buttons a little taller.
+- Verified in a throwaway instance: JTTY layout as described, FT8 after
+  it identical to before, back to JTTY the same. Installed 11:45.
 
 ### 2026-10-02 — JTTY screen redesign: FT-only controls hidden, QSO fields, calls heard, 24 macros, type-ahead
 
