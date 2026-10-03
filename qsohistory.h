@@ -20,6 +20,7 @@ class QsoHistory
 //                  0     1    2    3      4      5        6        7         8         9   10   11     12     13   14   15   16
 	enum Status {NONE, RFIN, RCQ, SCQ, RCALL, SCALL, RREPORT, SREPORT, RRREPORT, SRREPORT, RRR, SRR, RRR73, SRR73, R73, S73, FIN};
 	void init();
+	void setQueue (QStringList const& calls);   // JTDX-VU
 	void message(QString const& callsign, Status status, int priority, QString const& param, QString const& tyyp, QString const& continent, QString const& mpx, unsigned time, QString const& rep, int freq,  QString const& mode, int wanted = -1);
 	void rx(QString const& callsign, int freq);
 	void time(unsigned time);
@@ -63,8 +64,14 @@ class QsoHistory
 	bool as_active = false;
 	bool _strictdirCQ = false;
 	QSO _CQ;
-	// JTDX-VU: wanted stations (new DXCC > band > mode) rank above all others
-	static int score (QSO const& q) {return q.wanted > 0 ? 100 * q.wanted + q.priority : q.priority;}
+	// JTDX-VU: queued calls (right-click > Queue), earliest first, rank above
+	// everything; then wanted stations (new DXCC > band > mode); then JTDX's own
+	QHash<QString, int> _queue;     // base call -> rank (higher = earlier)
+	bool queued (QSO const& q) const {return _queue.contains (Radio::base_callsign (q.call));}
+	int score (QSO const& q) const {
+	  int r = _queue.value (Radio::base_callsign (q.call), 0);
+	  if (r) return 100000 + 1000 * r;
+	  return q.wanted > 0 ? 100 * q.wanted + q.priority : q.priority;}
 	latlng _mylatlng;
 	int a_init = 0;
 	int b_init = 0;

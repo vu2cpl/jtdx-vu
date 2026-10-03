@@ -3,6 +3,9 @@
 #include <QtGlobal>
 #include <QApplication>
 #include <QMouseEvent>
+#include <QContextMenuEvent>
+#include <QMenu>
+#include <QScopedPointer>
 #include <QTextCharFormat>
 #include <QFont>
 #include <QTextCursor>
@@ -129,6 +132,25 @@ void DisplayText::mouseDoubleClickEvent(QMouseEvent *e)
   bool alt = (e->modifiers() & Qt::AltModifier);
   QTextEdit::mouseDoubleClickEvent(e);
   emit(selectCallsign(alt,ctrl));
+}
+
+// JTDX-VU: right-click a decode to queue its station for AutoSeq (called
+// the next time it is decoded), or take it off the queue
+void DisplayText::contextMenuEvent (QContextMenuEvent * e)
+{
+  QScopedPointer<QMenu> menu {createStandardContextMenu (e->pos ())};
+  auto const meta = dynamic_cast<LineMeta *> (cursorForPosition (e->pos ()).block ().userData ());
+  if (queue_ && meta && !meta->call.isEmpty ())
+    {
+      QString const call = meta->call;
+      bool const in = queue_->contains (call);
+      auto * first = menu->actions ().value (0);
+      auto * act = new QAction {in ? tr ("Remove %1 from queue").arg (call) : tr ("Queue %1 (call when next decoded)").arg (call), menu.data ()};
+      connect (act, &QAction::triggered, this, [this, call] {emit queueToggled (call);});
+      menu->insertAction (first, act);
+      menu->insertSeparator (first);
+    }
+  menu->exec (e->globalPos ());
 }
 
 void DisplayText::mouseReleaseEvent(QMouseEvent *e)

@@ -1,6 +1,9 @@
 //-------------------------------------------------------- MainWindow
 
 #include "mainwindow.h"
+#include <QListWidget>
+#include <QMenu>
+#include <algorithm>
 #include <cinttypes>
 #include <limits>
 #include <fftw3.h>
@@ -1143,6 +1146,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     connect (m_jttyPanel, &JttyPanel::haltRequested, this, &MainWindow::jttyHalt);
     connect (&m_config, &Configuration::jtty_settings_changed, m_jttyPanel, &JttyPanel::reloadMacros);
     jttySetupUi ();
+    queueSetupUi ();
     m_jttyAutoCqTimer = new QTimer {this};
     m_jttyAutoCqTimer->setSingleShot (true);
     connect (m_jttyAutoCqTimer, &QTimer::timeout, this, &MainWindow::jttyAutoCqFire);
@@ -3711,6 +3715,71 @@ bool MainWindow::nonstop_continue ()
   return true;
 }
 
+// ---- JTDX-VU: AutoSeq queue -----------------------------------------------
+// Right-click a decode > "Queue CALL": AutoSeq calls it the next time it is
+// decoded (its CQ, or the end of its QSO), ahead of everything else, in queue
+// order.  Off the queue when logged; right-click the list to remove.
+void MainWindow::queueSetupUi ()
+{
+  m_queueBox = new QWidget;
+  auto * box = new QVBoxLayout {m_queueBox};
+  box->setContentsMargins (0, 0, 0, 0);
+  box->setSpacing (1);
+  box->addWidget (new QLabel {tr ("Queue (called when next decoded)")});
+  m_queueList = new QListWidget;
+  m_queueList->setMaximumHeight (fontMetrics ().height () * 4 + 6);
+  m_queueList->setToolTip (tr ("Right-click a decode to queue or unqueue a station.\n"
+                               "AutoSeq calls the first queued station that is decoded, before anyone else.\n"
+                               "Right-click here to remove a call or clear the queue."));
+  m_queueList->setContextMenuPolicy (Qt::CustomContextMenu);
+  box->addWidget (m_queueList);
+  connect (m_queueList, &QWidget::customContextMenuRequested, this, [this] (QPoint const& pos) {
+      QMenu menu;
+      auto * item = m_queueList->itemAt (pos);
+      if (item) {
+        auto const call = item->text ();
+        menu.addAction (tr ("Remove %1").arg (call), this, [this, call] {queueToggle (call);});
+      }
+      menu.addAction (tr ("Clear queue"), this, [this] {m_queue.clear (); queueChanged ();});
+      menu.exec (m_queueList->viewport ()->mapToGlobal (pos));
+    });
+  int at = ui->verticalLayout_9->count ();
+  for (int i = 0; i < ui->verticalLayout_9->count (); ++i)
+    if (ui->verticalLayout_9->itemAt (i)->layout () == ui->verticalLayout) at = i;
+  ui->verticalLayout_9->insertWidget (at, m_queueBox);
+  for (auto * pane : {ui->decodedTextBrowser, ui->decodedTextBrowser2})
+    connect (pane, &DisplayText::queueToggled, this, &MainWindow::queueToggle);
+  queueChanged ();
+}
+
+bool MainWindow::queued (QString const& call) const
+{
+  auto const base = Radio::base_callsign (call);
+  for (auto const& c : m_queue) if (Radio::base_callsign (c) == base) return true;
+  return false;
+}
+
+void MainWindow::queueToggle (QString const& call)
+{
+  if (m_queue.contains (call)) m_queue.removeAll (call);
+  else m_queue << call;
+  queueChanged ();
+  if (m_queue.contains (call))
+    showStatusMessage (m_autoseq ? tr ("%1 queued: called when next decoded").arg (call)
+                                 : tr ("%1 queued - switch AutoSeq on to have it called").arg (call), 10000);
+}
+
+void MainWindow::queueChanged ()
+{
+  m_qsoHistory.setQueue (m_queue);
+  if (!m_queueList) return;
+  bool const jtty = m_mode == "JTTY";
+  for (auto * pane : {ui->decodedTextBrowser, ui->decodedTextBrowser2}) pane->queue_ = jtty ? nullptr : &m_queue;
+  m_queueList->clear ();
+  m_queueList->addItems (m_queue);
+  m_queueBox->setVisible (!jtty && !m_queue.isEmpty ());
+}
+
 void MainWindow::process_Auto()
 {
   int count = 0;
@@ -3840,7 +3909,8 @@ void MainWindow::process_Auto()
       if (m_callToClipboard) clipboard->setText(hisCall);
       ui->dxCallEntry->setText(hisCall);
       // JTDX-VU: a caller answering our CQ, not a CQ we picked up
-      m_cqRunQso = m_status != QsoHistory::RCQ && m_status != QsoHistory::SCQ && m_status != QsoHistory::SCALL;
+      // (a queued station counts as our own run, so CNS carries on after it)
+      m_cqRunQso = (m_status != QsoHistory::RCQ && m_status != QsoHistory::SCQ && m_status != QsoHistory::SCALL) || queued (hisCall);
       if(m_mode=="JT9+JT65" && m_modeTx != mode) {
       m_modeTx = mode;
       if (m_modeTx == "JT9") ui->pbTxMode->setText("Tx JT9  @");
@@ -6407,6 +6477,11 @@ void MainWindow::acceptQSO2(QDateTime const& QSO_date_off, QString const& call, 
       Eqsl->upload(m_config.eqsl_username(),m_config.eqsl_passwd(),m_config.eqsl_nickname(),call,mode,QSO_date_on,rpt_sent,m_config.bands ()->find (dial_freq),eqslcomments);
   ui->dxCallEntry->setStyleSheet(QString("QLineEdit {color: %1; background: %2}").arg(Radio::convert_dark("#000000",m_useDarkStyle),Radio::convert_dark("#7fff7f",m_useDarkStyle)));
   m_lastloggedcall=call;
+  if (queued (call)) {     // JTDX-VU: worked, off the queue
+    auto const base = Radio::base_callsign (call);
+    m_queue.erase (std::remove_if (m_queue.begin (), m_queue.end (), [&] (QString const& c) {return Radio::base_callsign (c) == base;}), m_queue.end ());
+    queueChanged ();
+  }
   m_lastloggedtime=m_jtdxtime->currentDateTimeUtc2();
   if (m_config.clear_DX () && !logClearDXTimer.isActive() && !m_autoTx && !m_autoseq) logClearDXTimer.start ((qAbs(int(m_TRperiod)-m_nseq))*1000);
   countQSOs ();

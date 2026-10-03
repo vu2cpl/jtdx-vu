@@ -830,6 +830,7 @@ void MainWindow::jttyApplyLayout ()
 {
   if (!m_jttyPanel || !m_jttyQsoFields) return;
   QTimer::singleShot (0, this, &MainWindow::evenSplit);   // each mode has its own minimum widths
+  queueChanged ();   // no AutoSeq queue in JTTY
   bool const jtty = m_mode == "JTTY";
   QWidget * const ftOnly[] = {
     ui->TxMinuteButton, ui->rptSpinBox, ui->candListSpinBox, ui->DTCenterSpinBox, ui->HoundButton,
@@ -964,9 +965,28 @@ void MainWindow::jttyHeardFromLine (JttyDecodeLine & line)
   if (!line.complete && !line.text.endsWith (' ') && !words.isEmpty ()) words.removeLast ();
   auto const my = m_config.my_callsign ().trimmed ().toUpper ();
   auto const now = m_jtdxtime->currentDateTimeUtc2 ();
-  for (auto const& word : words)
+  // only the station sending, not the one being called (Manoj): a call
+  // after DE, a call sent twice, the call in a CQ / QRZ / TEST, or a call
+  // sent on its own; a call just before DE is the one being called
+  QStringList calls, called;
+  for (int i = 0; i < words.size (); ++i)
+    if (looksLikeCall (words[i]))
+      {
+        calls << words[i];
+        if (i + 1 < words.size () && words[i + 1] == "DE") called << words[i];
+      }
+  bool const cq = !words.isEmpty () && (words.front () == "CQ" || words.front () == "QRZ"
+                                        || words.front () == "QRZ?" || words.front () == "TEST");
+  auto const sending = [&] (int i) {
+    auto const& w = words[i];
+    if (called.contains (w)) return false;
+    if (i > 0 && words[i - 1] == "DE") return true;
+    return cq || words.count (w) > 1 || (calls.size () == 1 && words.size () == 1);
+  };
+  for (int i = 0; i < words.size (); ++i)
     {
-      if (word == my || line.heardCalls.contains (word) || !looksLikeCall (word)) continue;
+      auto const& word = words[i];
+      if (word == my || line.heardCalls.contains (word) || !looksLikeCall (word) || !sending (i)) continue;
       line.heardCalls << word;
       JttyHeardList::Entry e;
       e.call = word;

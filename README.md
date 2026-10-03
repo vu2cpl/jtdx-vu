@@ -164,6 +164,17 @@ or Pi 5 is recommended.
   tests as the Show selector, from Club Log when enabled), and only then
   the usual JTDX order. A wanted station is picked even when AnsB4 /
   CallB4 are off; with none heard, nothing changes.
+- **Queue a station for AutoSeq** (next release). Right-click a decode
+  in either pane > **Queue CALL**. AutoSeq calls it the next time it is
+  decoded (its CQ, or the end of its QSO), ahead of wanted stations and
+  callers, in queue order, and takes it off the queue once logged. The
+  queue shows above the Rx Frequency pane while it has calls; right-click
+  there (or the decode again) to remove one, or clear it. A queued QSO
+  counts as your own run, so CNS carries on afterwards. FT modes only.
+- **AutoSeq calls only stations decoded right now** (next release). JTDX
+  could go back to a station that called your CQ up to 5 minutes ago and
+  isn't heard any more; now every AutoSeq pick must be in the latest
+  decode period.
 - **A new band starts with no automatic calling** (since v0.5.2). Changing
   band - from the band buttons or combo box, or on the radio / SDR
   program - switches **Auto CQ**, **AnsB4** and **1 QSO** off, and the
@@ -211,7 +222,9 @@ or Pi 5 is recommended.
     in the right-hand column, the macro panel across the bottom, and
     **S / R / Name** QSO fields in a column beside Tx / Rx (RST sent and received, logged instead of a
     fixed 599; the name comes from the log when known), and a **Calls
-    heard** list of every call in the JTTY decodes, coloured like Band
+    heard** list of the stations sending in the JTTY decodes (the call
+    after DE, a call sent twice, the call in a CQ - not the station being
+    called; since the next release), coloured like Band
     Activity from the log / Club Log (new DXCC, new on the band, new in
     JTTY, new call, worked). Click a call to make it DX Call and put Rx
     on its frequency.

@@ -186,6 +186,51 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-03 — AutoSeq queue, current-decode rule, JTTY calls heard (for the next release)
+
+**Queue.** Manoj: "can we right click a station to add it to a q?" His
+choices: called when next heard (not blindly after the QSO), the queue
+beats everything, a small list by the panes.
+- `DisplayText::contextMenuEvent`: the standard menu plus "Queue CALL
+  (call when next decoded)" / "Remove CALL from queue", from the line's
+  `LineMeta::call`; `queueToggled(call)` signal. `queue_` (pointer to
+  `MainWindow::m_queue`) is null in JTTY, so no entry there.
+- `MainWindow::queueSetupUi/queueToggle/queueChanged/queued`: list (label
+  + `QListWidget`, max 4 rows) inserted in `verticalLayout_9` above the Rx
+  Frequency pane, where JTTY's calls heard sit; shown only with calls in
+  it and not in JTTY; right-click: Remove / Clear queue. Logging a queued
+  call (`m_lastloggedcall=call` in the log path) removes it (base-call
+  match). A queued pick sets `m_cqRunQso`, so CNS continues after it.
+- `QsoHistory::setQueue`: `_queue` base call -> rank. `score()` returns
+  100000 + 1000*rank for a queued call. Loops 1/2 (callers to our CQ)
+  accept a queued station's RCQ/RFIN even after a caller was taken, and an
+  ordinary caller can't override a queued pick (`priority < 100000`).
+  Loop 3 (others' CQs) also runs when CQ search is off (CNS / no
+  CallPrioCQ) but then only for queued calls; RFIN counts for queued
+  ones. Direction filters (CQ DX / CQ NA) still apply.
+- Not in JTTY; needs AutoSeq on and a call mode other than "None", as any
+  autoselect.
+
+**Current-decode rule.** Manoj: "call only if currently decoded to be
+enforced in jtdx for normal auto sequence behaviour also". Loops 1 and 3
+already required `tt.time == max_r_time`; loop 2 ("my CQ answers not
+answered 1st time") took callers from the last 5 min. It now needs
+`tt.time == max_r_time` too, so it only adds stations decoded this
+period. Continuing the current QSO (DX call set) is unchanged.
+
+**JTTY calls heard.** Manoj: the list also showed "stations being called
+by others". `jttyHeardFromLine` now adds only the sender: a call after DE,
+a call sent twice, a call in a line starting CQ / QRZ / TEST, or a line
+that is just one call; a call right before DE (the one being called) never
+goes in. Checked on the default macro texts.
+
+**Verified:** the QsoHistory harness (scratch) now has 14 cases, all
+pass - added: queued CQ beats a new DXCC; unheard first queued call skipped
+for the next heard one; queue works with CQ search off; queued call not
+decoded this period not called; a CQ only from the last period not called;
+a queued station's CQ beats a wanted caller to our CQ; a caller from the
+last period not called. Builds clean. Not yet tried in the GUI or on air.
+
 ### 2026-10-03 — AutoSeq picks wanted stations first (for the next release)
 
 Manoj: "auto seq to pickup wanted as per our log. that is new dxcc, mode
@@ -1580,6 +1625,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
+- [ ] **AutoSeq queue + current-decode rule + JTTY heard** (unreleased,
+      2026-10-03): try right-click Queue in the GUI and on air; check
+      the JTTY calls-heard list on live traffic.
 - [ ] **AutoSeq wanted-first** (unreleased, 2026-10-03): watch on air
       that a new band/mode DXCC is picked over stronger ordinary CQs and
       callers, and that it stops being picked once logged.

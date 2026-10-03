@@ -4,6 +4,12 @@
  */
 
 #include "qsohistory.h"
+void QsoHistory::setQueue (QStringList const& calls)
+{
+  _queue.clear ();
+  for (int i = 0; i < calls.size (); ++i) _queue.insert (Radio::base_callsign (calls[i]), calls.size () - i);
+}
+
 void QsoHistory::init()
 {
     _data.clear();
@@ -184,10 +190,10 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
               tt=_data[key];
               if (on_black == 0 && tt.time == max_r_time && !tt.continent.isEmpty() && (!lastcalled || tt.time == tt.b_time) &&
                   (tt.status == RCALL || tt.status == RREPORT || tt.status == RRREPORT || tt.status == RRR || tt.status == RRR73 || 
-                    ((tt.status == RCQ || tt.status == RFIN) && !mycall && ((tt.priority > 16 && tt.priority < 20))))) {
+                    ((tt.status == RCQ || tt.status == RFIN) && (queued (tt) || (!mycall && tt.priority > 16 && tt.priority < 20))))) {
                 if (!lastcalled && tt.time == tt.b_time) priority = a_init;
                 if (score (tt) > priority || 
-                      (priority > a_init && (((tt.status == RCALL || tt.status == RREPORT || tt.status == RRREPORT) && !mycall) || (score (tt) == priority &&
+                      (priority > a_init && ((priority < 100000 && (tt.status == RCALL || tt.status == RREPORT || tt.status == RRREPORT) && !mycall) || (score (tt) == priority &&
                          ((!(algo & 32) && ((!(algo & 16) && !tt.s_rep.isEmpty () && tt.s_rep.toInt() > rep.toInt())
                                             || (algo & 16 && ((tt.status == RCALL && !tt.s_rep.isEmpty () && tt.s_rep.toInt() > rep.toInt() && Rrep == "-60")
                                                               ||(tt.status == RREPORT && !tt.s_rep.isEmpty () && tt.s_rep.toInt() > Rrep.toInt()))))) 
@@ -233,12 +239,12 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
             foreach(QString key,_data.keys()) {
               on_black=_blackdata.value(key,0);
               tt=_data[key];
-              if (on_black == 0 && ((tt.time - _CQ.time < 300 && tt.time >= 300) || (tt.time < 300 && tt.time - (_CQ.time - 86100) < 300))  && !tt.continent.isEmpty() && (!lastcalled || tt.time == tt.b_time) &&
+              if (on_black == 0 && tt.time == max_r_time && ((tt.time - _CQ.time < 300 && tt.time >= 300) || (tt.time < 300 && tt.time - (_CQ.time - 86100) < 300))  && !tt.continent.isEmpty() && (!lastcalled || tt.time == tt.b_time) &&
                   (tt.status == RCALL || tt.status == RREPORT || tt.status == RRREPORT || tt.status == RRR || tt.status == RRR73 || 
-                    ((tt.status == RCQ || tt.status == RFIN) && !mycall && ((tt.priority > 16 && tt.priority < 20))))) {
+                    ((tt.status == RCQ || tt.status == RFIN) && (queued (tt) || (!mycall && tt.priority > 16 && tt.priority < 20))))) {
                 if (!lastcalled && tt.time == tt.b_time) priority = a_init;
                 if (score (tt) > priority || 
-                      (priority > a_init && (((tt.status == RCALL || tt.status == RREPORT || tt.status == RRREPORT) && !mycall) || (score (tt) == priority &&
+                      (priority > a_init && ((priority < 100000 && (tt.status == RCALL || tt.status == RREPORT || tt.status == RRREPORT) && !mycall) || (score (tt) == priority &&
                          ((!(algo & 32) && ((!(algo & 16) && !tt.s_rep.isEmpty () && tt.s_rep.toInt() > rep.toInt())
                                             || (algo & 16 && ((tt.status == RCALL && !tt.s_rep.isEmpty () && tt.s_rep.toInt() > rep.toInt() && Rrep == "-60")
                                                               ||(tt.status == RREPORT && !tt.s_rep.isEmpty () && tt.s_rep.toInt() > Rrep.toInt()))))) 
@@ -274,7 +280,7 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
             }
           }
 
-          if (algo&1 && myas_active && _data.size() > 0){ // their CQ answers
+          if ((algo&1 || !_queue.isEmpty ()) && myas_active && _data.size() > 0){ // their CQ answers
             QSO tt,t;
             int priority = b_init;
             rep = "-60";
@@ -286,7 +292,7 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
               is_called.time=0;
               is_called=_calldata.value(key,is_called);
               tt=_data[key];
-              if ((is_called.rep == -35 || is_called.rep < tt.s_rep.toInt() || (tt.b_time > 300 && tt.b_time - is_called.time > 300) || (tt.b_time <= 300 && is_called.time - tt.b_time < 86100)) && on_black == 0 && tt.time == max_r_time && (tt.status == RCQ || (tt.status == RFIN && tt.priority > 0)) && !tt.continent.isEmpty()) {
+              if ((is_called.rep == -35 || is_called.rep < tt.s_rep.toInt() || (tt.b_time > 300 && tt.b_time - is_called.time > 300) || (tt.b_time <= 300 && is_called.time - tt.b_time < 86100)) && on_black == 0 && tt.time == max_r_time && (algo & 1 || queued (tt)) && (tt.status == RCQ || (tt.status == RFIN && (tt.priority > 0 || queued (tt)))) && !tt.continent.isEmpty()) {
 //                printf("autosel:%s %d %d (%d,%d,%s,%d)\n",tt.call.toStdString().c_str(),ret,algo,tt.status,tt.priority,tt.s_rep.toStdString().c_str(),tt.distance);
                 if (score (tt) > priority || 
                     (priority > b_init && score (tt) == priority && 

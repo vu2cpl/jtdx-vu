@@ -65,6 +65,7 @@ class ClubLog;
 class BandModeSwitcher;
 class JttyPanel;
 class JttyHeardList;
+class QListWidget;
 class QAction;
 #include <QTextBlock>
 #include <QDateTime>
@@ -682,6 +683,9 @@ private:
   ClubLog *m_clubLog {nullptr};  // JTDX-VU
   BandModeSwitcher *m_switcher {nullptr};  // JTDX-VU
   bool m_nonstop {false};  // JTDX-VU Non-stop (Tx watchdog still applies)
+  QStringList m_queue;          // JTDX-VU: right-click queue, called by AutoSeq when next decoded
+  QWidget * m_queueBox {nullptr};
+  QListWidget * m_queueList {nullptr};
   bool m_cqRunQso {false}; // JTDX-VU: this QSO answers our CQ - only then does Non-stop continue
   JttyPanel *m_jttyPanel {nullptr};   // JTDX-VU JTTY
   QAction *m_actionJTTY {nullptr};
@@ -858,6 +862,10 @@ private:
   void switch_to_band (QString const& band);  // JTDX-VU band button
   bool nonstop_continue ();  // JTDX-VU Non-stop: keep going after a logged QSO
   int watchdog_minutes () const;  // JTDX-VU: the Auto CQ time limit while Non-stop, else Settings
+  void queueSetupUi ();        // JTDX-VU: the AutoSeq queue list by the Rx pane
+  void queueToggle (QString const& call);
+  void queueChanged ();
+  bool queued (QString const& call) const;
   void band_change_reset ();  // JTDX-VU: Auto CQ, AnsB4, 1 QSO off on a new band
   bool nonstop_active () const;  // JTDX-VU: Non-stop on and not in Hound mode
   bool singleshot_now () const;  // JTDX-VU: 1 QSO, or Non-stop with a QSO we answered
