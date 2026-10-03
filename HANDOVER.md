@@ -224,6 +224,8 @@ a call sent twice, a call in a line starting CQ / QRZ / TEST, or a line
 that is just one call; a call right before DE (the one being called) never
 goes in. Checked on the default macro texts.
 
+Installed on the Mac (`/Applications/JTDX-VU.app`, revision ec3157, still labelled 0.5.3) for Manoj to try.
+
 **Verified:** the QsoHistory harness (scratch) now has 14 cases, all
 pass - added: queued CQ beats a new DXCC; unheard first queued call skipped
 for the next heard one; queue works with CQ search off; queued call not
