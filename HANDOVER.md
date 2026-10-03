@@ -205,7 +205,7 @@ v0.5.2.
   mute → re-arm at +10 s, reconnect at +20 s, repeating; unmute → audio
   back on the current connection, no more drops; status messages as
   above; quit exit 0, no crash report.
-- AetherSDR issue drafted (see Open items).
+- AetherSDR: already #6006 upstream; confirmation posted (see Open items).
 
 ### 2026-10-03 — TCI reconnects automatically (v0.5.2)
 
@@ -1493,9 +1493,12 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **TCI auto-reconnect + audio watchdog** (v0.5.2): try a real
       AetherSDR restart with TCI audio on; watch for false "no audio"
       alarms during long JTTY sends or band changes.
-- [ ] **AetherSDR bug report** (TCI audio not re-armed after the 10 s
-      DAX release): draft in `docs/aethersdr-tci-audio-issue.md`; Manoj
-      to post, or say so.
+- [ ] **AetherSDR TCI audio bug** is upstream
+      [aethersdr/AetherSDR#6006](https://github.com/aethersdr/AetherSDR/issues/6006)
+      (26.9.5 regression, fix proposed, not merged as of 2026-10-03);
+      Manoj's FLEX-6600 confirmation posted. When a fixed AetherSDR ships,
+      check TCI audio survives a JTDX-VU close/reopen. Notes in
+      `docs/aethersdr-tci-audio-issue.md`.
 - [ ] **CNS only after our own CQ** (v0.5.2): check on
       air - a CQ run continues; answering a CQ halts after that QSO;
       Hound halts as before.

@@ -1,12 +1,22 @@
-# Draft issue for aethersdr/AetherSDR
+# AetherSDR TCI audio bug - reported
 
-Not posted yet. Repo: https://github.com/aethersdr/AetherSDR/issues
+Already tracked upstream as
+[aethersdr/AetherSDR#6006](https://github.com/aethersdr/AetherSDR/issues/6006)
+("TCI RX audio not restored when a TCI client reconnects (26.9.5
+regression from 26.9.4)", priority high, diagnosed by the maintainers'
+agent: the `dax|<channel>` RX binding is not rebuilt after the DAX stream
+unregister - `refreshRxBindings()` missing in `onDaxStreamUnregistered()` /
+`ensureDaxForTci()`). Not a new issue: Manoj's confirmation (FLEX-6600,
+macOS 26, probe result) was posted there on 2026-10-03:
+https://github.com/aethersdr/AetherSDR/issues/6006#issuecomment-5967032247
+
+The draft written before #6006 was found is kept below for reference.
 
 ---
 
 **Title:** TCI RX audio never resumes after the 10 s DAX release (audio_start acknowledged, no audio frames)
 
-**AetherSDR:** 26.9.5, macOS 26 (Mac mini M4 Pro), FlexRadio <model>
+**AetherSDR:** 26.9.5, macOS 26 (Mac mini M4 Pro), FLEX-6600
 **TCI client:** JTDX-VU 0.5.x (JTDX 2.2.159 TCI client), TCI audio on, receiver 0
 
 **What happens**
