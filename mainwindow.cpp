@@ -1168,8 +1168,11 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     ui->menuAutoSeq->addSeparator ();
     ui->menuAutoSeq->addAction (action);
     // "Auto CQ": Call Non-Stop in the FT modes, JTTY Auto CQ in JTTY.  It sits
-    // in the right-hand button column under AnsB4.  In JTTY, pressing it
-    // while it runs is also the halt (Esc and Halt Tx still work too).
+    // in the right-hand button column directly under Monitor, in every mode,
+    // so it is always in the same place (JTTY hides Bypass / 1 QSO / AnsB4,
+    // and small windows hide them too - below it, they can't move it).  In
+    // JTTY, pressing it while it runs is also the halt (Esc and Halt Tx still
+    // work too).
     auto button = new QPushButton {tr ("Auto CQ")};
     button->setCheckable (true);
     button->setFocusPolicy (Qt::NoFocus);
@@ -1177,7 +1180,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     button->setMinimumSize (ui->AnsB4Button->minimumSize ());
     button->setMaximumSize (80, 45);
     m_cnsButton = button;
-    int const column_index = ui->verticalLayout_2->indexOf (ui->AnsB4Button) + 1;
+    int const column_index = ui->verticalLayout_2->indexOf (ui->monitorButton) + 1;
     ui->verticalLayout_2->insertWidget (column_index, button);
 
     auto set = [this, action] (bool on) {

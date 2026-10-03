@@ -172,6 +172,22 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-03 — Auto CQ in the same place in every mode (after v0.5.2)
+
+Manoj: "auto cq button is different in jtty and other modes. need to be
+same for motor memory ease". In the FT modes it was 6th in the right-hand
+column (Tune, Monitor, Bypass, 1 QSO, AnsB4, Auto CQ); JTTY hides the
+three FT-only buttons, so it jumped up to 3rd.
+
+- The button is now inserted directly under `monitorButton` (was under
+  `AnsB4Button`), so the column is Tune, Monitor, Auto CQ everywhere;
+  FT modes continue with Bypass / 1 QSO / AnsB4, JTTY with Halt Tx /
+  Log QSO / Erase / Clear DX (`jttyApplyLayout` inserts those after the
+  Auto CQ button, unchanged). Small windows that hide Bypass / 1 QSO /
+  AnsB4 by height can no longer move it either.
+- **Verified** (`-r tcitest`, Rig None): FT8 → JTTY → FT8, Auto CQ third
+  each time.
+
 ### 2026-10-03 — Status-bar text no longer drawn under "WD Nm" (after v0.5.2)
 
 Manoj: "text is being doubled" - screenshot: "Band changed: ..." with

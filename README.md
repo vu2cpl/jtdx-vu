@@ -173,7 +173,7 @@ or Pi 5 is recommended.
   TCI audio after the last audio client has been gone for over 10 s;
   restarting AetherSDR clears it, JTDX-VU can stay open.
 - **Call Non-Stop:** the **Auto CQ** button in the right-hand button
-  column (under AnsB4), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
+  column, directly under Monitor in every mode (since v0.5.3), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
   or the next caller instead of halting Tx. Only QSOs from your own CQ
   continue: when you answer someone (double-click their CQ or QSO), Tx
   halts after that QSO, as with **1 QSO**, and while CNS is on AutoSeq
