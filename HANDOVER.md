@@ -285,6 +285,10 @@ v0.5.2.
   back on the current connection, no more drops; status messages as
   above; quit exit 0, no crash report.
 - AetherSDR: already #6006 upstream; confirmation posted (see Open items).
+- `tools/tci_audio_probe.py` (committed after v0.5.3): connects to the
+  SDR program's TCI on 127.0.0.1:50001, sends `audio_start:0` and counts
+  the binary audio bytes that come back - 0 means the SDR program is not
+  sending audio (not a JTDX-VU fault). Changes nothing on the radio.
 
 ### 2026-10-03 — TCI reconnects automatically (v0.5.2)
 

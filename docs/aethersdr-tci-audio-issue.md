@@ -31,7 +31,7 @@ The draft written before #6006 was found is kept below for reference.
    sent**. CAT over TCI works normally (vfo, modulation, rx_smeter).
 5. Only restarting AetherSDR brings TCI audio back.
 
-**Probe:** a minimal websocket client (no JTDX involved) connected to
+**Probe:** a minimal websocket client (`tools/tci_audio_probe.py`, no JTDX involved) connected to
 `127.0.0.1:50001` while AetherSDR was in this state. It got the normal
 start-up burst (`protocol:ExpertSDR3,1.5; ... audio_samplerate:48000;
 audio_stream_sample_type:float32; audio_stream_channels:2; start; ready;`)
