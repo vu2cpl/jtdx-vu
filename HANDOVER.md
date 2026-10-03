@@ -96,8 +96,8 @@ Last updated: 2026-10-03
   11:40, re-installed 11:45 (tidied layout) and 11:55 (no CW ID)** (bundle of `6ae5e051`'s code). Previous v0.4.0 app and the
   pre-migration .ini (`JTDX-VU.ini.before-redesign`) are in
   `~/Desktop/jdxvu/prev-install/`.
-- **Installed app:** `/Applications/JTDX-VU.app` is v0.5.2 (`4ba63a58`),
-  installed 2026-10-03. It was built locally, so
+- **Installed app:** `/Applications/JTDX-VU.app` is v0.5.2 + the
+  status-bar fix (`972b762b`), installed 2026-10-03. It was built locally, so
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -189,6 +189,13 @@ common by the new messages.
   10 s; the reconnecting / still-no-audio warnings stay until replaced.
 - **Verified** (`-r tcitest`, rig-side band change): message clean, no WD
   box; after 10 s Receiving / FT8 / WD 6m / progress all back.
+- Installed `972b762b`. The quit → copy → relaunch took longer than
+  AetherSDR's 10 s grace, so #6006 struck for real: the watchdog
+  re-armed, reconnected (new port) and showed "TCI reconnected, still no
+  audio from the SDR program - restart it" cleanly - **first live
+  confirmation of the audio watchdog**. To avoid it when installing:
+  copy first while the app runs is unsafe, so restart AetherSDR after,
+  or relaunch inside 10 s.
 
 ### 2026-10-03 — Auto CQ, AnsB4 and 1 QSO switch off on a band change (v0.5.2)
 
