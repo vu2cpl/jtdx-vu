@@ -80,6 +80,20 @@ def stream_audio(c, alive, lock):
             except OSError: return
         time.sleep(2048 / 48000)
 
+PUSH = sys.argv[1] + ".push"
+def pusher(c, alive, lock):
+    # a file <log file>.push is sent as one text message, as if the SDR program
+    # changed something itself (e.g. "vfo:0,0,21074000;"), then deleted
+    while alive[1]:
+        if os.path.exists(PUSH):
+            t = open(PUSH).read().strip(); os.remove(PUSH)
+            for cmd in filter(None, t.split(";")): reply(cmd)   # keep state in step
+            try:
+                with lock: c.sendall(frame(t))
+            except OSError: return
+            log.write("%.3f pushed %s\n" % (time.time(), t))
+        time.sleep(0.2)
+
 def serve(c):
     req = b""
     while b"\r\n\r\n" not in req:
@@ -93,8 +107,9 @@ def serve(c):
     c.sendall(frame("protocol:fake,1.5;device:FakeSDR;receive_only:false;trx_count:2;channels_count:2;"
                     "vfo:0,0,%s;modulation:0,%s;split_enable:0,false;drive:50;start;ready;"
                     % (state["vfo:0,0"], state["modulation:0"])))
-    alive = [False]
+    alive = [False, True]
     lock = threading.Lock()
+    threading.Thread(target=pusher, args=(c, alive, lock), daemon=True).start()
     try:
         for msg in frames(c):
             for cmd in filter(None, msg.split(";")):
@@ -108,7 +123,7 @@ def serve(c):
                 with lock: c.sendall(frame(r))
     except OSError:
         pass
-    alive[0] = False
+    alive[0] = alive[1] = False
     log.write("%.3f closed\n" % time.time())
 
 s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

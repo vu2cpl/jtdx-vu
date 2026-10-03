@@ -2645,6 +2645,18 @@ void MainWindow::bumpFqso(int n)                                 //bumpFqso()
   }
 }
 
+// JTDX-VU: a new band starts with no automatic calling - Auto CQ (CNS /
+// JTTY Auto CQ), AnsB4 and 1 QSO switch off (Manoj, 2026-10-03), whether the
+// band was changed here or on the rig / SDR program
+void MainWindow::band_change_reset ()
+{
+  QStringList off;
+  if (m_cnsButton && m_cnsButton->isChecked ()) { m_cnsButton->setChecked (false); off << tr ("Auto CQ"); }
+  if (ui->actionAnswerWorkedB4->isChecked ()) { ui->actionAnswerWorkedB4->setChecked (false); off << tr ("AnsB4"); }
+  if (ui->actionSingleShot->isChecked ()) { ui->actionSingleShot->setChecked (false); off << tr ("1 QSO"); }
+  if (!off.isEmpty ()) showStatusMessage (tr ("Band changed: %1 switched off").arg (off.join (", ")));
+}
+
 void MainWindow::displayDialFrequency ()
 {
   static bool startup=true;
@@ -2676,6 +2688,7 @@ void MainWindow::displayDialFrequency ()
           if (m_pwrBandTxMemory.contains(curBand)) { m_PwrBandSetOK = false; ui->outAttenuation->setValue(m_pwrBandTxMemory[curBand].toInt()); m_PwrBandSetOK = true;/* printf("set power from freq %s %s %d\n",m_lastBand.toStdString().c_str(),curBand.toStdString().c_str(),m_pwrBandTxMemory[curBand].toInt());*/}
           else { m_pwrBandTxMemory[curBand] = ui->outAttenuation->value(); }
       }
+      band_change_reset ();   // JTDX-VU: band changed on the rig side
       startup=false;
     }
     ui->bandComboBox->setCurrentText (band_name);
@@ -6917,6 +6930,7 @@ void MainWindow::band_changed (Frequency f)
           cleared=true;
       }
     }
+    if (oldband != newband) band_change_reset ();
 //    m_lastBand.clear ();
     m_bandEdited = false;
     psk_Reporter->sendReport();      // Upload any queued spots before changing band

@@ -152,6 +152,27 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-03 — Auto CQ, AnsB4 and 1 QSO switch off on a band change (v0.5.2)
+
+Manoj: "auto cq, ans b4, 1 qso all are green even when changing bands" -
+they should switch off.
+
+- `MainWindow::band_change_reset()` unchecks the Auto CQ button (CNS in
+  the FT modes, JTTY Auto CQ in JTTY - through its own toggled handler),
+  `actionAnswerWorkedB4` and `actionSingleShot`, and shows "Band changed:
+  <those that were on> switched off".
+- Called from `band_changed()` when the band (not just the mode) differs -
+  band buttons, band combo, scheduler - and from `displayDialFrequency()`
+  when the rig reports a new band (AetherSDR, the Ulanzi deck). The
+  latter must not skip the first change after start-up: JTDX's `startup`
+  flag there stays true until the first rig-side band change, which
+  swallowed the test's 20m → 15m.
+- `tools/fake_tci.py`: a `<log>.push` file is sent as one message (e.g.
+  `vfo:0,0,21074000;`), to imitate a band change on the SDR side.
+- **Verified** (`-r tcitest`, all three on from the .ini / AutoSeq menu):
+  rig-side 20m → 15m and the 40m button both switched all three off with
+  the message.
+
 ### 2026-10-03 — TCI audio watchdog (v0.5.2)
 
 After installing the reconnect build, TCI connected (CAT fine, 21.074)

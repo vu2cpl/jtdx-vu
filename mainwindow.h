@@ -858,6 +858,7 @@ private:
   void switch_to_band (QString const& band);  // JTDX-VU band button
   bool nonstop_continue ();  // JTDX-VU Non-stop: keep going after a logged QSO
   int watchdog_minutes () const;  // JTDX-VU: the Auto CQ time limit while Non-stop, else Settings
+  void band_change_reset ();  // JTDX-VU: Auto CQ, AnsB4, 1 QSO off on a new band
   bool nonstop_active () const;  // JTDX-VU: Non-stop on and not in Hound mode
   bool singleshot_now () const;  // JTDX-VU: 1 QSO, or Non-stop with a QSO we answered
   // JTDX-VU JTTY (mainwindow_jtty.cpp)

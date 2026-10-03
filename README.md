@@ -157,6 +157,10 @@ or Pi 5 is recommended.
   changing it re-filters every decode already on screen, and a
   just-worked station drops out. Traffic with your call and your QSO
   partner always shows, and the Rx Frequency pane is never filtered.
+- **A new band starts with no automatic calling** (since v0.5.2). Changing
+  band - from the band buttons or combo box, or on the radio / SDR
+  program - switches **Auto CQ**, **AnsB4** and **1 QSO** off, and the
+  status bar says which ones were on.
 - **TCI reconnects on its own** (since v0.5.2). If the SDR program
   (AetherSDR, ExpertSDR, Thetis, ...) is closed or restarted, Tx halts
   and the status bar says "TCI: ... reconnecting every 5 s" instead of
