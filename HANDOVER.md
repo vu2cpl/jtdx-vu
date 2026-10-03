@@ -48,8 +48,7 @@ Last updated: 2026-10-03
     arm64 app reports 0.5.3; copies in `~/Desktop/jdxvu/v0.5.3/`.
   - Pi `.deb` on meridianpi5 (prefix /usr/local): `apt-get install -s`
     clean, Conflicts: jtdx, uploaded by hand.
-  - Local Mac build of `bcad6f8c` (0.5.3) bundled but **not installed**:
-    JTDX-VU was running; the installed `41936ec2` is the same code.
+  - Installed on the Mac (local build of `bcad6f8c`, reports 0.5.3).
   - Website: paragraph "Auto CQ in one place (v0.5.3)" (with the
     AetherSDR #6006 note), table / release link / apt command on v0.5.3,
     card sentence; pushed (`f212028`) after all eight URLs answered 206.
@@ -111,9 +110,8 @@ Last updated: 2026-10-03
   11:40, re-installed 11:45 (tidied layout) and 11:55 (no CW ID)** (bundle of `6ae5e051`'s code). Previous v0.4.0 app and the
   pre-migration .ini (`JTDX-VU.ini.before-redesign`) are in
   `~/Desktop/jdxvu/prev-install/`.
-- **Installed app:** `/Applications/JTDX-VU.app` is v0.5.2 + the
-  status-bar fix + Auto CQ under Monitor (`41936ec2`), installed
-  2026-10-03. It was built locally, so
+- **Installed app:** `/Applications/JTDX-VU.app` is v0.5.3 (`bcad6f8c`),
+  installed 2026-10-03. It was built locally, so
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
