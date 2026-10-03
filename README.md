@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.5.2
+# JTDX-VU for VUCG community — v0.5.3
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -127,7 +127,7 @@ or Pi 5 is recommended.
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.5.2"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.5.3"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
