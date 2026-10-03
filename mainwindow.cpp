@@ -3646,18 +3646,33 @@ void MainWindow::decode()                                       //decode()
 
 // JTDX-VU "Non-stop": at the end of a QSO keep transmitting - clear the DX
 // call and go back to CQ, so AutoSeq answers the next caller - instead of
-// halting Tx. Only once the QSO is logged, never in single-shot / Hound
+// halting Tx. Only for a QSO that came from our own CQ (one where we answered
+// them is treated as 1 QSO), once it is logged, never in single-shot / Hound
 // mode, and the Tx watchdog still applies as usual.
 // JTDX-VU: the Tx watchdog limit in minutes - fixed at 10 while Non-stop
 // is on (even if the watchdog is disabled in Settings), else the setting
 int MainWindow::watchdog_minutes () const
 {
-  return m_nonstop ? JttySettings::autoCqMinutes (m_settings) : m_config.watchdog ();
+  return nonstop_active () ? JttySettings::autoCqMinutes (m_settings) : m_config.watchdog ();
+}
+
+// JTDX-VU: Non-stop is off in Hound mode (the only special operating mode
+// JTDX has)
+bool MainWindow::nonstop_active () const
+{
+  return m_nonstop && !m_houndMode;
+}
+
+// JTDX-VU: "1 QSO" in effect - the button, or Non-stop with a QSO we did not
+// get from our own CQ (we answered them): halt after that QSO, as 1 QSO does
+bool MainWindow::singleshot_now () const
+{
+  return m_singleshot || (nonstop_active () && !m_hisCall.isEmpty () && !m_cqRunQso);
 }
 
 bool MainWindow::nonstop_continue ()
 {
-  if (!m_nonstop || !m_autoseq || m_singleshot || m_houndMode) return false;
+  if (!nonstop_active () || !m_autoseq || singleshot_now ()) return false;
   if (!m_config.autolog () && m_lastloggedcall != m_hisCall) return false;  // not logged yet
   if (!m_hisCall.isEmpty ()) clearDX (" cleared, non-stop: next QSO");
   on_txb6_clicked ();
@@ -3681,6 +3696,7 @@ void MainWindow::process_Auto()
   int rx = ui->RxFreqSpinBox->value ();
   int tx = ui->TxFreqSpinBox->value ();
   QStringList StrStatus = {"NONE","RFIN","RCQ","SCQ","RCALL","SCALL","RREPORT","SREPORT","RRREPORT","SRREPORT","RRR","SRR","RRR73","SRR73","R73","S73","FIN"};
+  bool const singleshot = singleshot_now ();  // JTDX-VU: taken before the DX call is cleared
   if (!hisCall.isEmpty ()) {
     if (m_houndMode) count = -1; //marker for changing status to FIN when status is RRR73
     m_status = m_qsoHistory.autoseq(hisCall,grid,rpt,rx,tx,time,count,prio,mode);
@@ -3708,7 +3724,7 @@ void MainWindow::process_Auto()
            }
          }
       }
-    } else if ((m_status == QsoHistory::SRR73 || m_status >= QsoHistory::S73) && !m_singleshot && (!m_config.autolog() || m_nonstop) && m_lastloggedcall == m_hisCall && !m_lockTxFreq &&
+    } else if ((m_status == QsoHistory::SRR73 || m_status >= QsoHistory::S73) && !singleshot && (!m_config.autolog() || nonstop_active ()) && m_lastloggedcall == m_hisCall && !m_lockTxFreq &&
         (tx == 1 || abs(rx - ui->TxFreqSpinBox->value ()) > m_nguardfreq)) { 
       clearDX (" cleared, AutoSeq QSO finished");
       hisCall = m_hisCall;
@@ -3727,7 +3743,7 @@ void MainWindow::process_Auto()
       hisCall = m_hisCall;
       grid = m_hisGrid;
       m_status = QsoHistory::NONE;
-      if (m_singleshot)
+      if (singleshot)
         counters = false;
     } else if ((m_status == QsoHistory::RCALL || (m_status == QsoHistory::SREPORT && !m_skipTx1)) && m_config.answerInCallCount() && 
         (m_config.nAnswerInCallCounter() <= count || m_reply_other)) {
@@ -3738,7 +3754,7 @@ void MainWindow::process_Auto()
       grid = m_hisGrid;
       m_status = QsoHistory::NONE;
       counters2 = false;
-      if (m_singleshot)
+      if (singleshot)
         counters = false;
     } else if ((m_status == QsoHistory::RREPORT || m_status == QsoHistory::SRREPORT) && m_config.sentRReportCount() && 
         m_config.nSentRReportCounter() <= count) {
@@ -3748,7 +3764,7 @@ void MainWindow::process_Auto()
       grid = m_hisGrid;
       m_status = QsoHistory::NONE;
       counters2 = false;
-      if (m_singleshot)
+      if (singleshot)
         counters = false;
     } else if ((m_status == QsoHistory::RRR || m_status == QsoHistory::RRR73 || m_status == QsoHistory::R73 || m_status == QsoHistory::SRR73 || m_status == QsoHistory::S73) && 
         m_config.sentRR7373Count() && m_config.nSentRR7373Counter() <= count) {
@@ -3758,7 +3774,7 @@ void MainWindow::process_Auto()
       grid = m_hisGrid;
       m_status = QsoHistory::NONE;
       counters2 = false;
-      if (m_singleshot)
+      if (singleshot)
         counters = false;
     }
   }
@@ -3766,7 +3782,7 @@ void MainWindow::process_Auto()
     auto ms = m_msDecStarted % 86400000;
     auto secs = round(ms / 1000.0) +1;
     int nmod = fmod(double(secs),2.0*m_TRperiod);
-    if(m_callPrioCQ && !m_lockTxFreq && counters2 && m_counter == 0 && m_txFirst != (nmod!=0)) { time=1; }    //highiest priority, evaluating response to CQ first, then searching CQ decoded messages 
+    if(m_callPrioCQ && !nonstop_active () && !m_lockTxFreq && counters2 && m_counter == 0 && m_txFirst != (nmod!=0)) { time=1; }    //highiest priority, evaluating response to CQ first, then searching CQ decoded messages 
     else { if (m_counter > 0) m_counter -= 1; time=0; } //highiest priority, evaluating response to CQ only
     if ((!m_config.newDXCC() && !m_config.newGrid() && !m_config.newPx() && !m_config.newCall()) || m_answerWorkedB4) time |= 128;
     if ((!m_config.newDXCC() && !m_config.newGrid() && !m_config.newPx() && !m_config.newCall()) || m_callWorkedB4) time |= 64;
@@ -3793,6 +3809,8 @@ void MainWindow::process_Auto()
     if (!hisCall.isEmpty ()) {
       if (m_callToClipboard) clipboard->setText(hisCall);
       ui->dxCallEntry->setText(hisCall);
+      // JTDX-VU: a caller answering our CQ, not a CQ we picked up
+      m_cqRunQso = m_status != QsoHistory::RCQ && m_status != QsoHistory::SCQ && m_status != QsoHistory::SCALL;
       if(m_mode=="JT9+JT65" && m_modeTx != mode) {
       m_modeTx = mode;
       if (m_modeTx == "JT9") ui->pbTxMode->setText("Tx JT9  @");
@@ -3876,7 +3894,7 @@ void MainWindow::process_Auto()
       }
       case QsoHistory::SRR73: {
         if (nonstop_continue ()) break;
-        if (!m_singleshot && !m_config.autolog() && m_lastloggedcall == m_hisCall)
+        if (!singleshot && !m_config.autolog() && m_lastloggedcall == m_hisCall)
           autoStopTx("SRR73, none received ");
         break;
       }
@@ -3893,7 +3911,7 @@ void MainWindow::process_Auto()
       }
       case QsoHistory::FIN: {
         if (nonstop_continue ()) break;
-        if (m_singleshot) 
+        if (singleshot) 
           autoStopTx("FIN, end of QSO, Singleshot ");
         else if (m_config.autolog())
           autoStopTx("FIN, end of QSO, Autolog ");
@@ -3910,7 +3928,7 @@ void MainWindow::process_Auto()
   } else {
     if (m_enableTx && m_hisCall.isEmpty()) ui->RxFreqSpinBox->setValue (ui->TxFreqSpinBox->value ());
     if (!counters) {
-       if(m_singleshot) { autoStopTx("m_singleshot, counter triggered "); }
+       if(singleshot) { autoStopTx("m_singleshot, counter triggered "); }
        else if(m_houndMode) { autoStopTx("m_houndMode, counter triggered "); }
     }
   }
@@ -4167,7 +4185,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       if (mycallinmsg && !m_manualDecode) {
          if (!deCall.isEmpty() && Radio::base_callsign (deCall) == Radio::base_callsign (m_hisCall)) {
            if (!m_processAuto_done && m_autoseq && ((!decodedtextmsg.contains(" 73") && !decodedtextmsg.contains("RR73")) 
-           || (decodedtextmsg.contains(" 73") && m_status==QsoHistory::RRREPORT && m_rrr) || (decodedtextmsg.contains("RR73") && m_status==QsoHistory::RREPORT) || m_callMode==0 || m_singleshot || m_houndMode)) {
+           || (decodedtextmsg.contains(" 73") && m_status==QsoHistory::RRREPORT && m_rrr) || (decodedtextmsg.contains("RR73") && m_status==QsoHistory::RREPORT) || m_callMode==0 || singleshot_now () || m_houndMode)) {
              m_processAuto_done = true;
              process_Auto();
            } else if ((decodedtextmsg.contains(" 73") || decodedtextmsg.contains("RR73")) && m_callMode<=1) m_callFirst73 = true;
@@ -5415,6 +5433,9 @@ void MainWindow::processMessage(QString const& messages, int position, bool alt,
 
 // Determine appropriate response to received message
   auto dtext = " " + decodedtext.string () + " ";
+  // JTDX-VU: they are calling us (our CQ run), not a CQ or QSO we picked
+  m_cqRunQso = dtext.contains (" " + m_baseCall + " ") || dtext.contains ("/" + m_baseCall + " ")
+     || dtext.contains (" " + m_baseCall + "/");
   if(dtext.contains (" " + m_baseCall + " ")
      || dtext.contains ("/" + m_baseCall + " ")
      || dtext.contains (" " + m_baseCall + "/")
@@ -6185,11 +6206,14 @@ void MainWindow::on_propLineEdit_textChanged(const QString &text) {
 void MainWindow::on_dxCallEntry_textChanged(const QString &t) //dxCall changed
 {
   int n=t.length();
+  QString const prevCall = m_hisCall;
   if (n < 3 ) {
       if (t != t.toUpper().trimmed()) ui->dxCallEntry->setText(t.toUpper().trimmed());
       if (m_hisCall.isEmpty()) { m_hisCallCompound=false; return; }
       else m_hisCall.clear();
   } else m_hisCall=t.toUpper().trimmed();
+  // JTDX-VU: a new or typed DX call is not from our CQ until shown otherwise
+  if (m_hisCall != prevCall) m_cqRunQso = false;
   // JTDX-VU: JTTY has no auto-sequencer to stamp the QSO start; take it from
   // when the DX call was picked or typed, or every QSO logs a stale start
   if (m_mode == "JTTY" && !m_hisCall.isEmpty()) {
@@ -8506,6 +8530,8 @@ void MainWindow::updateCnsButton ()
           "Esc, Halt Tx, sending anything else or picking a DX call stops it too.")
     : tr ("Auto CQ (Call Non-Stop): after each logged QSO go straight back to CQ / the next caller "
           "instead of halting Tx. A station that does not answer is dropped after the AutoSeq "
-          "counters, as usual. The Tx watchdog still stops Tx: while this is on it is the Auto CQ\n"
+          "counters, as usual. Only QSOs from your own CQ continue: when you answer someone, Tx "
+          "halts after that QSO, as with 1 QSO. Off in Hound mode. The Tx watchdog still stops Tx: "
+          "while this is on it is the Auto CQ\n"
           "time limit in Settings > JTTY (5 min by default)."));
 }

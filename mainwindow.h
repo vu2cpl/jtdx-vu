@@ -682,6 +682,7 @@ private:
   ClubLog *m_clubLog {nullptr};  // JTDX-VU
   BandModeSwitcher *m_switcher {nullptr};  // JTDX-VU
   bool m_nonstop {false};  // JTDX-VU Non-stop (Tx watchdog still applies)
+  bool m_cqRunQso {false}; // JTDX-VU: this QSO answers our CQ - only then does Non-stop continue
   JttyPanel *m_jttyPanel {nullptr};   // JTDX-VU JTTY
   QAction *m_actionJTTY {nullptr};
   QAction *m_actionFT2 {nullptr};
@@ -854,6 +855,8 @@ private:
   void switch_to_band (QString const& band);  // JTDX-VU band button
   bool nonstop_continue ();  // JTDX-VU Non-stop: keep going after a logged QSO
   int watchdog_minutes () const;  // JTDX-VU: the Auto CQ time limit while Non-stop, else Settings
+  bool nonstop_active () const;  // JTDX-VU: Non-stop on and not in Hound mode
+  bool singleshot_now () const;  // JTDX-VU: 1 QSO, or Non-stop with a QSO we answered
   // JTDX-VU JTTY (mainwindow_jtty.cpp)
   bool jtty_decode (int k);
   void openWavFile (QString const&);   // JTDX-VU: File > Open body, also JTDXVU_OPEN_WAV

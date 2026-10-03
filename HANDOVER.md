@@ -152,6 +152,29 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-03 — CNS continues only after QSOs from our own CQ (unreleased)
+
+Manoj: continuous QSOs should not happen unless we are CQing - not when
+we answer others, and not in Fox/Hound-style special modes; "use 1 QSO
+logic automatically for when I answer them".
+
+- `m_cqRunQso`: set when the DX call comes from a station calling us -
+  autoselect with a status other than RCQ/SCQ/SCALL, or a double-click
+  on a decode that contains our call. Any other pick (their CQ, a
+  third-party QSO, a typed call) leaves it false; a DX call change
+  resets it (`on_dxCallEntry_textChanged`).
+- `singleshot_now()` = 1 QSO, or CNS with a DX call not from our CQ.
+  `process_Auto()` takes it once at the top (before clearDX) and uses
+  it wherever it used `m_singleshot`; the readFromStdout 73 check too.
+  So an answered QSO halts at the end (and on give-up) exactly as 1 QSO.
+- `nonstop_active()` = CNS and not Hound (JTDX has no Fox mode; the
+  SpecOp contest code is commented out, so Hound is the only special
+  mode). Used for the continue branch, `nonstop_continue()` and the
+  watchdog limit.
+- While CNS is active the "call priority + search CQ" autoselect
+  (`time=1`) is off, so a CQ run never jumps onto someone else's CQ.
+- Builds clean; **not yet tested** (needs real callers / a CQ to answer).
+
 ### 2026-10-02 — Decode panes split about half each, in every mode
 
 Manoj, after the resize fix: "left pane and right pane should be almost
@@ -1378,6 +1401,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **Even decode-pane split + resize fix:** released in v0.5.1,
       Manoj: "its fine now". Check
       the minimum on a Linux / Windows font.
+- [ ] **CNS only after our own CQ** (2026-10-03, unreleased): check on
+      air - a CQ run continues; answering a CQ halts after that QSO;
+      Hound halts as before.
 - [ ] **Auto CQ time limit:** released in v0.5.1;
       check on air in JTTY and with CNS in FT8.
 - [ ] **JTTY Auto CQ on air:** installed 2026-10-01; check

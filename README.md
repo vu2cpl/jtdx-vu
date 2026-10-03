@@ -159,7 +159,11 @@ or Pi 5 is recommended.
   partner always shows, and the Rx Frequency pane is never filtered.
 - **Call Non-Stop:** the **Auto CQ** button in the right-hand button
   column (under AnsB4), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
-  or the next caller instead of halting Tx. A station that doesn't
+  or the next caller instead of halting Tx. Only QSOs from your own CQ
+  continue: when you answer someone (double-click their CQ or QSO), Tx
+  halts after that QSO, as with **1 QSO**, and while CNS is on AutoSeq
+  answers only stations calling you, never other CQs. CNS is off in
+  Hound mode. A station that doesn't
   answer is dropped after the AutoSeq counters (Settings > Sequencing),
   as usual. While CNS is on the Tx watchdog is the **Auto CQ time
   limit** (Settings > JTTY, 5 minutes by default; 10 minutes fixed up to
