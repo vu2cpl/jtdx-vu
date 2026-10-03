@@ -181,6 +181,9 @@ in v0.5.2.
   reconnected". Quit while retrying at 2, 5.3, 6.2 and 10.5 s after the
   drop: exit 0, no crash reports. Not yet tried with AetherSDR or TCI
   audio.
+- Installed in /Applications 2026-10-03 (local build of `ea5630c3`,
+  0.5.2); v0.5.2 re-cut on `ea5630c3` (first cut on `05360fe3` had only
+  the CNS change, deleted after ~20 min with Manoj's OK).
 
 ### 2026-10-03 — CNS continues only after QSOs from our own CQ (v0.5.2)
 
