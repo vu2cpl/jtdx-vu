@@ -97,7 +97,8 @@ Last updated: 2026-10-03
   pre-migration .ini (`JTDX-VU.ini.before-redesign`) are in
   `~/Desktop/jdxvu/prev-install/`.
 - **Installed app:** `/Applications/JTDX-VU.app` is v0.5.2 + the
-  status-bar fix (`972b762b`), installed 2026-10-03. It was built locally, so
+  status-bar fix + Auto CQ under Monitor (`41936ec2`), installed
+  2026-10-03. It was built locally, so
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
