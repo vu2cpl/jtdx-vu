@@ -8,7 +8,7 @@ Last updated: 2026-10-03
   secret scan, see below). Default branch `jtdx-vu`. The `upstream`
   remote is `jtdx-project/jtdx`; upstream has been dormant since
   2022-03 at tag 159.
-- **Version:** JTDX-VU **0.5.1** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.5.2** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -17,7 +17,10 @@ Last updated: 2026-10-03
   the TCI quit crash, the Settings dialog on small screens and JTTY
   logging (599, MFSK/JTTY, start time); v0.5.0 gives JTTY its own
   screen (QSO fields, calls heard, 24 macros, type-ahead); v0.5.1 adds
-  the Auto CQ time limit and fixes window resizing and the pane split.
+  the Auto CQ time limit and fixes window resizing and the pane split;
+  v0.5.2 keeps CNS to our own CQ runs (off in Hound), switches Auto CQ /
+  AnsB4 / 1 QSO off on a band change, and adds TCI auto-reconnect and a
+  TCI audio watchdog.
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -35,6 +38,23 @@ Last updated: 2026-10-03
     v0.5.0). Pushed early by the website session (`07b899a`) with two
     "Building" placeholder rows; direct links restored in `3d34286` once
     all eight URLs answered 206.
+- **Release v0.5.2: COMPLETE 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.2,
+  tag `v0.5.2` on `4ba63a58`. Cut three times the same morning, each
+  time with Manoj's OK: `05360fe3` (CQ-only CNS), `ea5630c3` (+ TCI
+  reconnect), `4ba63a58` (+ audio watchdog, band-change switch-off); the
+  earlier two were deleted, so early downloaders may have an older 0.5.2.
+  - CI run 37108417045 (macOS) and 37108417041 (Windows), green. All
+    four builds plus `.sha256` downloaded anonymously, every checksum OK,
+    arm64 app reports 0.5.2 with the band-change code; copies in
+    `~/Desktop/jdxvu/v0.5.2/`.
+  - Pi `.deb` from `4ba63a58` on meridianpi5 (prefix /usr/local, cmake
+    re-run): `apt-get install -s` clean, uploaded by hand.
+  - Website: project page paragraph "CQ-only Call Non-Stop, TCI
+    reconnect and band-change safety (v0.5.2)", table / release link /
+    apt command on v0.5.2, card sentence; pushed (`3e6be2d`, `e794f79`,
+    rebased over the Club Log refresh) after all eight URLs answered.
+  - **Not in v0.5.2:** the status-bar overlap fix (`776ef8e0`), next
+    release.
 - **Release v0.5.1: COMPLETE 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.1,
   tag `v0.5.1` on `89a3b8b5`. Ships the three fixes made after v0.5.0:
   Auto CQ time limit, main-window resize, even decode-pane split (see
@@ -76,7 +96,7 @@ Last updated: 2026-10-03
   11:40, re-installed 11:45 (tidied layout) and 11:55 (no CW ID)** (bundle of `6ae5e051`'s code). Previous v0.4.0 app and the
   pre-migration .ini (`JTDX-VU.ini.before-redesign`) are in
   `~/Desktop/jdxvu/prev-install/`.
-- **Installed app:** `/Applications/JTDX-VU.app` is v0.5.1 (`89a3b8b5`),
+- **Installed app:** `/Applications/JTDX-VU.app` is v0.5.2 (`4ba63a58`),
   installed 2026-10-03. It was built locally, so
   it runs on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
