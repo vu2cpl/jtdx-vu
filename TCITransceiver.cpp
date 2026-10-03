@@ -271,6 +271,9 @@ void TCITransceiver::onConnected()
 void TCITransceiver::onDisconnected()
 {
     inConnected = false;
+    // JTDX-VU: an unexpected drop (the SDR program closed or restarted) -
+    // the next poll reports it, so the main window can reconnect
+    if (tci_Ready && error_.isEmpty ()) error_ = tr ("TCI connection lost");
 //    printf("%s(%0.1f) TCI disconnected\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset());
 #if JTDX_DEBUG_TO_FILE
     FILE * pFile = fopen (debug_file_.c_str(),"a");

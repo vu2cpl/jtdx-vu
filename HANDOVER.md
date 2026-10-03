@@ -152,7 +152,37 @@ Last updated: 2026-10-03
 
 ## What changed
 
-### 2026-10-03 — CNS continues only after QSOs from our own CQ (unreleased)
+### 2026-10-03 — TCI reconnects automatically (v0.5.2)
+
+Manoj: "why is tci not reconnecting after update?" - AetherSDR had been
+restarted (12:42:56) and JTDX-VU never reconnects to TCI: stock JTDX's
+`onDisconnected()` only clears a flag; the poll then fails, and
+`rigFailure()` tries once at once (the SDR program isn't back yet) and
+then shows the modal Rig Control Error box. He asked for auto-reconnect
+in v0.5.2.
+
+- `TCITransceiver::onDisconnected()`: an unexpected drop (`tci_Ready`)
+  sets `error_` "TCI connection lost" if `onError` didn't, so the next
+  poll reports it.
+- `MainWindow::handle_transceiver_failure()`: for a TCI rig, no dialog -
+  `m_tciReconnecting`, status "TCI: <reason> - reconnecting every 5 s",
+  single-shot `m_tciRetryTimer` (5 s) → `rigOpen()`; a failed attempt
+  comes back the same way. Skipped (re-armed) while a modal dialog such
+  as Settings is open; stops if the rig is no longer TCI.
+- `handle_transceiver_update()`: "TCI reconnected" on the first update
+  that is online with a frequency. The update sent while going offline
+  (frequency 0) must not count - it did in the first try and stopped the
+  retries.
+- **Verified** with new `tools/fake_tci.py` (stdlib websocket TCI
+  simulator: start-up burst, echoes sets, answers queries; port 50099)
+  and a throwaway `-r tcitest` instance (Rig TCI Client RX1, no TCI
+  audio): server killed for 12 s → failure, retry refused, retry →
+  connected 1 s after the server came back, 14.074 000 green, "TCI
+  reconnected". Quit while retrying at 2, 5.3, 6.2 and 10.5 s after the
+  drop: exit 0, no crash reports. Not yet tried with AetherSDR or TCI
+  audio.
+
+### 2026-10-03 — CNS continues only after QSOs from our own CQ (v0.5.2)
 
 Manoj: continuous QSOs should not happen unless we are CQing - not when
 we answer others, and not in Fox/Hound-style special modes; "use 1 QSO
@@ -1402,7 +1432,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **Even decode-pane split + resize fix:** released in v0.5.1,
       Manoj: "its fine now". Check
       the minimum on a Linux / Windows font.
-- [ ] **CNS only after our own CQ** (2026-10-03, unreleased): check on
+- [ ] **TCI auto-reconnect** (v0.5.2): try a real AetherSDR restart
+      with TCI audio on.
+- [ ] **CNS only after our own CQ** (v0.5.2): check on
       air - a CQ run continues; answering a CQ halts after that QSO;
       Hound halts as before.
 - [ ] **Auto CQ time limit:** released in v0.5.1;

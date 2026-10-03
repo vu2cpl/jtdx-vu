@@ -722,6 +722,8 @@ private:
   QTimer ptt1Timer;                 //StartTx delay
   QTimer ptt0Timer;                 //StopTx delay
   QTimer logQSOTimer;
+  QTimer m_tciRetryTimer;           // JTDX-VU: TCI auto-reconnect
+  bool m_tciReconnecting {false};
   QTimer killFileTimer;
   QTimer tuneButtonTimer;
   QTimer cqButtonTimer;

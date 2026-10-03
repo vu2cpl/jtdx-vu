@@ -880,6 +880,15 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   connect (&m_config, &Configuration::transceiver_TCIframesWritten, this, &MainWindow::dataSink);
   connect (&m_config, &Configuration::transceiver_TCImodActive, this, &MainWindow::tci_mod_active);
   connect (&m_config, &Configuration::transceiver_failure, this, &MainWindow::handle_transceiver_failure);
+  // JTDX-VU: TCI auto-reconnect - when the SDR program is closed or restarted,
+  // retry every 5 s (not while a dialog such as Settings is open)
+  m_tciRetryTimer.setSingleShot (true);
+  m_tciRetryTimer.setInterval (5000);
+  connect (&m_tciRetryTimer, &QTimer::timeout, this, [this] {
+    if (!m_tciReconnecting || !m_config.is_tci ()) { m_tciReconnecting = false; return; }
+    if (QApplication::activeModalWidget ()) { m_tciRetryTimer.start (); return; }
+    rigOpen ();
+  });
   connect (&m_config, &Configuration::udp_server_changed, m_messageClient, &MessageClient::set_server);
   connect (&m_config, &Configuration::udp_server_port_changed, m_messageClient, &MessageClient::set_server_port);
 
@@ -7619,6 +7628,10 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
   displayDialFrequency ();
   ui->readFreq->setStyleSheet(ui->readFreq->styleSheet().left(230)+QString("background: %1;\n color: %2;\n}").arg(Radio::convert_dark("#00ff00",m_useDarkStyle),Radio::convert_dark("#000000",m_useDarkStyle)));
   m_rigOk=true;
+  if (m_tciReconnecting && s.online () && s.frequency ()) {   // not the update sent while going offline
+    m_tciReconnecting = false;
+    showStatusMessage (tr ("TCI reconnected"));
+  }
   ui->readFreq->setEnabled (false);
   ui->readFreq->setText (s.split () ? "S" : "");
   if(m_config.write_decoded_debug()) {
@@ -7635,6 +7648,14 @@ void MainWindow::handle_transceiver_failure (QString const& reason)
   m_rigOk=false;
   ui->readFreq->setEnabled (true);
   haltTx("Rig control error: " + reason + " ");
+  // JTDX-VU: TCI - keep retrying quietly instead of the Rig Control Error
+  // dialog, so it comes back on its own once the SDR program is running again
+  if (m_config.is_tci ()) {
+    m_tciReconnecting = true;
+    showStatusMessage (tr ("TCI: %1 - reconnecting every 5 s").arg (reason));
+    m_tciRetryTimer.start ();
+    return;
+  }
   rigFailure (tr("Rig Control Error"), reason);
 }
 

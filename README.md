@@ -157,6 +157,11 @@ or Pi 5 is recommended.
   changing it re-filters every decode already on screen, and a
   just-worked station drops out. Traffic with your call and your QSO
   partner always shows, and the Rx Frequency pane is never filtered.
+- **TCI reconnects on its own** (since v0.5.2). If the SDR program
+  (AetherSDR, ExpertSDR, Thetis, ...) is closed or restarted, Tx halts
+  and the status bar says "TCI: ... reconnecting every 5 s" instead of
+  the Rig Control Error box; once the SDR program is back it shows "TCI
+  reconnected" and carries on. Other rig types behave as before.
 - **Call Non-Stop:** the **Auto CQ** button in the right-hand button
   column (under AnsB4), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
   or the next caller instead of halting Tx. Only QSOs from your own CQ
