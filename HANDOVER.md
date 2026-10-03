@@ -196,6 +196,10 @@ common by the new messages.
   confirmation of the audio watchdog**. To avoid it when installing:
   copy first while the app runs is unsafe, so restart AetherSDR after,
   or relaunch inside 10 s.
+- Manoj then restarted AetherSDR (14:12:13) with JTDX-VU left running:
+  the same JTDX-VU process (PID 31020) reconnected on its own (new local
+  port) and audio flowed again (7 MB within seconds) - **TCI
+  auto-reconnect + audio recovery confirmed live**, no JTDX-VU restart.
 
 ### 2026-10-03 — Auto CQ, AnsB4 and 1 QSO switch off on a band change (v0.5.2)
 
@@ -1535,8 +1539,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **Even decode-pane split + resize fix:** released in v0.5.1,
       Manoj: "its fine now". Check
       the minimum on a Linux / Windows font.
-- [ ] **TCI auto-reconnect + audio watchdog** (v0.5.2): try a real
-      AetherSDR restart with TCI audio on; watch for false "no audio"
+- [ ] **TCI audio watchdog** (v0.5.2): reconnect and recovery confirmed
+      live with AetherSDR 2026-10-03; still watch for false "no audio"
       alarms during long JTTY sends or band changes.
 - [ ] **AetherSDR TCI audio bug** is upstream
       [aethersdr/AetherSDR#6006](https://github.com/aethersdr/AetherSDR/issues/6006)
