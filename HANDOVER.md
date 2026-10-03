@@ -152,6 +152,40 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-03 — TCI audio watchdog (v0.5.2)
+
+After installing the reconnect build, TCI connected (CAT fine, 21.074)
+but no audio. A stdlib probe client sent `audio_start:0` to AetherSDR
+26.9.5: acknowledged, 0 bytes of audio in 3 s - AetherSDR's fault, not
+JTDX-VU's. Its `TciServer.cpp`: when the last audio client sends
+`audio_stop` *or disconnects*, `scheduleDaxRelease()` releases DAX after
+`kDaxReleaseGraceMs` (10 s); a later `audio_start` should re-arm through
+`ensureDaxForTci()`, and that failed here (old JTDX-VU quit 13:00:30,
+new one started 13:01:52, 80 s gap). Restarting AetherSDR fixed it.
+Skipping `audio_stop` on quit would not help (disconnect does the same).
+Manoj: "this is not a fix" - report it upstream and add detection in
+v0.5.2.
+
+- `TCITransceiver`: `last_rx_audio_ms_` is stamped on every receive
+  audio frame for our receiver (before the `audio_` check, so Monitor off
+  still counts). `do_poll()`: with TCI audio on and connected, 10 s
+  without audio (not while PTT) → send `audio_stop` + `audio_start` once
+  (`audio_rearmed_`); 10 s more → `error_` "no audio from the SDR
+  program - restart it", so the poll fails and the reconnect loop runs.
+- `MainWindow`: `m_tciNoAudio` (reason contains "no audio") keeps the
+  warning after a reconnect ("TCI reconnected, still no audio from the
+  SDR program - restart it") until `dataSink()` sees frames: "TCI audio
+  back".
+- `tools/fake_tci.py` now streams silent 48 kHz float32 stereo receive
+  audio after `audio_start`, unless `<log>.mute` exists (AetherSDR's
+  stuck state). Gotcha: a websocket frame under 64 KiB must use the
+  16-bit length - Qt drops the connection on the 64-bit form.
+- **Verified** (`-r tcitest`, TCI audio on): 25 s of audio, no re-arm;
+  mute → re-arm at +10 s, reconnect at +20 s, repeating; unmute → audio
+  back on the current connection, no more drops; status messages as
+  above; quit exit 0, no crash report.
+- AetherSDR issue drafted (see Open items).
+
 ### 2026-10-03 — TCI reconnects automatically (v0.5.2)
 
 Manoj: "why is tci not reconnecting after update?" - AetherSDR had been
@@ -1435,8 +1469,12 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **Even decode-pane split + resize fix:** released in v0.5.1,
       Manoj: "its fine now". Check
       the minimum on a Linux / Windows font.
-- [ ] **TCI auto-reconnect** (v0.5.2): try a real AetherSDR restart
-      with TCI audio on.
+- [ ] **TCI auto-reconnect + audio watchdog** (v0.5.2): try a real
+      AetherSDR restart with TCI audio on; watch for false "no audio"
+      alarms during long JTTY sends or band changes.
+- [ ] **AetherSDR bug report** (TCI audio not re-armed after the 10 s
+      DAX release): draft in `docs/aethersdr-tci-audio-issue.md`; Manoj
+      to post, or say so.
 - [ ] **CNS only after our own CQ** (v0.5.2): check on
       air - a CQ run continues; answering a CQ halts after that QSO;
       Hound halts as before.

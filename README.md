@@ -162,6 +162,12 @@ or Pi 5 is recommended.
   and the status bar says "TCI: ... reconnecting every 5 s" instead of
   the Rig Control Error box; once the SDR program is back it shows "TCI
   reconnected" and carries on. Other rig types behave as before.
+  With TCI audio on, JTDX-VU also watches the receive audio: if none
+  arrives for 10 s (Tx aside), it asks for it again once, then says
+  "no audio from the SDR program - restart it" and keeps retrying until
+  audio is back ("TCI audio back"). AetherSDR 26.9.5 can stop sending
+  TCI audio after the last audio client has been gone for over 10 s;
+  restarting AetherSDR clears it, JTDX-VU can stay open.
 - **Call Non-Stop:** the **Auto CQ** button in the right-hand button
   column (under AnsB4), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
   or the next caller instead of halting Tx. Only QSOs from your own CQ

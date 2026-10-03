@@ -2,8 +2,11 @@
 # usage: fake_tci.py <log file> [port, default 50099]
 # Sends the start-up burst (protocol ... start; ready;), echoes every "set"
 # command back as the new state and answers queries from that state, the way
-# an SDR program does. No audio, no IQ. Kill it to simulate the SDR program
-# closing; start it again to see the client reconnect.
+# an SDR program does. After audio_start it streams silent receive audio
+# (48 kHz float32 stereo frames) - unless the file <log file>.mute exists,
+# which imitates an SDR program that acknowledges audio_start but sends
+# nothing (AetherSDR 26.9.5 after its DAX release). No IQ. Kill it to
+# simulate the SDR program closing; start it again to see the client reconnect.
 import socket, hashlib, base64, threading, time, sys, struct
 G = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 log = open(sys.argv[1], 'a', buffering=1)
@@ -60,6 +63,23 @@ def reply(cmd):
         state[key] = ",".join(args[k:])
     return key + ("," if k else ":") + state.get(key, "0") + ";"
 
+import os
+MUTE = sys.argv[1] + ".mute"
+def audio_frame():
+    n = 2048                               # float32 stereo samples per frame
+    hdr = struct.pack("<16I", 0, 48000, 3, 0, 0, n * 2, 1, 2, *([0] * 8))
+    return hdr + bytes(n * 2 * 4)
+
+def stream_audio(c, alive, lock):
+    f = audio_frame(); n = len(f)
+    ws = (bytes([0x82, 126]) + struct.pack(">H", n) if n < 65536 else bytes([0x82, 127]) + struct.pack(">Q", n)) + f
+    while alive[0]:
+        if not os.path.exists(MUTE):
+            try:
+                with lock: c.sendall(ws)
+            except OSError: return
+        time.sleep(2048 / 48000)
+
 def serve(c):
     req = b""
     while b"\r\n\r\n" not in req:
@@ -73,14 +93,22 @@ def serve(c):
     c.sendall(frame("protocol:fake,1.5;device:FakeSDR;receive_only:false;trx_count:2;channels_count:2;"
                     "vfo:0,0,%s;modulation:0,%s;split_enable:0,false;drive:50;start;ready;"
                     % (state["vfo:0,0"], state["modulation:0"])))
+    alive = [False]
+    lock = threading.Lock()
     try:
         for msg in frames(c):
             for cmd in filter(None, msg.split(";")):
                 r = reply(cmd)
+                if cmd.startswith("audio_start") and not alive[0]:
+                    alive[0] = True
+                    threading.Thread(target=stream_audio, args=(c, alive, lock), daemon=True).start()
+                elif cmd.startswith("audio_stop"):
+                    alive[0] = False
                 if not cmd.startswith("rx_smeter"): log.write("%.3f < %s  > %s\n" % (time.time(), cmd, r))
-                c.sendall(frame(r))
+                with lock: c.sendall(frame(r))
     except OSError:
         pass
+    alive[0] = False
     log.write("%.3f closed\n" % time.time())
 
 s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

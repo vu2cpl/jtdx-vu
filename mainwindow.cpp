@@ -1980,6 +1980,10 @@ void MainWindow::writeHaltTxEvent(QString reason)
 //-------------------------------------------------------------- dataSink()
 void MainWindow::dataSink(qint64 frames)
 {
+  if (m_tciNoAudio && m_tci) {   // JTDX-VU: TCI audio is flowing again
+    m_tciNoAudio = false;
+    showStatusMessage (tr ("TCI audio back"));
+  }
   static float s[NSMAX];
   static int ihsym=0;
   static int ihsymlast=52;
@@ -7630,7 +7634,8 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
   m_rigOk=true;
   if (m_tciReconnecting && s.online () && s.frequency ()) {   // not the update sent while going offline
     m_tciReconnecting = false;
-    showStatusMessage (tr ("TCI reconnected"));
+    showStatusMessage (m_tciNoAudio ? tr ("TCI reconnected, still no audio from the SDR program - restart it")
+                                    : tr ("TCI reconnected"));
   }
   ui->readFreq->setEnabled (false);
   ui->readFreq->setText (s.split () ? "S" : "");
@@ -7652,6 +7657,7 @@ void MainWindow::handle_transceiver_failure (QString const& reason)
   // dialog, so it comes back on its own once the SDR program is running again
   if (m_config.is_tci ()) {
     m_tciReconnecting = true;
+    if (reason.contains ("no audio")) m_tciNoAudio = true;   // TCITransceiver::do_poll watchdog
     showStatusMessage (tr ("TCI: %1 - reconnecting every 5 s").arg (reason));
     m_tciRetryTimer.start ();
     return;

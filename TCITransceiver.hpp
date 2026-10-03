@@ -333,6 +333,8 @@ private:
   QByteArray m_tx1[8];
   int tx_fifo, tx_fifo2;
   quint32 last_type;  
+  qint64 last_rx_audio_ms_ {0};   // JTDX-VU: TCI audio watchdog
+  bool audio_rearmed_ {false};
   std::string debug_file_;
   std::string wav_file_;
   std::mutex mtx_;

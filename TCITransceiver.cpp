@@ -3,6 +3,7 @@
 #include <QRegularExpression>
 #include <QLocale>
 #include <QThread>
+#include <QDateTime>
 #include <qmath.h>
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
 #include <QRandomGenerator>
@@ -394,6 +395,8 @@ int TCITransceiver::do_start (JTDXDateTime * jtdxtime)
   requested_stream_audio_ = false;
   stream_audio_ = false;
   _power_ = false;
+  last_rx_audio_ms_ = 0;
+  audio_rearmed_ = false;
 //  printf ("%s(%0.1f) TCI open %s rig_power:%d rig_power_off:%d tci_audio:%d do_snr:%d do_pwr:%d\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),url_.toString().toStdString().c_str(),rig_power_,rig_power_off_,tci_audio_,do_snr_,do_pwr_);
 #if JTDX_DEBUG_TO_FILE
   pFile = fopen (debug_file_.c_str(),"a");
@@ -962,6 +965,11 @@ void TCITransceiver::onBinaryReceived(const QByteArray &data)
           }
         }
 #endif
+    }
+    // JTDX-VU: audio watchdog - any receive audio counts, also with Monitor off
+    if (pStream->type == RxAudioStream && pStream->receiver == rx_.toUInt()) {
+        last_rx_audio_ms_ = QDateTime::currentMSecsSinceEpoch ();
+        audio_rearmed_ = false;
     }
     if (pStream->type == Iq_Stream){
         bool tx = false;
@@ -1548,6 +1556,25 @@ void TCITransceiver::do_poll ()
     fprintf (pFile,"%s(%0.1f) TCI do_poll |%s| split:%d ptt:%d rx_busy:%d tx_busy:%d level:%d power:%d\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),error_.toStdString().c_str(),state ().split (),state (). ptt (),busy_rx_frequency_,busy_other_frequency_,level_,power_);
     fclose (pFile);
 #endif
+  }
+  // JTDX-VU: TCI audio watchdog. Connected with TCI audio on, but no receive
+  // audio for 10 s (not counting Tx): ask for it again once; if it still does
+  // not come, report it, so the main window reconnects and says so. Seen with
+  // AetherSDR 26.9.5, which can stop sending audio after the last audio client
+  // has been gone for more than 10 s, while still answering audio_start.
+  if (tci_audio_ && tci_Ready && inConnected && error_.isEmpty ()) {
+    qint64 const now = QDateTime::currentMSecsSinceEpoch ();
+    if (PTT_ || last_rx_audio_ms_ == 0) last_rx_audio_ms_ = now;
+    else if (now - last_rx_audio_ms_ > 10000) {
+      if (!audio_rearmed_) {
+        audio_rearmed_ = true;
+        last_rx_audio_ms_ = now;
+        sendTextMessage (CmdAudioStop + SmDP + rx_ + SmTZ);
+        sendTextMessage (CmdAudioStart + SmDP + rx_ + SmTZ);
+      } else {
+        error_ = tr ("no audio from the SDR program - restart it");
+      }
+    }
   }
   if (/*!inConnected && */!error_.isEmpty()) {tci_Ready = false; throw error {error_};}
   else if (!tci_Ready) throw error {tr ("TCI could not be opened")};

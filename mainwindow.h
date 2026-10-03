@@ -724,6 +724,7 @@ private:
   QTimer logQSOTimer;
   QTimer m_tciRetryTimer;           // JTDX-VU: TCI auto-reconnect
   bool m_tciReconnecting {false};
+  bool m_tciNoAudio {false};        // JTDX-VU: dropped for lack of TCI audio, until audio arrives
   QTimer killFileTimer;
   QTimer tuneButtonTimer;
   QTimer cqButtonTimer;
