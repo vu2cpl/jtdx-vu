@@ -50,7 +50,9 @@ Last updated: 2026-10-03
     clean, Conflicts: jtdx, uploaded by hand.
   - Local Mac build of `bcad6f8c` (0.5.3) bundled but **not installed**:
     JTDX-VU was running; the installed `41936ec2` is the same code.
-  - Website: not updated yet for v0.5.3 (asked Manoj).
+  - Website: paragraph "Auto CQ in one place (v0.5.3)" (with the
+    AetherSDR #6006 note), table / release link / apt command on v0.5.3,
+    card sentence; pushed (`f212028`) after all eight URLs answered 206.
 - **Release v0.5.2: COMPLETE 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.2,
   tag `v0.5.2` on `4ba63a58`. Cut three times the same morning, each
   time with Manoj's OK: `05360fe3` (CQ-only CNS), `ea5630c3` (+ TCI
