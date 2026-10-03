@@ -173,7 +173,8 @@ logic automatically for when I answer them".
   watchdog limit.
 - While CNS is active the "call priority + search CQ" autoselect
   (`time=1`) is off, so a CQ run never jumps onto someone else's CQ.
-- Builds clean; **not yet tested** (needs real callers / a CQ to answer).
+- Builds clean; installed in /Applications 2026-10-03 (`4deff926`, still
+  shows 0.5.1). **Not yet tested** (needs real callers / a CQ to answer).
 
 ### 2026-10-02 — Decode panes split about half each, in every mode
 
