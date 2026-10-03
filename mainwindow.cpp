@@ -1982,7 +1982,7 @@ void MainWindow::dataSink(qint64 frames)
 {
   if (m_tciNoAudio && m_tci) {   // JTDX-VU: TCI audio is flowing again
     m_tciNoAudio = false;
-    showStatusMessage (tr ("TCI audio back"));
+    showStatusMessage (tr ("TCI audio back"), 10000);
   }
   static float s[NSMAX];
   static int ihsym=0;
@@ -2199,7 +2199,7 @@ QString MainWindow::save_wave_file (QString const& name, short const * data, int
 
 void MainWindow::showSoundInError(const QString& errorMsg) { JTDXMessageBox::critical_message(this, "", tr("Error in SoundInput"), errorMsg); }
 void MainWindow::showSoundOutError(const QString& errorMsg) { JTDXMessageBox::critical_message(this, "", tr("Error in SoundOutput"), errorMsg); }
-void MainWindow::showStatusMessage(const QString& statusMsg) { statusBar()->showMessage(statusMsg); }
+void MainWindow::showStatusMessage(const QString& statusMsg, int timeout) { statusBar()->showMessage(statusMsg, timeout); }
 
 void MainWindow::on_actionSettings_triggered()               //Setup Dialog
 {
@@ -2654,7 +2654,7 @@ void MainWindow::band_change_reset ()
   if (m_cnsButton && m_cnsButton->isChecked ()) { m_cnsButton->setChecked (false); off << tr ("Auto CQ"); }
   if (ui->actionAnswerWorkedB4->isChecked ()) { ui->actionAnswerWorkedB4->setChecked (false); off << tr ("AnsB4"); }
   if (ui->actionSingleShot->isChecked ()) { ui->actionSingleShot->setChecked (false); off << tr ("1 QSO"); }
-  if (!off.isEmpty ()) showStatusMessage (tr ("Band changed: %1 switched off").arg (off.join (", ")));
+  if (!off.isEmpty ()) showStatusMessage (tr ("Band changed: %1 switched off").arg (off.join (", ")), 10000);
 }
 
 void MainWindow::displayDialFrequency ()
@@ -2888,6 +2888,7 @@ void MainWindow::createStatusBar()                           //createStatusBar
   txwatchdog_label->setMinimumSize(QSize(52,20));
   txwatchdog_label->setFrameStyle(QFrame::Panel | QFrame::Sunken);
   statusBar()->addWidget(txwatchdog_label);
+  connect (statusBar (), &QStatusBar::messageChanged, this, [this] (QString const&) {update_watchdog_label ();});
   update_watchdog_label ();
 
 
@@ -7648,8 +7649,8 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
   m_rigOk=true;
   if (m_tciReconnecting && s.online () && s.frequency ()) {   // not the update sent while going offline
     m_tciReconnecting = false;
-    showStatusMessage (m_tciNoAudio ? tr ("TCI reconnected, still no audio from the SDR program - restart it")
-                                    : tr ("TCI reconnected"));
+    if (m_tciNoAudio) showStatusMessage (tr ("TCI reconnected, still no audio from the SDR program - restart it"));
+    else showStatusMessage (tr ("TCI reconnected"), 10000);
   }
   ui->readFreq->setEnabled (false);
   ui->readFreq->setText (s.split () ? "S" : "");
@@ -8493,7 +8494,9 @@ void MainWindow::update_watchdog_label ()
   if (watchdog_minutes () && !m_mode.startsWith ("WSPR"))
     {
       txwatchdog_label->setText (QString {tr("WD %1m")}.arg (watchdog_minutes () - m_idleMinutes));
-      txwatchdog_label->setVisible (true);
+      // JTDX-VU: a status-bar message hides the normal widgets; showing this
+      // one anyway drew "WD Nm" on top of the message text
+      txwatchdog_label->setVisible (statusBar ()->currentMessage ().isEmpty ());
     }
   else
     {

@@ -117,7 +117,7 @@ public:
 public slots:
   void showSoundInError(const QString& errorMsg);
   void showSoundOutError(const QString& errorMsg);
-  void showStatusMessage(const QString& statusMsg);
+  void showStatusMessage(const QString& statusMsg, int timeout = 0);
   void dataSink(qint64 frames);
   void tci_mod_active(bool on) {m_tci_mod_active = on;}
   void diskDat();

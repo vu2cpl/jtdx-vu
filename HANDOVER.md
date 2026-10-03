@@ -152,6 +152,24 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-03 — Status-bar text no longer drawn under "WD Nm" (after v0.5.2)
+
+Manoj: "text is being doubled" - screenshot: "Band changed: ..." with
+"WD 10m" drawn over it. A `QStatusBar` message hides the normal widgets,
+but stock `update_watchdog_label()` called `setVisible (true)` on every
+update, so the watchdog box came back on top of the text (also seen in
+the TCI tests: "WD 6m" over "TCI reconnected"). Stock JTDX bug, made
+common by the new messages.
+
+- `update_watchdog_label()` shows the label only while
+  `statusBar ()->currentMessage ()` is empty; `QStatusBar::messageChanged`
+  re-runs it, so the box returns when a message clears.
+- `showStatusMessage()` takes a timeout (default 0 = stays, as before).
+  "Band changed ...", "TCI reconnected" and "TCI audio back" clear after
+  10 s; the reconnecting / still-no-audio warnings stay until replaced.
+- **Verified** (`-r tcitest`, rig-side band change): message clean, no WD
+  box; after 10 s Receiving / FT8 / WD 6m / progress all back.
+
 ### 2026-10-03 — Auto CQ, AnsB4 and 1 QSO switch off on a band change (v0.5.2)
 
 Manoj: "auto cq, ans b4, 1 qso all are green even when changing bands" -
