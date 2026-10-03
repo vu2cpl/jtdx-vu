@@ -157,6 +157,13 @@ or Pi 5 is recommended.
   changing it re-filters every decode already on screen, and a
   just-worked station drops out. Traffic with your call and your QSO
   partner always shows, and the Rx Frequency pane is never filtered.
+- **AutoSeq goes for what your log needs first** (next release). Always
+  on, no switch: when picking a CQ to answer, and when choosing between
+  stations calling your CQ, AutoSeq takes a **new DXCC** first, then a
+  DXCC **new on this band**, then one **new in this mode** (the same
+  tests as the Show selector, from Club Log when enabled), and only then
+  the usual JTDX order. A wanted station is picked even when AnsB4 /
+  CallB4 are off; with none heard, nothing changes.
 - **A new band starts with no automatic calling** (since v0.5.2). Changing
   band - from the band buttons or combo box, or on the radio / SDR
   program - switches **Auto CQ**, **AnsB4** and **1 QSO** off, and the

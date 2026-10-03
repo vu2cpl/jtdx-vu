@@ -955,7 +955,8 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
     }
     if (show_line) {
         if (!checkCall.isEmpty () && (std_type == 1 || std_type == 2 || std_type == 4 || (std_type == 3 && !param.isEmpty()))) {
-            qsoHistory.message(checkCall,status,priority,param,tyyp,countryName.left(2),mpx,c_time,decodedText->report(),decodedText->frequencyOffset(),checkMode);
+            qsoHistory.message(checkCall,status,priority,param,tyyp,countryName.left(2),mpx,c_time,decodedText->report(),decodedText->frequencyOffset(),checkMode,
+                               jt65bc ? 0 : wanted (logBook, checkCall, dialFreq, meta.mode));  // JTDX-VU: auto-seq picks wanted first
         } 
         if (std_type == 2) {
             if(!redMarker_) std_type = 0;
@@ -1127,6 +1128,23 @@ bool DisplayText::needed (LogBook & logBook, LineMeta const& m, int level)
     default:
       return false;
     }
+}
+
+// JTDX-VU: how much our log wants this station, for auto-seq (always on,
+// whatever the colour settings): 3 = new DXCC, 2 = DXCC new on this band,
+// 1 = DXCC new in this mode (any band), 0 = not wanted / unknown entity.
+int DisplayText::wanted (LogBook & logBook, QString const& call, double dialFreq, QString const& mode)
+{
+  if (call.isEmpty ()) return 0;
+  QString country;
+  bool worked = true, workedSlot = true;
+  logBook.matchDXCC (call, country, worked, workedSlot);
+  if (country.isEmpty () || country.startsWith ("  ,?,")) return 0;
+  if (!worked) return 3;
+  logBook.matchDXCC (call, country, worked, workedSlot, dialFreq);
+  if (!workedSlot) return 2;
+  logBook.matchDXCC (call, country, worked, workedSlot, 0, mode);
+  return workedSlot ? 0 : 1;
 }
 
 void DisplayText::hide_last_block ()

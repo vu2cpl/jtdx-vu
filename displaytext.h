@@ -57,6 +57,7 @@ private:
       bool alwaysShow = false;
     };
     static bool needed (LogBook &, LineMeta const&, int level);
+    static int wanted (LogBook &, QString const& call, double dialFreq, QString const& mode);
     void refilter ();
     void hide_last_block ();
     LineMeta * pendingMeta_ = nullptr;

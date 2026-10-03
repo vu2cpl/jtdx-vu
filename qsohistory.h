@@ -20,7 +20,7 @@ class QsoHistory
 //                  0     1    2    3      4      5        6        7         8         9   10   11     12     13   14   15   16
 	enum Status {NONE, RFIN, RCQ, SCQ, RCALL, SCALL, RREPORT, SREPORT, RRREPORT, SRREPORT, RRR, SRR, RRR73, SRR73, R73, S73, FIN};
 	void init();
-	void message(QString const& callsign, Status status, int priority, QString const& param, QString const& tyyp, QString const& continent, QString const& mpx, unsigned time, QString const& rep, int freq,  QString const& mode);
+	void message(QString const& callsign, Status status, int priority, QString const& param, QString const& tyyp, QString const& continent, QString const& mpx, unsigned time, QString const& rep, int freq,  QString const& mode, int wanted = -1);
 	void rx(QString const& callsign, int freq);
 	void time(unsigned time);
 	void owndata (QString const& mycontinent, QString const& myprefix, QString const& mygrid, bool strictdirCQ);
@@ -46,6 +46,7 @@ class QsoHistory
 	  Status	status,srx_c,srx_p,stx_c,stx_p;
 	  unsigned	b_time,time;
 	  int		distance,rx,tx,count,priority;
+	  int		wanted = 0;	// JTDX-VU: 3 new DXCC, 2 new band, 1 new mode (our log)
 	   	
  	};
 
@@ -62,6 +63,8 @@ class QsoHistory
 	bool as_active = false;
 	bool _strictdirCQ = false;
 	QSO _CQ;
+	// JTDX-VU: wanted stations (new DXCC > band > mode) rank above all others
+	static int score (QSO const& q) {return q.wanted > 0 ? 100 * q.wanted + q.priority : q.priority;}
 	latlng _mylatlng;
 	int a_init = 0;
 	int b_init = 0;

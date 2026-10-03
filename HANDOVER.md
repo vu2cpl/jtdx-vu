@@ -186,6 +186,38 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-03 — AutoSeq picks wanted stations first (for the next release)
+
+Manoj: "auto seq to pickup wanted as per our log. that is new dxcc, mode
+or band". Choices he made: wanted first, then others (not wanted-only);
+also applies to callers answering our CQ; **always on, no button** ("make
+it universal. why need a button?").
+
+- `DisplayText::wanted()` (displaytext.cpp): 3 = DXCC never worked,
+  2 = DXCC not worked on this band, 1 = not worked in this mode on any
+  band, 0 = otherwise / unknown entity. Same `matchDXCC` tests as the
+  Show filter's `needed()`, but independent of the Notifications colour
+  settings (JTDX's own priority 20-23 only exists when those are on).
+  Passed into `QsoHistory::message()` as a new last argument (default -1
+  = leave as is, used for our own TX lines).
+- `QsoHistory::QSO::wanted`, reset to 0 when the QSO reaches FIN.
+  `QsoHistory::score()` = `100 * wanted + priority` for a wanted station,
+  else `priority`. All three autoselect loops (callers to our CQ, callers
+  not yet answered, others' CQs) now compare `score()` instead of
+  `priority`, so any wanted station outranks every non-wanted one,
+  DXCC > band > mode, then JTDX's priority, then signal/distance as
+  before. Score >= 100 also clears the AnsB4 / CallB4 thresholds
+  (`a_init` / `b_init` = 4). `prio` handed back to MainWindow is still
+  JTDX's priority, so the give-up counters behave as before.
+- Note: a wanted-by-log station now ranks above JTDX's Wanted Call /
+  Prefix / Country lists (priority 17-19) and above new CQZ/ITUZ.
+- **Verified** with a harness that links the real `qsohistory.cpp`
+  (scratch, not committed): new-mode DXCC beats a new grid with a better
+  signal; new DXCC beats new mode; nothing wanted → old order; CallB4 off
+  still picks a wanted prio-0 CQ but skips a plain worked one; our CQ: a
+  weak wanted caller is answered before a strong ordinary one, and with
+  no wanted caller the strongest goes first. Not yet tried on air.
+
 ### 2026-10-03 — Auto CQ in the same place in every mode (after v0.5.2)
 
 Manoj: "auto cq button is different in jtty and other modes. need to be
@@ -1547,6 +1579,13 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - The dialog renders, and a macOS notification arrives.
 
 ## Open items
+
+- [ ] **AutoSeq wanted-first** (unreleased, 2026-10-03): watch on air
+      that a new band/mode DXCC is picked over stronger ordinary CQs and
+      callers, and that it stops being picked once logged.
+- [ ] **Port wanted-first AutoSeq to MSHV-Mac private** (Manoj's TODO,
+      after this ships in JTDX-VU). MSHV has no QsoHistory; its own
+      auto-answer choice needs the same DXCC > band > mode ranking.
 
 - [ ] **Cache Hamlib in windows.yml.** It rebuilds from source every run
       and costs about 10 min.
