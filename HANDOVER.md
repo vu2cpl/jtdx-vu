@@ -8,7 +8,7 @@ Last updated: 2026-10-03
   secret scan, see below). Default branch `jtdx-vu`. The `upstream`
   remote is `jtdx-project/jtdx`; upstream has been dormant since
   2022-03 at tag 159.
-- **Version:** JTDX-VU **0.5.2** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.5.3** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -20,7 +20,8 @@ Last updated: 2026-10-03
   the Auto CQ time limit and fixes window resizing and the pane split;
   v0.5.2 keeps CNS to our own CQ runs (off in Hound), switches Auto CQ /
   AnsB4 / 1 QSO off on a band change, and adds TCI auto-reconnect and a
-  TCI audio watchdog.
+  TCI audio watchdog; v0.5.3 puts Auto CQ under Monitor in every mode
+  and stops the WD box covering status messages.
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -38,6 +39,18 @@ Last updated: 2026-10-03
     v0.5.0). Pushed early by the website session (`07b899a`) with two
     "Building" placeholder rows; direct links restored in `3d34286` once
     all eight URLs answered 206.
+- **Release v0.5.3: COMPLETE 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.3,
+  tag `v0.5.3` on `bcad6f8c`: Auto CQ under Monitor everywhere
+  (`41936ec2`), status-bar overlap fix (`776ef8e0`); notes add a "Known
+  issue (AetherSDR)" section pointing at aethersdr/AetherSDR#6006.
+  - CI run 37111236434 (macOS) and 37111236405 (Windows), green. All
+    four builds plus `.sha256` downloaded anonymously, every checksum OK,
+    arm64 app reports 0.5.3; copies in `~/Desktop/jdxvu/v0.5.3/`.
+  - Pi `.deb` on meridianpi5 (prefix /usr/local): `apt-get install -s`
+    clean, Conflicts: jtdx, uploaded by hand.
+  - Local Mac build of `bcad6f8c` (0.5.3) bundled but **not installed**:
+    JTDX-VU was running; the installed `41936ec2` is the same code.
+  - Website: not updated yet for v0.5.3 (asked Manoj).
 - **Release v0.5.2: COMPLETE 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.2,
   tag `v0.5.2` on `4ba63a58`. Cut three times the same morning, each
   time with Manoj's OK: `05360fe3` (CQ-only CNS), `ea5630c3` (+ TCI
@@ -53,8 +66,8 @@ Last updated: 2026-10-03
     reconnect and band-change safety (v0.5.2)", table / release link /
     apt command on v0.5.2, card sentence; pushed (`3e6be2d`, `e794f79`,
     rebased over the Club Log refresh) after all eight URLs answered.
-  - **Not in v0.5.2:** the status-bar overlap fix (`776ef8e0`), next
-    release.
+  - The status-bar overlap fix (`776ef8e0`) came after the tag; it is in
+    v0.5.3.
 - **Release v0.5.1: COMPLETE 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.1,
   tag `v0.5.1` on `89a3b8b5`. Ships the three fixes made after v0.5.0:
   Auto CQ time limit, main-window resize, even decode-pane split (see
