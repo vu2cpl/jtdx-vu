@@ -43,7 +43,25 @@ Last updated: 2026-10-03
     v0.5.0). Pushed early by the website session (`07b899a`) with two
     "Building" placeholder rows; direct links restored in `3d34286` once
     all eight URLs answered 206.
-- **Release v0.6.0: IN PROGRESS 2026-10-04** - version bump, tag, CI, Pi .deb, checks.
+- **Release v0.6.0: COMPLETE 2026-10-04** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.6.0,
+  tag `v0.6.0` on `b1592998`: wanted-first AutoSeq, right-click queue,
+  current-decode rule, redesigned Notifications page + New only tick +
+  Background highlight, TX/RX sliders, Auto CQ / 1 QSO exclusive, per-filter
+  wanted hiding, AnsB4 / 1 QSO kept on band change, JTTY heard = senders,
+  UDP errors on the status bar, Fake It split runaway fix. Notes say the
+  queue, wanted-first, sliders and Auto CQ / 1 QSO are not yet tried on air,
+  and that AetherSDR#6116 (TCI audio) is merged.
+  - CI run 37221289182 (macOS) and 37221289166 (Windows), green. All
+    four builds plus `.sha256` downloaded anonymously (200), every
+    checksum OK, arm64 app reports 0.6.0 / Rev b15929; copies in
+    `~/Desktop/jdxvu/v0.6.0/`.
+  - Pi `.deb` on meridianpi5 (prefix /usr/local): Version 0.6.0,
+    Conflicts: jtdx, `apt-get install -s` clean, uploaded by hand.
+  - Website: paragraph "AutoSeq goes for what you need, a station queue
+    and new Notifications settings (v0.6.0)", table / release link / apt
+    command on v0.6.0, card sentence; pushed (`14806fc`) after all eight
+    URLs answered 200.
+  - Not installed on the Mac mini yet (it runs the v0.5.3 build).
 - **Release v0.5.3: COMPLETE 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.3,
   tag `v0.5.3` on `bcad6f8c`: Auto CQ under Monitor everywhere
   (`41936ec2`), status-bar overlap fix (`776ef8e0`); notes add a "Known
