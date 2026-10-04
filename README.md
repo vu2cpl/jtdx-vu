@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.5.3
+# JTDX-VU for VUCG community — v0.6.0
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -127,7 +127,7 @@ or Pi 5 is recommended.
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.5.3"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.6.0"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -150,7 +150,7 @@ or Pi 5 is recommended.
   mode are shown green. Choose which buttons appear in View > Band &
   Mode Buttons....
 - **Show only needed decodes.** A **New only** tick above the decodes
-  (since the next release; a four-way "Show:" dropdown before) hides
+  (since v0.6.0; a four-way "Show:" dropdown before) hides
   everything that doesn't get a "new" colour from Settings > Notifications -
   so what counts as new (DXCC, on this band, in this mode, zones, grid,
   prefix, call) is chosen once, there. It uses Club Log when enabled, turns
@@ -158,33 +158,33 @@ or Pi 5 is recommended.
   already on screen, and a just-worked station drops out. Traffic with your
   call and your QSO partner always shows, and the Rx Frequency pane is never
   filtered.
-- **Notifications page redesigned** (next release): one row per kind of
+- **Notifications page redesigned** (since v0.6.0): one row per kind of
   "new" in priority order, each with its band / mode checks, colour squares
   and beep on one line, plus "Already worked", "Messages and markers" and a
   live preview.
-- **AutoSeq goes for what your log needs first** (next release). Always
+- **AutoSeq goes for what your log needs first** (since v0.6.0). Always
   on, no switch: when picking a CQ to answer, and when choosing between
   stations calling your CQ, AutoSeq takes a **new DXCC** first, then a
   DXCC **new on this band**, then one **new in this mode** (the same
   tests as the Show selector, from Club Log when enabled), and only then
   the usual JTDX order. A wanted station is picked even when AnsB4 /
   CallB4 are off; with none heard, nothing changes.
-- **Queue a station for AutoSeq** (next release). Right-click a decode
+- **Queue a station for AutoSeq** (since v0.6.0). Right-click a decode
   in either pane > **Queue CALL**. AutoSeq calls it the next time it is
   decoded (its CQ, or the end of its QSO), ahead of wanted stations and
   callers, in queue order, and takes it off the queue once logged. The
   queue shows above the Rx Frequency pane while it has calls; right-click
   there (or the decode again) to remove one, or clear it. A queued QSO
   counts as your own run, so CNS carries on afterwards. FT modes only.
-- **AutoSeq calls only stations decoded right now** (next release). JTDX
+- **AutoSeq calls only stations decoded right now** (since v0.6.0). JTDX
   could go back to a station that called your CQ up to 5 minutes ago and
   isn't heard any more; now every AutoSeq pick must be in the latest
   decode period.
-- **UDP errors on the status bar** (next release). A wrong or unreachable
+- **UDP errors on the status bar** (since v0.6.0). A wrong or unreachable
   UDP server (Settings > Reporting) used to pop up a "Network Error" box on
   every send; now the status bar says "UDP host:port: ... - check Settings >
   Reporting", and a failed name lookup is retried every 30 s.
-- **TX and RX sliders** (next release). The Pwr slider is now labelled
+- **TX and RX sliders** (since v0.6.0). The Pwr slider is now labelled
   **TX**. With TCI audio it shows the SDR program's own drive setting and
   moves with it, so nothing changes the radio's power until you move it
   (it used to show 0 after a start, and moving it set the SDR program's RF
@@ -192,7 +192,7 @@ or Pi 5 is recommended.
   now shown at its saved level from the start. A new **RX** slider beside
   it raises or lowers the received audio going to the decoder and the
   level meter (-20 to +20 dB, 0 = as received), for any radio.
-- **Choose which wanted filters show** (next release): View > Wanted
+- **Choose which wanted filters show** (since v0.6.0): View > Wanted
   filters (or right-click a filter's label) shows or hides Callsign,
   Prefix, Grid and Country one by one, to give the Rx window more room. A
   hidden filter with text in it still applies.
@@ -223,7 +223,7 @@ or Pi 5 is recommended.
   as usual. While CNS is on the Tx watchdog is the **Auto CQ time
   limit** (Settings > JTTY, 5 minutes by default; 10 minutes fixed up to
   v0.5.0), so unanswered CQ still stops. Auto CQ and **1 QSO** exclude each
-  other (next release): switching Auto CQ on clears 1 QSO, and pressing
+  other (since v0.6.0): switching Auto CQ on clears 1 QSO, and pressing
   1 QSO during an Auto CQ run means "finish this QSO, then stop" - both go
   off when Tx halts after it.
 - **No Stop button:** Monitor is the one start/stop control for
@@ -249,7 +249,7 @@ or Pi 5 is recommended.
     fixed 599; the name comes from the log when known), and a **Calls
     heard** list of the stations sending in the JTTY decodes (the call
     after DE, a call sent twice, the call in a CQ - not the station being
-    called; since the next release), coloured like Band
+    called; since v0.6.0), coloured like Band
     Activity from the log / Club Log (new DXCC, new on the band, new in
     JTTY, new call, worked). Click a call to make it DX Call and put Rx
     on its frequency.

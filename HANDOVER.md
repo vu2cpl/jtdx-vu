@@ -8,7 +8,7 @@ Last updated: 2026-10-03
   secret scan, see below). Default branch `jtdx-vu`. The `upstream`
   remote is `jtdx-project/jtdx`; upstream has been dormant since
   2022-03 at tag 159.
-- **Version:** JTDX-VU **0.5.3** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.6.0** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -21,7 +21,11 @@ Last updated: 2026-10-03
   v0.5.2 keeps CNS to our own CQ runs (off in Hound), switches Auto CQ /
   AnsB4 / 1 QSO off on a band change, and adds TCI auto-reconnect and a
   TCI audio watchdog; v0.5.3 puts Auto CQ under Monitor in every mode
-  and stops the WD box covering status messages.
+  and stops the WD box covering status messages; v0.6.0 adds wanted-first
+  AutoSeq, the right-click queue, the redesigned Notifications page with a
+  New only tick and Background highlight, TX/RX sliders (TX follows the
+  TCI drive), Auto CQ / 1 QSO exclusive, per-filter wanted hiding, keeps
+  AnsB4 / 1 QSO on band change, and fixes the Fake It split runaway over TCI.
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -39,6 +43,7 @@ Last updated: 2026-10-03
     v0.5.0). Pushed early by the website session (`07b899a`) with two
     "Building" placeholder rows; direct links restored in `3d34286` once
     all eight URLs answered 206.
+- **Release v0.6.0: IN PROGRESS 2026-10-04** - version bump, tag, CI, Pi .deb, checks.
 - **Release v0.5.3: COMPLETE 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.3,
   tag `v0.5.3` on `bcad6f8c`: Auto CQ under Monitor everywhere
   (`41936ec2`), status-bar overlap fix (`776ef8e0`); notes add a "Known
@@ -1831,8 +1836,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       [aethersdr/AetherSDR#6006](https://github.com/aethersdr/AetherSDR/issues/6006)
       (26.9.5 regression). Fix PR
       [aethersdr/AetherSDR#6116](https://github.com/aethersdr/AetherSDR/pull/6116)
-      (skerker, `refreshRxBindings()` in `onDaxStreamUnregistered()`), open
-      and awaiting review. **Tested here 2026-10-04** on a local build of
+      (skerker, `refreshRxBindings()` in `onDaxStreamUnregistered()`),
+      **merged 2026-10-04**; in AetherSDR's next release. **Tested here 2026-10-04** on a local build of
       `c6103737` (FLEX-6600, macOS 26): probe got ~1.15 MB / 3 s after
       each of three DAX releases; JTDX-VU closed/reopened past the grace
       decoded 33 FT8 messages on 15 m. Result posted on the PR as Manoj.
