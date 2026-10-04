@@ -804,6 +804,8 @@ private:
   bool blueMarker_;
   bool hidehintMarker_;
   bool txtColor_;
+  bool highlightBackground_ {true};     // JTDX-VU
+  QCheckBox * vuBackground_ {nullptr};
   bool workedColor_;
   bool workedStriked_;
   bool workedUnderlined_;
@@ -1060,6 +1062,7 @@ bool Configuration::redMarker () const {return m_->redMarker_;}
 bool Configuration::blueMarker () const {return m_->blueMarker_;}
 bool Configuration::hidehintMarker () const {return m_->hidehintMarker_;}
 bool Configuration::txtColor () const {return m_->txtColor_;}
+bool Configuration::highlightBackground () const {return m_->highlightBackground_;}
 bool Configuration::workedColor () const {return m_->workedColor_;}
 bool Configuration::workedStriked () const {return m_->workedStriked_;}
 bool Configuration::workedUnderlined () const {return m_->workedUnderlined_;}
@@ -2258,6 +2261,7 @@ Radio::convert_dark("#fafbfe",useDarkStyle_),Radio::convert_dark("#dcdef1",useDa
   next_stations_.station_list (stations_.station_list ());
 
   set_rig_invariants ();
+  if (vuBackground_) vuBackground_->setChecked (highlightBackground_);   // JTDX-VU
   if (vu_notify_refresh_) vu_notify_refresh_ ();   // JTDX-VU
 }
 
@@ -2626,6 +2630,7 @@ void Configuration::impl::read_settings ()
   else gridNotif_ = false;
 
   next_txtColor_ = txtColor_ = settings_->value ("txtColor", false).toBool ();
+  highlightBackground_ = settings_->value ("HighlightBackground", true).toBool ();
   next_workedColor_ = workedColor_ = settings_->value ("workedColor", false).toBool ();
   next_workedStriked_ = workedStriked_ = settings_->value ("workedStriked", true).toBool ();
   next_workedUnderlined_ = workedUnderlined_ = settings_->value ("workedUnderlined", false).toBool ();
@@ -2904,6 +2909,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("blueMarker", blueMarker_);
   settings_->setValue ("hidehintMarker", hidehintMarker_);
   settings_->setValue ("txtColor", txtColor_);
+  settings_->setValue ("HighlightBackground", highlightBackground_);
   settings_->setValue ("workedColor", workedColor_);
   settings_->setValue ("workedStriked", workedStriked_);
   settings_->setValue ("workedUnderlined", workedUnderlined_);
@@ -3544,6 +3550,7 @@ void Configuration::impl::accept ()
   blueMarker_ = ui_->blueMarker_check_box->isChecked ();
   hidehintMarker_ = ui_->hideHint_check_box->isChecked ();
   txtColor_ = ui_->txtColor_check_box->isChecked ();
+  if (vuBackground_) highlightBackground_ = vuBackground_->isChecked ();
   workedColor_ = ui_->workedColor_check_box->isChecked ();
   workedStriked_ = ui_->workedStriked_check_box->isChecked ();
   workedUnderlined_ = ui_->workedUnderlined_check_box->isChecked ();
@@ -4770,16 +4777,11 @@ void Configuration::impl::vu_notifications_page ()
   auto * page = new QWidget;
   auto * v = new QVBoxLayout {page};
   v->setSpacing (10);
-  auto section = [&] (QString const& title, QString const& sub) {
+  // the explanations are tooltips (hover), not text on the page
+  auto section = [&] (QString const& title, QString const& tip) {
       auto * box = new QGroupBox {title};
+      box->setToolTip (tip);
       auto * bl = new QVBoxLayout {box};
-      if (!sub.isEmpty ())
-        {
-          auto * l = new QLabel {sub};
-          l->setWordWrap (true);
-          QFont f = l->font (); f.setPointSizeF (f.pointSizeF () * 0.92); l->setFont (f);
-          bl->addWidget (l);
-        }
       v->addWidget (box);
       return bl;
     };
@@ -4816,11 +4818,14 @@ void Configuration::impl::vu_notifications_page ()
       return c;
     };
 
+  auto tipped = [] (QCheckBox * c, QString const& tip) {c->setToolTip (tip); return c;};
+
   // ---- New ones
   auto * newBox = section (tr ("New ones"),
-                           tr ("One row per kind of \"new\", in priority order: when a station is new in several ways, "
-                               "the top row's colour is used and AutoSeq ranks it by that row. "
-                               "Click a colour square to change it."));
+                           tr ("Each row is one kind of new station, in priority order.\n"
+                               "A station that is new in more than one way takes the colour of the highest row,\n"
+                               "and AutoSeq ranks it by that row.\n"
+                               "Click a colour square to change the colour."));
   auto * grid = new QGridLayout;
   grid->setHorizontalSpacing (10);
   grid->setVerticalSpacing (6);
@@ -4832,62 +4837,65 @@ void Configuration::impl::vu_notifications_page ()
     QPushButton * pbNew, * pbBand, * pbSecond;
     QColor * cNew, * cNewDark, * cBand, * cBandDark, * cSecond, * cSecondDark;
     QString secondText;
+    QString what;     // for the tooltips: "its CQ zone", "its callsign", ...
   };
   QList<Cat> const cats {
     {tr ("CQ zone"), ui_->newCQZ_check_box, ui_->newCQZBand_check_box, ui_->newCQZBandMode_check_box, ui_->beep_on_newCQZ_check_box,
-     ui_->pbNewCQZ, ui_->pbNewCQZBand, nullptr, &next_color_NewCQZ_, &next_color_NewCQZ_dark_, &next_color_NewCQZBand_, &next_color_NewCQZBand_dark_, nullptr, nullptr, tr ("Mode")},
+     ui_->pbNewCQZ, ui_->pbNewCQZBand, nullptr, &next_color_NewCQZ_, &next_color_NewCQZ_dark_, &next_color_NewCQZBand_, &next_color_NewCQZBand_dark_, nullptr, nullptr, tr ("Mode"), tr ("its CQ zone")},
     {tr ("ITU zone"), ui_->newITUZ_check_box, ui_->newITUZBand_check_box, ui_->newITUZBandMode_check_box, ui_->beep_on_newITUZ_check_box,
-     ui_->pbNewITUZ, ui_->pbNewITUZBand, nullptr, &next_color_NewITUZ_, &next_color_NewITUZ_dark_, &next_color_NewITUZBand_, &next_color_NewITUZBand_dark_, nullptr, nullptr, tr ("Mode")},
+     ui_->pbNewITUZ, ui_->pbNewITUZBand, nullptr, &next_color_NewITUZ_, &next_color_NewITUZ_dark_, &next_color_NewITUZBand_, &next_color_NewITUZBand_dark_, nullptr, nullptr, tr ("Mode"), tr ("its ITU zone")},
     {tr ("DXCC"), ui_->newDXCC_check_box, ui_->newDXCCBand_check_box, ui_->newDXCCBandMode_check_box, ui_->beep_on_newDXCC_check_box,
      ui_->pbNewDXCC, ui_->pbNewDXCCBand, pbNewDXCCMode_, &next_color_NewDXCC_, &next_color_NewDXCC_dark_, &next_color_NewDXCCBand_, &next_color_NewDXCCBand_dark_,
-     &next_color_NewDXCCMode_, &next_color_NewDXCCMode_dark_, tr ("Mode")},
+     &next_color_NewDXCCMode_, &next_color_NewDXCCMode_dark_, tr ("Mode"), tr ("its DXCC entity")},
     {tr ("Grid"), ui_->newGrid_check_box, ui_->newGridBand_check_box, ui_->newGridBandMode_check_box, ui_->beep_on_newGrid_check_box,
-     ui_->pbNewGrid, ui_->pbNewGridBand, nullptr, &next_color_NewGrid_, &next_color_NewGrid_dark_, &next_color_NewGridBand_, &next_color_NewGridBand_dark_, nullptr, nullptr, tr ("Mode")},
+     ui_->pbNewGrid, ui_->pbNewGridBand, nullptr, &next_color_NewGrid_, &next_color_NewGrid_dark_, &next_color_NewGridBand_, &next_color_NewGridBand_dark_, nullptr, nullptr, tr ("Mode"), tr ("its grid square")},
     {tr ("Prefix"), ui_->newPx_check_box, ui_->newPxBand_check_box, ui_->newPxBandMode_check_box, ui_->beep_on_newPx_check_box,
-     ui_->pbNewPx, ui_->pbNewPxBand, nullptr, &next_color_NewPx_, &next_color_NewPx_dark_, &next_color_NewPxBand_, &next_color_NewPxBand_dark_, nullptr, nullptr, tr ("Mode")},
+     ui_->pbNewPx, ui_->pbNewPxBand, nullptr, &next_color_NewPx_, &next_color_NewPx_dark_, &next_color_NewPxBand_, &next_color_NewPxBand_dark_, nullptr, nullptr, tr ("Mode"), tr ("its prefix")},
     {tr ("Call"), ui_->newCall_check_box, ui_->newCallBand_check_box, ui_->newCallBandMode_check_box, ui_->beep_on_newCall_check_box,
-     ui_->pbNewCall, ui_->pbNewCallBand, nullptr, &next_color_NewCall_, &next_color_NewCall_dark_, &next_color_NewCallBand_, &next_color_NewCallBand_dark_, nullptr, nullptr, tr ("Mode")},
+     ui_->pbNewCall, ui_->pbNewCallBand, nullptr, &next_color_NewCall_, &next_color_NewCall_dark_, &next_color_NewCallBand_, &next_color_NewCallBand_dark_, nullptr, nullptr, tr ("Mode"), tr ("its callsign")},
   };
   int row = 0;
   for (auto const& c : cats)
     {
       auto * on = mirror (c.name, c.on);
       QFont f = on->font (); f.setBold (true); on->setFont (f);
-      on->setToolTip (tr ("Colour stations from a %1 you have never worked").arg (c.name));
+      on->setToolTip (tr ("Highlight a station when you have never worked %1.").arg (c.what));
       grid->addWidget (on, row, 0);
-      grid->addWidget (swatch (c.pbNew, [=] {return dark (*c.cNew, *c.cNewDark);}, tr ("Never worked")), row, 1);
+      grid->addWidget (swatch (c.pbNew, [=] {return dark (*c.cNew, *c.cNewDark);}, tr ("Colour when %1 has never been worked").arg (c.what)), row, 1);
       auto * band = mirror (tr ("Band"), c.band);
-      band->setToolTip (tr ("Also colour a %1 you have worked, but not on this band").arg (c.name));
+      band->setToolTip (tr ("Also highlight a station when you have worked %1, but not on this band.").arg (c.what));
       grid->addWidget (band, row, 2);
       grid->addWidget (swatch (c.pbBand, [=] {return dark (*c.cBand, *c.cBandDark);},
-                               c.pbSecond ? tr ("Not worked on this band") : tr ("Not worked on this band / in this mode")), row, 3);
+                               c.pbSecond ? tr ("Colour when not worked on this band") : tr ("Colour when not worked on this band or in this mode")), row, 3);
       auto * second = mirror (c.secondText, c.second);
-      second->setToolTip (c.pbSecond ? tr ("Also colour a DXCC you have worked, but never in this mode (any band)")
-                                     : tr ("Also colour a %1 you have worked, but never in this mode - with Band ticked too: "
-                                           "not on this band in this mode. Uses the Band colour").arg (c.name));
+      second->setToolTip (c.pbSecond ? tr ("Also highlight a station when you have worked its DXCC entity, but never in this mode (on any band).")
+                                     : tr ("Also highlight a station when you have worked %1, but never in this mode.\n"
+                                           "With Band ticked as well: not worked on this band in this mode.\n"
+                                           "Uses the Band colour.").arg (c.what));
       grid->addWidget (second, row, 4);
       if (c.pbSecond)
-        grid->addWidget (swatch (c.pbSecond, [=] {return dark (*c.cSecond, *c.cSecondDark);}, tr ("Not worked in this mode")), row, 5);
+        grid->addWidget (swatch (c.pbSecond, [=] {return dark (*c.cSecond, *c.cSecondDark);}, tr ("Colour when not worked in this mode")), row, 5);
       auto * beep = mirror (tr ("Beep"), c.beep);
+      beep->setToolTip (tr ("Also beep when this row highlights a station."));
       grid->addWidget (beep, row, 6);
       ++row;
     }
   grid->setColumnStretch (7, 1);
 
   // ---- Already worked
-  auto * workedBox = section (tr ("Already worked"), tr ("How stations already in your log look (CQ and My Call messages)."));
+  auto * workedBox = section (tr ("Already worked"), tr ("How decodes from stations you have already worked are shown\n(CQ and My Call messages only)."));
   auto * wl = new QHBoxLayout;
-  wl->addWidget (mirror (tr ("Colour"), ui_->workedColor_check_box));
-  wl->addWidget (swatch (ui_->pbWorkedCall, [=] {return dark (next_color_WorkedCall_, next_color_WorkedCall_dark_);}, tr ("Worked colour")));
+  wl->addWidget (tipped (mirror (tr ("Colour"), ui_->workedColor_check_box), tr ("Show decodes from worked stations in the colour on the right.")));
+  wl->addWidget (swatch (ui_->pbWorkedCall, [=] {return dark (next_color_WorkedCall_, next_color_WorkedCall_dark_);}, tr ("Colour for worked stations")));
   wl->addSpacing (12);
-  wl->addWidget (mirror (tr ("Strike through"), ui_->workedStriked_check_box));
-  wl->addWidget (mirror (tr ("Underline"), ui_->workedUnderlined_check_box));
-  wl->addWidget (mirror (tr ("Hide"), ui_->workedDontShow_check_box));
+  wl->addWidget (tipped (mirror (tr ("Strike through"), ui_->workedStriked_check_box), tr ("Strike through decodes from worked stations.")));
+  wl->addWidget (tipped (mirror (tr ("Underline"), ui_->workedUnderlined_check_box), tr ("Underline decodes from worked stations.")));
+  wl->addWidget (tipped (mirror (tr ("Hide"), ui_->workedDontShow_check_box), tr ("Hide decodes from worked stations, unless they contain your call.")));
   wl->addStretch (1);
   workedBox->addLayout (wl);
 
   // ---- Messages and markers
-  auto * msgBox = section (tr ("Messages and markers"), QString {});
+  auto * msgBox = section (tr ("Messages and markers"), tr ("Colours for message types, the markers at the end of a line, and beeps."));
   auto * ml = new QGridLayout;
   ml->setHorizontalSpacing (10);
   auto colourRow = [&] (int r, int col, QString const& text, QPushButton * pb, std::function<QColor ()> colour) {
@@ -4897,23 +4905,38 @@ void Configuration::impl::vu_notifications_page ()
       h->addStretch (1);
       ml->addLayout (h, r, col);
     };
+  vuBackground_ = new QCheckBox {tr ("Background highlight")};
+  vuBackground_->setToolTip (tr ("On: decodes are highlighted with a coloured background.\n"
+                                 "Off: the background stays plain and the highlight colour is used for the text."));
+  vuBackground_->setChecked (highlightBackground_);
+  connect (vuBackground_, &QCheckBox::toggled, this, [this] {if (vu_notify_refresh_) vu_notify_refresh_ ();});
+  {
+    auto * h = new QHBoxLayout;
+    h->addWidget (vuBackground_);
+    h->addStretch (1);
+    msgBox->addLayout (h);
+  }
   colourRow (0, 0, tr ("CQ / 73"), ui_->pbCQmsg, [=] {return dark (next_color_CQ_, next_color_CQ_dark_);});
   colourRow (0, 1, tr ("My call"), ui_->pbMyCall, [=] {return dark (next_color_MyCall_, next_color_MyCall_dark_);});
   colourRow (0, 2, tr ("My Tx"), ui_->pbTxMsg, [=] {return dark (next_color_TxMsg_, next_color_TxMsg_dark_);});
   colourRow (1, 0, tr ("Other standard"), ui_->pbStandardCall, [=] {return dark (next_color_StandardCall_, next_color_StandardCall_dark_);});
-  ml->addWidget (mirror (tr ("Colour other standard messages"), ui_->newPotential_check_box), 1, 1);
-  ml->addWidget (mirror (tr ("Colour the text, not the background"), ui_->txtColor_check_box), 1, 2);
-  ml->addWidget (mirror (tr ("Red marker: my call in a message"), ui_->redMarker_check_box), 2, 0);
-  ml->addWidget (mirror (tr ("Blue marker: my call in my QSO"), ui_->blueMarker_check_box), 2, 1);
-  ml->addWidget (mirror (tr ("Marker for other messages"), ui_->otherMessagesMarker_check_box), 2, 2);
-  ml->addWidget (mirror (tr ("Hide hint character"), ui_->hideHint_check_box), 3, 0);
-  ml->addWidget (mirror (tr ("Treat RR73 / 73 like CQ"), ui_->RR73_marker_check_box), 3, 1);
-  ml->addWidget (mirror (tr ("Beep on my call"), ui_->beep_on_my_call_check_box), 4, 0);
-  ml->addWidget (mirror (tr ("Beep on 1st decode"), ui_->beep_on_firstMsg_check_box), 4, 1);
+  ml->addWidget (tipped (mirror (tr ("Colour other standard messages"), ui_->newPotential_check_box), tr ("Also check and colour standard messages that are neither CQ nor addressed to you.")), 1, 1);
+  auto * swap = mirror (tr ("Swap text and background colours"), ui_->txtColor_check_box);
+  swap->setToolTip (tr ("With Background highlight on: the message colour (CQ, My call) becomes the background\n"
+                        "and the highlight colour is used for the text."));
+  refreshers << [this, swap] {if (vuBackground_ && !vuBackground_->isChecked ()) swap->setEnabled (false);};
+  ml->addWidget (swap, 1, 2);
+  ml->addWidget (tipped (mirror (tr ("Red marker: my call in a message"), ui_->redMarker_check_box), tr ("Show a red marker at the end of a line that contains your call.")), 2, 0);
+  ml->addWidget (tipped (mirror (tr ("Blue marker: my call in my QSO"), ui_->blueMarker_check_box), tr ("Show a blue marker on lines from your current QSO partner that contain your call.")), 2, 1);
+  ml->addWidget (tipped (mirror (tr ("Marker for other messages"), ui_->otherMessagesMarker_check_box), tr ("Mark other standard messages with a marker at the end of the line instead of a background colour.")), 2, 2);
+  ml->addWidget (tipped (mirror (tr ("Hide hint character"), ui_->hideHint_check_box), tr ("Hide the hint character in the marker column.")), 3, 0);
+  ml->addWidget (tipped (mirror (tr ("Treat RR73 / 73 like CQ"), ui_->RR73_marker_check_box), tr ("Treat RR73 and 73 messages like CQ messages when AutoSeq picks a station.")), 3, 1);
+  ml->addWidget (tipped (mirror (tr ("Beep on my call"), ui_->beep_on_my_call_check_box), tr ("Beep when a decode contains your call.")), 4, 0);
+  ml->addWidget (tipped (mirror (tr ("Beep on 1st decode"), ui_->beep_on_firstMsg_check_box), tr ("Beep as soon as the first message of a period is decoded.")), 4, 1);
   msgBox->addLayout (ml);
 
   // ---- Preview
-  auto * pvBox = section (tr ("Preview"), QString {});
+  auto * pvBox = section (tr ("Preview"), tr ("Sample decodes in the colours chosen above."));
   struct Line {QString text; int cat; int kind;};   // kind: 0 never, 1 band, 2 second; cat -1 = worked
   QList<Line> const lines {
     {"CQ 3B8M LG89", 2, 0}, {"CQ VK9XY NH91", 2, 1}, {"CQ JA1ABC PM95", 2, 2},
@@ -4953,9 +4976,20 @@ void Configuration::impl::vu_notifications_page ()
               note = c.name + (ln.kind == 0 ? tr (" never worked") : ln.kind == 1 ? tr (" new on band") : tr (" new in mode"));
               if (!shown) note += tr (" - off");
             }
-          if (!colour.isValid ()) colour = cq;
-          QColor bg = colour, fg = ui_->txtColor_check_box->isChecked () ? cq : QColor {Qt::black};
-          if (ui_->txtColor_check_box->isChecked ()) {bg = cq; fg = colour;}
+          QColor const plain = useDarkStyle_ ? QColor {"#202830"} : QColor {Qt::white};
+          QColor bg, fg;
+          if (vuBackground_ && !vuBackground_->isChecked ())
+            {
+              bg = plain;
+              fg = colour.isValid () ? colour : cq;
+              if (useDarkStyle_ && fg.lightness () < 150) fg.setHsl (fg.hslHue (), fg.hslSaturation (), 150);
+            }
+          else
+            {
+              if (!colour.isValid ()) colour = cq;
+              bg = colour; fg = cq == colour ? QColor {Qt::black} : cq;
+              if (ui_->txtColor_check_box->isChecked ()) {bg = cq; fg = colour == cq ? QColor {Qt::black} : colour;}
+            }
           pv[i]->setText (QString {"000100 -12  0.1 1500 ~ %1"}.arg (ln.text, -18) + "   " + note);
           pv[i]->setStyleSheet (QString {"QLabel{background:%1;color:%2;%3}"}.arg (bg.name (), fg.name (), deco));
         }

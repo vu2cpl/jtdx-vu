@@ -213,8 +213,19 @@ MSHV build. Mockup agreed ("lets try this"); trial build on the Desktop
   a member that re-runs the same log checks as the colouring for every
   enabled category (`LineMeta` gained `grid`), so the filter shows exactly
   what Settings colours "new"; a station still drops out once worked.
-- Not yet looked at on screen (the display was locked during the test; an
-  offscreen grab attempt failed) - Manoj is trying the Desktop build.
+- Manoj's first look (screenshots): asked why lines have coloured
+  backgrounds, for an on/off for that, and for the on-page explanations
+  (grammatically wrong) to become hover tooltips. Done:
+  - **Background highlight** (`highlightBackground`, `[Configuration]
+    HighlightBackground`, default on = JTDX as before). Off: in
+    `displayDecodedText` the pane's plain background is kept and the colour
+    that would have filled it goes on the text; in dark style it is lifted
+    to HSL lightness 150 so dark highlight colours stay readable. The old
+    "Inverse text/background color" tick is labelled "Swap text and
+    background colours" (it never removed the background) and is greyed
+    while Background highlight is off.
+  - The section explanations are group-box tooltips; every control has its
+    own rewritten tooltip (JTDX's originals are no longer shown here).
 
 ### 2026-10-04 — UDP "Network Error" box replaced by a status-bar message (for the next release)
 

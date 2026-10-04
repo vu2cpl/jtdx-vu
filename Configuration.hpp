@@ -185,6 +185,7 @@ public:
   bool blueMarker () const;
   bool hidehintMarker () const;
   bool txtColor () const;
+  bool highlightBackground () const;   // JTDX-VU: off = plain background, colour on the text
   bool workedStriked () const;
   bool workedUnderlined () const;
   bool workedColor () const;

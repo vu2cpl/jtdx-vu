@@ -53,6 +53,7 @@ void DisplayText::setConfiguration(Configuration const * config)
   displayNewCallBandMode_ = config->newCallBandMode();
   displayPotential_ = config->newPotential();
   displayTxtColor_ = config->txtColor();
+  displayBackground_ = config->highlightBackground();
   displayWorkedColor_ = config->workedColor();
   displayWorkedStriked_ = config->workedStriked();
   displayWorkedUnderlined_ = config->workedUnderlined();
@@ -877,7 +878,21 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
         }
          
             
-        if (displayTxtColor_ && (displayPotential_ || std_type != 3)) {
+        if (!displayBackground_) {
+            // JTDX-VU: background highlight off - the pane's own background,
+            // and the colour that would have filled it goes on the text
+            // (kept light enough to read on a dark pane)
+            QString const plain = Radio::convert_dark("#ffffff",useDarkStyle_);
+            if (bgColor != plain) txtColor = bgColor;
+            bgColor = plain;
+            if (useDarkStyle_) {
+                QColor c {txtColor};
+                if (c.isValid() && c.lightness() < 150) {
+                    c.setHsl(c.hslHue(), c.hslSaturation(), 150);
+                    txtColor = c.name();
+                }
+            }
+        } else if (displayTxtColor_ && (displayPotential_ || std_type != 3)) {
             swpColor = bgColor;
             bgColor = txtColor;
             txtColor = swpColor;

@@ -96,6 +96,7 @@ private:
     bool displayNewCallBandMode_;
     bool displayPotential_;
     bool displayTxtColor_;
+    bool displayBackground_ {true};   // JTDX-VU: false = colour the text only
     bool displayWorkedColor_;
     bool displayWorkedStriked_;
     bool displayWorkedUnderlined_;
