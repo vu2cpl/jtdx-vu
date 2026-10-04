@@ -34,7 +34,7 @@ BandModeSwitcher::BandModeSwitcher (QSettings * settings, bool dark, QWidget * p
   , settings_ {settings}
   , dark_ {dark}
   , row_ {new QHBoxLayout {this}}
-  , new_only_combo_ {new QComboBox}
+  , new_only_box_ {new QCheckBox {tr ("New only")}}
 {
   settings_->beginGroup ("Switcher");
   show_bands_ = settings_->value ("ShowBands", true).toBool ();
@@ -42,17 +42,19 @@ BandModeSwitcher::BandModeSwitcher (QSettings * settings, bool dark, QWidget * p
   bands_ = settings_->value ("Bands", QStringList {"160m", "80m", "40m", "30m", "20m", "17m",
                                                    "15m", "12m", "10m", "6m"}).toStringList ();
   modes_ = settings_->value ("Modes", QStringList {"FT8", "FT4"}).toStringList ();
-  new_only_ = qBound (0, settings_->value ("NewOnly", 0).toInt (), 3);
+  new_only_ = settings_->value ("NewOnly", 0).toInt () > 0 ? 1 : 0;   // the old 1-3 choices mean on
   settings_->endGroup ();
 
-  new_only_combo_->addItems ({tr ("All"), tr ("New DXCC"), tr ("New band"), tr ("New mode")});
-  new_only_combo_->setCurrentIndex (new_only_);
-  new_only_combo_->setFocusPolicy (Qt::NoFocus);
-  new_only_combo_->setToolTip (tr ("Band Activity: show only decodes from DXCC entities you still need - as in MSHV:\n"
-                                   "New DXCC = entity never worked; New band = not worked on this band;\n"
-                                   "New mode = not worked in this mode on any band.\n"
-                                   "Uses Club Log when enabled; traffic with your call and your QSO partner always shows."));
-  connect (new_only_combo_, QOverload<int>::of (&QComboBox::currentIndexChanged), this, [this] (int level) {
+  // JTDX-VU: one tick, as in MSHV - what counts as "new" is chosen once, in
+  // Settings > Notifications (the rows that colour a decode)
+  new_only_box_->setChecked (new_only_);
+  new_only_box_->setFocusPolicy (Qt::NoFocus);
+  new_only_box_->setToolTip (tr ("Band Activity: show only decodes that get a \"new\" colour -\n"
+                                 "the kinds of new ticked in Settings > Notifications (DXCC, band, mode, zones, grid, prefix, call).\n"
+                                 "Uses Club Log when enabled; a station drops out once worked.\n"
+                                 "Traffic with your call and your QSO partner always shows."));
+  connect (new_only_box_, &QCheckBox::toggled, this, [this] (bool on) {
+      int const level = on ? 1 : 0;
       new_only_ = level;
       settings_->beginGroup ("Switcher");
       settings_->setValue ("NewOnly", level);
@@ -70,7 +72,7 @@ void BandModeSwitcher::rebuild ()
 {
   while (auto item = row_->takeAt (0))
     {
-      if (item->widget () != new_only_combo_ && !trailing_.contains (item->widget ())) delete item->widget ();
+      if (item->widget () != new_only_box_ && !trailing_.contains (item->widget ())) delete item->widget ();
       delete item;
     }
   band_buttons_.clear ();
@@ -107,8 +109,7 @@ void BandModeSwitcher::rebuild ()
     }
   if (mode_buttons_.isEmpty () && band_buttons_.isEmpty ()) row_->addStretch ();
   else separator ();
-  row_->addWidget (new QLabel {tr ("Show:")});
-  row_->addWidget (new_only_combo_);
+  row_->addWidget (new_only_box_);
   for (auto w : trailing_) row_->addWidget (w);
   restyle ();
 }
@@ -131,9 +132,9 @@ void BandModeSwitcher::restyle ()
   for (auto i = mode_buttons_.cbegin (); i != mode_buttons_.cend (); ++i)
     i.value ()->setStyleSheet (i.key () == active_mode_ ? active : QString {});
   // an active filter is easy to forget: show it in amber
-  new_only_combo_->setStyleSheet (new_only_ ? (dark_ ? "QComboBox{background-color:rgb(150,95,0);color:white;}"
-                                                     : "QComboBox{background-color:rgb(255,200,90);color:black;}")
-                                            : QString {});
+  new_only_box_->setStyleSheet (new_only_ ? (dark_ ? "QCheckBox{background-color:rgb(150,95,0);color:white;padding:1px 4px;border-radius:3px}"
+                                                   : "QCheckBox{background-color:rgb(255,200,90);color:black;padding:1px 4px;border-radius:3px}")
+                                          : QString {});
 }
 
 void BandModeSwitcher::settings_dialog (QWidget * parent)

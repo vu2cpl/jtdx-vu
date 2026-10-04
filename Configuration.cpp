@@ -161,6 +161,11 @@
 #include <QColorDialog>
 #include <QGridLayout>
 #include <QScrollArea>
+#include <QGroupBox>
+#include <QToolButton>
+#include <QCheckBox>
+#include <QLabel>
+#include <QSignalBlocker>
 #include <QScreen>
 #include <QStyle>
 #include <QSerialPortInfo>
@@ -661,6 +666,8 @@ private:
   QLabel * labNewDXCCMode_ {nullptr};     // preview on the CQ colour
   QLabel * labNewMcDXCCMode_ {nullptr};   // preview on the My Call colour
   void style_pbNewDXCCMode ();
+  void vu_notifications_page ();          // JTDX-VU: the redesigned Notifications tab
+  std::function<void ()> vu_notify_refresh_;
   QColor color_NewGrid_;
   QColor next_color_NewGrid_;
   QColor color_NewGridBand_;
@@ -1461,6 +1468,7 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
           }
       });
   }
+  vu_notifications_page ();
   // JTDX-VU: the .ui pins a 686x586 minimum sized for Windows fonts; with the
   // larger macOS UI font that lets the dialog shrink below what its layouts
   // need, so tabs (Notifications worst) overlap.  Let the layouts set it.
@@ -2250,6 +2258,7 @@ Radio::convert_dark("#fafbfe",useDarkStyle_),Radio::convert_dark("#dcdef1",useDa
   next_stations_.station_list (stations_.station_list ());
 
   set_rig_invariants ();
+  if (vu_notify_refresh_) vu_notify_refresh_ ();   // JTDX-VU
 }
 
 void Configuration::impl::done (int r)
@@ -4738,6 +4747,228 @@ void Configuration::impl::on_pbNewDXCC_clicked()
         ui_->labNewScDXCC->setStyleSheet(QString("font-weight: bold;background: %1;color: %2").arg(useDarkStyle_? next_color_NewDXCC_dark_.name() : next_color_NewDXCC_.name(),useDarkStyle_? next_color_StandardCall_dark_.name() : next_color_StandardCall_.name()));
       }
     }
+}
+
+// JTDX-VU: the Notifications tab, redesigned (Manoj, 2026-10-04).  One row per
+// "new one" category in priority order (the top row wins), each with its
+// on/off, band / mode checks, colour squares and beep on the same line; then
+// "Already worked", "Messages and markers" and a live preview.  It is a front
+// end: every control drives the original .ui widget (kept, hidden), so the
+// existing slots, enabling rules, saving and loading are unchanged.
+void Configuration::impl::vu_notifications_page ()
+{
+  auto * tab = ui_->notifications_tab;
+  auto * tabLayout = qobject_cast<QGridLayout *> (tab->layout ());
+  if (!tabLayout) return;
+  // park the original page in a hidden widget
+  auto * old = new QWidget {tab};
+  old->hide ();
+  tabLayout->removeItem (ui_->verticalLayout_8);
+  ui_->verticalLayout_8->setParent (nullptr);
+  old->setLayout (ui_->verticalLayout_8);
+
+  auto * page = new QWidget;
+  auto * v = new QVBoxLayout {page};
+  v->setSpacing (10);
+  auto section = [&] (QString const& title, QString const& sub) {
+      auto * box = new QGroupBox {title};
+      auto * bl = new QVBoxLayout {box};
+      if (!sub.isEmpty ())
+        {
+          auto * l = new QLabel {sub};
+          l->setWordWrap (true);
+          QFont f = l->font (); f.setPointSizeF (f.pointSizeF () * 0.92); l->setFont (f);
+          bl->addWidget (l);
+        }
+      v->addWidget (box);
+      return bl;
+    };
+  auto dark = [this] (QColor const& light, QColor const& darkc) {return useDarkStyle_ ? darkc : light;};
+  QList<std::function<void ()>> refreshers;
+  // a colour square that opens the original colour button's dialog
+  auto swatch = [&] (QPushButton * colourButton, std::function<QColor ()> colour, QString const& tip) {
+      auto * b = new QToolButton;
+      b->setFixedSize (26, 18);
+      b->setToolTip (tip);
+      connect (b, &QToolButton::clicked, this, [this, colourButton] {
+          colourButton->click ();
+          if (vu_notify_refresh_) vu_notify_refresh_ ();
+        });
+      refreshers << [b, colour] {
+          b->setStyleSheet (QString {"QToolButton{background:%1;border:1px solid palette(mid);border-radius:3px}"}.arg (colour ().name ()));
+        };
+      return b;
+    };
+  // a check box mirroring an original one: clicking it clicks the original
+  auto mirror = [&] (QString const& text, QCheckBox * original) {
+      auto * c = new QCheckBox {text};
+      c->setToolTip (original->toolTip ());
+      connect (c, &QCheckBox::clicked, this, [this, original] {
+          original->click ();
+          if (vu_notify_refresh_) vu_notify_refresh_ ();
+        });
+      connect (original, &QCheckBox::toggled, this, [this] {if (vu_notify_refresh_) vu_notify_refresh_ ();});
+      refreshers << [c, original] {
+          QSignalBlocker block {c};
+          c->setChecked (original->isChecked ());
+          c->setEnabled (original->isEnabled ());
+        };
+      return c;
+    };
+
+  // ---- New ones
+  auto * newBox = section (tr ("New ones"),
+                           tr ("One row per kind of \"new\", in priority order: when a station is new in several ways, "
+                               "the top row's colour is used and AutoSeq ranks it by that row. "
+                               "Click a colour square to change it."));
+  auto * grid = new QGridLayout;
+  grid->setHorizontalSpacing (10);
+  grid->setVerticalSpacing (6);
+  newBox->addLayout (grid);
+  struct Cat
+  {
+    QString name;
+    QCheckBox * on, * band, * second, * beep;
+    QPushButton * pbNew, * pbBand, * pbSecond;
+    QColor * cNew, * cNewDark, * cBand, * cBandDark, * cSecond, * cSecondDark;
+    QString secondText;
+  };
+  QList<Cat> const cats {
+    {tr ("CQ zone"), ui_->newCQZ_check_box, ui_->newCQZBand_check_box, ui_->newCQZBandMode_check_box, ui_->beep_on_newCQZ_check_box,
+     ui_->pbNewCQZ, ui_->pbNewCQZBand, nullptr, &next_color_NewCQZ_, &next_color_NewCQZ_dark_, &next_color_NewCQZBand_, &next_color_NewCQZBand_dark_, nullptr, nullptr, tr ("This mode")},
+    {tr ("ITU zone"), ui_->newITUZ_check_box, ui_->newITUZBand_check_box, ui_->newITUZBandMode_check_box, ui_->beep_on_newITUZ_check_box,
+     ui_->pbNewITUZ, ui_->pbNewITUZBand, nullptr, &next_color_NewITUZ_, &next_color_NewITUZ_dark_, &next_color_NewITUZBand_, &next_color_NewITUZBand_dark_, nullptr, nullptr, tr ("This mode")},
+    {tr ("DXCC"), ui_->newDXCC_check_box, ui_->newDXCCBand_check_box, ui_->newDXCCBandMode_check_box, ui_->beep_on_newDXCC_check_box,
+     ui_->pbNewDXCC, ui_->pbNewDXCCBand, pbNewDXCCMode_, &next_color_NewDXCC_, &next_color_NewDXCC_dark_, &next_color_NewDXCCBand_, &next_color_NewDXCCBand_dark_,
+     &next_color_NewDXCCMode_, &next_color_NewDXCCMode_dark_, tr ("This mode")},
+    {tr ("Grid"), ui_->newGrid_check_box, ui_->newGridBand_check_box, ui_->newGridBandMode_check_box, ui_->beep_on_newGrid_check_box,
+     ui_->pbNewGrid, ui_->pbNewGridBand, nullptr, &next_color_NewGrid_, &next_color_NewGrid_dark_, &next_color_NewGridBand_, &next_color_NewGridBand_dark_, nullptr, nullptr, tr ("This mode")},
+    {tr ("Prefix"), ui_->newPx_check_box, ui_->newPxBand_check_box, ui_->newPxBandMode_check_box, ui_->beep_on_newPx_check_box,
+     ui_->pbNewPx, ui_->pbNewPxBand, nullptr, &next_color_NewPx_, &next_color_NewPx_dark_, &next_color_NewPxBand_, &next_color_NewPxBand_dark_, nullptr, nullptr, tr ("This mode")},
+    {tr ("Call"), ui_->newCall_check_box, ui_->newCallBand_check_box, ui_->newCallBandMode_check_box, ui_->beep_on_newCall_check_box,
+     ui_->pbNewCall, ui_->pbNewCallBand, nullptr, &next_color_NewCall_, &next_color_NewCall_dark_, &next_color_NewCallBand_, &next_color_NewCallBand_dark_, nullptr, nullptr, tr ("This mode")},
+  };
+  int row = 0;
+  for (auto const& c : cats)
+    {
+      auto * on = mirror (c.name, c.on);
+      QFont f = on->font (); f.setBold (true); on->setFont (f);
+      on->setToolTip (tr ("Colour stations from a %1 you have never worked").arg (c.name));
+      grid->addWidget (on, row, 0);
+      grid->addWidget (swatch (c.pbNew, [=] {return dark (*c.cNew, *c.cNewDark);}, tr ("Never worked")), row, 1);
+      auto * band = mirror (tr ("This band"), c.band);
+      band->setToolTip (tr ("Also colour a %1 you have worked, but not on this band").arg (c.name));
+      grid->addWidget (band, row, 2);
+      grid->addWidget (swatch (c.pbBand, [=] {return dark (*c.cBand, *c.cBandDark);},
+                               c.pbSecond ? tr ("Not worked on this band") : tr ("Not worked on this band / in this mode")), row, 3);
+      auto * second = mirror (c.secondText, c.second);
+      second->setToolTip (c.pbSecond ? tr ("Also colour a DXCC you have worked, but never in this mode (any band)")
+                                     : tr ("Also colour a %1 you have worked, but never in this mode - with This band ticked too: "
+                                           "not on this band in this mode. Uses the This band colour").arg (c.name));
+      grid->addWidget (second, row, 4);
+      if (c.pbSecond)
+        grid->addWidget (swatch (c.pbSecond, [=] {return dark (*c.cSecond, *c.cSecondDark);}, tr ("Not worked in this mode")), row, 5);
+      auto * beep = mirror (tr ("Beep"), c.beep);
+      grid->addWidget (beep, row, 6);
+      ++row;
+    }
+  grid->setColumnStretch (7, 1);
+
+  // ---- Already worked
+  auto * workedBox = section (tr ("Already worked"), tr ("How stations already in your log look (CQ and My Call messages)."));
+  auto * wl = new QHBoxLayout;
+  wl->addWidget (mirror (tr ("Colour"), ui_->workedColor_check_box));
+  wl->addWidget (swatch (ui_->pbWorkedCall, [=] {return dark (next_color_WorkedCall_, next_color_WorkedCall_dark_);}, tr ("Worked colour")));
+  wl->addSpacing (12);
+  wl->addWidget (mirror (tr ("Strike through"), ui_->workedStriked_check_box));
+  wl->addWidget (mirror (tr ("Underline"), ui_->workedUnderlined_check_box));
+  wl->addWidget (mirror (tr ("Hide"), ui_->workedDontShow_check_box));
+  wl->addStretch (1);
+  workedBox->addLayout (wl);
+
+  // ---- Messages and markers
+  auto * msgBox = section (tr ("Messages and markers"), QString {});
+  auto * ml = new QGridLayout;
+  ml->setHorizontalSpacing (10);
+  auto colourRow = [&] (int r, int col, QString const& text, QPushButton * pb, std::function<QColor ()> colour) {
+      auto * h = new QHBoxLayout;
+      h->addWidget (swatch (pb, colour, text));
+      h->addWidget (new QLabel {text});
+      h->addStretch (1);
+      ml->addLayout (h, r, col);
+    };
+  colourRow (0, 0, tr ("CQ / 73"), ui_->pbCQmsg, [=] {return dark (next_color_CQ_, next_color_CQ_dark_);});
+  colourRow (0, 1, tr ("My call"), ui_->pbMyCall, [=] {return dark (next_color_MyCall_, next_color_MyCall_dark_);});
+  colourRow (0, 2, tr ("My Tx"), ui_->pbTxMsg, [=] {return dark (next_color_TxMsg_, next_color_TxMsg_dark_);});
+  colourRow (1, 0, tr ("Other standard"), ui_->pbStandardCall, [=] {return dark (next_color_StandardCall_, next_color_StandardCall_dark_);});
+  ml->addWidget (mirror (tr ("Colour other standard messages"), ui_->newPotential_check_box), 1, 1);
+  ml->addWidget (mirror (tr ("Colour the text, not the background"), ui_->txtColor_check_box), 1, 2);
+  ml->addWidget (mirror (tr ("Red marker: my call in a message"), ui_->redMarker_check_box), 2, 0);
+  ml->addWidget (mirror (tr ("Blue marker: my call in my QSO"), ui_->blueMarker_check_box), 2, 1);
+  ml->addWidget (mirror (tr ("Marker for other messages"), ui_->otherMessagesMarker_check_box), 2, 2);
+  ml->addWidget (mirror (tr ("Hide hint character"), ui_->hideHint_check_box), 3, 0);
+  ml->addWidget (mirror (tr ("Treat RR73 / 73 like CQ"), ui_->RR73_marker_check_box), 3, 1);
+  ml->addWidget (mirror (tr ("Beep on my call"), ui_->beep_on_my_call_check_box), 4, 0);
+  ml->addWidget (mirror (tr ("Beep on 1st decode"), ui_->beep_on_firstMsg_check_box), 4, 1);
+  msgBox->addLayout (ml);
+
+  // ---- Preview
+  auto * pvBox = section (tr ("Preview"), QString {});
+  struct Line {QString text; int cat; int kind;};   // kind: 0 never, 1 band, 2 second; cat -1 = worked
+  QList<Line> const lines {
+    {"CQ 3B8M LG89", 2, 0}, {"CQ VK9XY NH91", 2, 1}, {"CQ JA1ABC PM95", 2, 2},
+    {"CQ K1ABC FN42", 3, 0}, {"CQ DL1XYZ JO62", 5, 1}, {"CQ G4ABC IO91", -1, 0},
+  };
+  QList<QLabel *> pv;
+  for (int i = 0; i < lines.size (); ++i)
+    {
+      auto * l = new QLabel;
+      l->setFont (QFontDatabase::systemFont (QFontDatabase::FixedFont));
+      l->setContentsMargins (6, 1, 6, 1);
+      pvBox->addWidget (l);
+      pv << l;
+    }
+  pvBox->setSpacing (0);
+  refreshers << [=] {
+      auto cq = dark (next_color_CQ_, next_color_CQ_dark_);
+      for (int i = 0; i < lines.size (); ++i)
+        {
+          auto const& ln = lines[i];
+          QColor colour;
+          QString note;
+          QString deco;
+          if (ln.cat < 0)
+            {
+              if (ui_->workedColor_check_box->isChecked ()) colour = dark (next_color_WorkedCall_, next_color_WorkedCall_dark_);
+              if (ui_->workedStriked_check_box->isChecked ()) deco = "text-decoration:line-through;";
+              else if (ui_->workedUnderlined_check_box->isChecked ()) deco = "text-decoration:underline;";
+              note = ui_->workedDontShow_check_box->isChecked () ? tr ("worked - hidden") : tr ("worked");
+            }
+          else
+            {
+              auto const& c = cats[ln.cat];
+              bool shown = c.on->isChecked () && (ln.kind == 0 || (ln.kind == 1 && c.band->isChecked ()) || (ln.kind == 2 && c.second->isChecked ()));
+              if (shown) colour = ln.kind == 0 ? dark (*c.cNew, *c.cNewDark) : ln.kind == 1 ? dark (*c.cBand, *c.cBandDark)
+                                                                            : dark (*c.cSecond, *c.cSecondDark);
+              note = c.name + (ln.kind == 0 ? tr (" never worked") : ln.kind == 1 ? tr (" new on band") : tr (" new in mode"));
+              if (!shown) note += tr (" - off");
+            }
+          if (!colour.isValid ()) colour = cq;
+          QColor bg = colour, fg = ui_->txtColor_check_box->isChecked () ? cq : QColor {Qt::black};
+          if (ui_->txtColor_check_box->isChecked ()) {bg = cq; fg = colour;}
+          pv[i]->setText (QString {"000100 -12  0.1 1500 ~ %1"}.arg (ln.text, -18) + "   " + note);
+          pv[i]->setStyleSheet (QString {"QLabel{background:%1;color:%2;%3}"}.arg (bg.name (), fg.name (), deco));
+        }
+    };
+
+  v->addStretch (1);
+  auto * scroll = new QScrollArea;
+  scroll->setWidgetResizable (true);
+  scroll->setFrameShape (QFrame::NoFrame);
+  scroll->setWidget (page);
+  tabLayout->addWidget (scroll, 0, 0);
+  vu_notify_refresh_ = [refreshers] {for (auto const& r : refreshers) r ();};
+  vu_notify_refresh_ ();
 }
 
 void Configuration::impl::style_pbNewDXCCMode ()

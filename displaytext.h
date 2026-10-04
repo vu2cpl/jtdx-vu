@@ -59,9 +59,10 @@ private:
       QString call;
       double dialFreq = 0;
       QString mode;
+      QString grid;
       bool alwaysShow = false;
     };
-    static bool needed (LogBook &, LineMeta const&, int level);
+    bool needed (LogBook &, LineMeta const&) const;   // new in any way Settings > Notifications colours
     static int wanted (LogBook &, QString const& call, double dialFreq, QString const& mode);
     void refilter ();
     void hide_last_block ();

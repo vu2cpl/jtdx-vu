@@ -1,6 +1,7 @@
 #include "displaytext.h"
 
 #include <QtGlobal>
+#include <functional>
 #include <QApplication>
 #include <QMouseEvent>
 #include <QContextMenuEvent>
@@ -952,9 +953,10 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
     meta.call = checkCall;
     meta.dialFreq = dialFreq;
     meta.mode = checkMode.isEmpty () ? app_mode : checkMode;
+    meta.grid = grid.trimmed ();
     meta.alwaysShow = std_type == 2 || jt65bc || bypassAllFilters || bypassRxfFilters
       || (!hisCall.isEmpty () && !checkCall.isEmpty () && checkCall.contains (hisCall));
-    bool vu_hidden = newOnly_ > 0 && !meta.alwaysShow && !needed (logBook, meta, newOnly_);
+    bool vu_hidden = newOnly_ > 0 && !meta.alwaysShow && !needed (logBook, meta);
     if (bypassAllFilters || bypassRxfFilters) {
             show_line = true;
     }
@@ -1127,29 +1129,63 @@ void DisplayText::displayQSY(QString text)
 
 // ---- JTDX-VU: live "show only new" filter --------------------------------
 
-bool DisplayText::needed (LogBook & logBook, LineMeta const& m, int level)
+// The main window's "New only" tick (Manoj, 2026-10-04): a decode stays when
+// it gets a "new" colour from Settings > Notifications - the same categories
+// and the same log checks as the colouring in displayDecodedText().  Re-run
+// on every refilter, so a station drops out as soon as it is worked.
+bool DisplayText::needed (LogBook & logBook, LineMeta const& m) const
 {
-  // As in MSHV, each choice is its own test (not cumulative, no band+mode
-  // slot): 1 = new DXCC, 2 = new band (DXCC not worked on this band),
-  // 3 = new mode (DXCC not worked in this mode on any band).  An ATNO is
-  // new for all three.
   if (m.call.isEmpty ()) return false;
   QString country;
-  bool worked = true, workedSlot = true;
-  logBook.matchDXCC (m.call, country, worked, workedSlot);
-  if (country.isEmpty () || country.startsWith ("  ,?,")) return false;   // unknown entity
-  if (!worked) return true;
-  switch (level)
+  double const f = m.dialFreq;
+  QString const& md = m.mode;
+  // the zone / prefix / call checks: never worked, or (with the band / mode
+  // ticks) not in that slot - band only, mode only (any band), or both
+  typedef std::function<void (bool &, bool &, double, QString const&)> Match;
+  auto slot = [&] (bool on, bool band, bool mode, Match const& match) {
+      if (!on) return false;
+      bool b4 = true, slotB4 = true;
+      if (band && mode) match (b4, slotB4, f, md);
+      else if (band) match (b4, slotB4, f, QString {});
+      else if (mode) match (b4, slotB4, 0, md);
+      else match (b4, slotB4, 0, QString {});
+      return !b4 || ((band || mode) && !slotB4);
+    };
+  if (slot (displayNewCQZ_, displayNewCQZBand_, displayNewCQZBandMode_, [&] (bool & a, bool & s, double fr, QString const& mo) {
+        if (fr || !mo.isEmpty ()) logBook.matchCQZ (m.call, country, a, s, fr, mo); else logBook.matchCQZ (m.call, country, a, s);}))
+    return true;
+  if (slot (displayNewITUZ_, displayNewITUZBand_, displayNewITUZBandMode_, [&] (bool & a, bool & s, double fr, QString const& mo) {
+        if (fr || !mo.isEmpty ()) logBook.matchITUZ (m.call, country, a, s, fr, mo); else logBook.matchITUZ (m.call, country, a, s);}))
+    return true;
+  if (displayNewDXCC_)
     {
-    case 2:
-      logBook.matchDXCC (m.call, country, worked, workedSlot, m.dialFreq);       // band only
-      return !workedSlot;
-    case 3:
-      logBook.matchDXCC (m.call, country, worked, workedSlot, 0, m.mode);        // mode only, any band
-      return !workedSlot;
-    default:
-      return false;
+      bool worked = true, slotB4 = true;
+      logBook.matchDXCC (m.call, country, worked, slotB4);
+      bool const known = !country.isEmpty () && !country.startsWith ("  ,?,");
+      if (known && !worked) return true;
+      if (known && displayNewDXCCBand_)
+        {
+          bool w = true, b = true;
+          logBook.matchDXCC (m.call, country, w, b, f);
+          if (!b) return true;
+        }
+      if (known && displayNewDXCCBandMode_)
+        {
+          bool w = true, b = true;
+          logBook.matchDXCC (m.call, country, w, b, 0, md);
+          if (!b) return true;
+        }
     }
+  if (!m.grid.isEmpty () && slot (displayNewGrid_, displayNewGridBand_, displayNewGridBandMode_, [&] (bool & a, bool & s, double fr, QString const& mo) {
+        if (fr || !mo.isEmpty ()) logBook.matchGrid (m.grid, a, s, fr, mo); else logBook.matchGrid (m.grid, a, s);}))
+    return true;
+  if (slot (displayNewPx_, displayNewPxBand_, displayNewPxBandMode_, [&] (bool & a, bool & s, double fr, QString const& mo) {
+        if (fr || !mo.isEmpty ()) logBook.matchPX (m.call, country, a, s, fr, mo); else logBook.matchPX (m.call, country, a, s);}))
+    return true;
+  if (slot (displayNewCall_, displayNewCallBand_, displayNewCallBandMode_, [&] (bool & a, bool & s, double fr, QString const& mo) {
+        if (fr || !mo.isEmpty ()) logBook.matchCall (m.call, country, a, s, fr, mo); else logBook.matchCall (m.call, country, a, s);}))
+    return true;
+  return false;
 }
 
 // JTDX-VU: how much our log wants this station, for auto-seq (always on,
@@ -1199,7 +1235,7 @@ void DisplayText::refilter ()
     {
       auto meta = dynamic_cast<LineMeta *> (b.userData ());
       if (!meta) continue;                                  // spacers, Tx lines
-      bool visible = newOnly_ == 0 || meta->alwaysShow || needed (lastLogBook_, *meta, newOnly_);
+      bool visible = newOnly_ == 0 || meta->alwaysShow || needed (lastLogBook_, *meta);
       if (b.isVisible () != visible)
         {
           b.setVisible (visible);

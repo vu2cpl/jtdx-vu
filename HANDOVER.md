@@ -186,6 +186,36 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-04 — Notifications tab redesigned; main-window "New only" tick (trial, for the next release)
+
+Manoj: keep all six categories (zones, DXCC, grid, prefix, call) but make
+the page friendlier, and replace the Show dropdown with one tick as in his
+MSHV build. Mockup agreed ("lets try this"); trial build on the Desktop
+(`~/Desktop/jdxvu/test/notifications-trial/JTDX-VU.app`) for him to try.
+- `Configuration::impl::vu_notifications_page()`: the original page
+  (`verticalLayout_8`) is parked in a hidden widget; a new scrollable page
+  takes its place. **Front end only** - every new control mirrors an
+  original widget (clicks it, re-reads it via `toggled`), colour squares
+  click the original colour buttons, so slots, enabling rules, save/load
+  are unchanged. `vu_notify_refresh_` re-syncs (also at the end of
+  `initialize_models`).
+  - "New ones": one row per category in priority order (CQ zone, ITU zone,
+    DXCC, Grid, Prefix, Call - the top row wins): on/off + never-worked
+    colour, "This band" + colour, "This mode" (the old "per band+mode"
+    tick: alone = this mode any band, with This band = band+mode slot; on
+    DXCC = new in mode, own colour), Beep.
+  - "Already worked": Colour + square, Strike through, Underline, Hide.
+  - "Messages and markers": CQ/73, My call, My Tx, Other standard colours;
+    the marker / beep / RR73 / text-colour ticks, plainer labels.
+  - "Preview": six sample lines in the chosen colours, live.
+- `BandModeSwitcher`: the Show combo is now a "New only" check box (amber
+  when on); `[Switcher] NewOnly` > 0 = on. `DisplayText::needed()` is now
+  a member that re-runs the same log checks as the colouring for every
+  enabled category (`LineMeta` gained `grid`), so the filter shows exactly
+  what Settings colours "new"; a station still drops out once worked.
+- Not yet looked at on screen (the display was locked during the test; an
+  offscreen grab attempt failed) - Manoj is trying the Desktop build.
+
 ### 2026-10-04 — UDP "Network Error" box replaced by a status-bar message (for the next release)
 
 On the MacBook the UDP server was the default 255.255.255.255:2237, which

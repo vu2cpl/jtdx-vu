@@ -14,6 +14,7 @@ class QSettings;
 class QHBoxLayout;
 class QPushButton;
 class QComboBox;
+class QCheckBox;
 
 class BandModeSwitcher final
   : public QWidget
@@ -31,7 +32,7 @@ public:
 
   Q_SIGNAL void band_clicked (QString const& band) const;
   Q_SIGNAL void mode_clicked (QString const& mode) const;
-  Q_SIGNAL void new_only_changed (int level) const;  // 0 all, 1 new DXCC, 2 new band, 3 new mode
+  Q_SIGNAL void new_only_changed (int level) const;  // 0 all, 1 only what Settings > Notifications colours as new
 
   int new_only () const {return new_only_;}
   void add_trailing_widget (QWidget *);  // kept at the end of the row across rebuilds
@@ -50,7 +51,7 @@ private:
   QString active_band_;
   QString active_mode_;
   QHBoxLayout * row_;
-  QComboBox * new_only_combo_;
+  QCheckBox * new_only_box_;
   QList<QWidget *> trailing_;
   QMap<QString, QPushButton *> band_buttons_;
   QMap<QString, QPushButton *> mode_buttons_;
