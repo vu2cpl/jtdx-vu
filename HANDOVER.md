@@ -186,6 +186,18 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-04 — Wanted filters: choose which ones show (for the next release)
+
+Manoj (after confirming the Fake It fix works on the MacBook): the wanted
+filters above the Rx pane take a lot of room. The existing "Wanted" tick
+hides all four; now each can be shown or hidden on its own: **View >
+Wanted filters > Callsign / Prefix / Grid / Country**, the same menu on a
+right-click of any filter label. `m_wantedShow` bitmask (1 call, 2 prefix,
+4 grid, 8 country; `[JTDXVU] WantedShow`, default 15) applied in
+`on_cbShowWanted_toggled` (and once after the menu is built, since
+readSettings runs first). A hidden filter with text still applies (said
+in the label tooltip). Builds; not yet tried on screen.
+
 ### 2026-10-04 — Fake It split over TCI: runaway at Tx start (root cause found)
 
 The first candidate (below) did not help. A `JTDX_DEBUG_TO_FILE=ON` build

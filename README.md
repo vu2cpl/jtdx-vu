@@ -192,6 +192,10 @@ or Pi 5 is recommended.
   now shown at its saved level from the start. A new **RX** slider beside
   it raises or lowers the received audio going to the decoder and the
   level meter (-20 to +20 dB, 0 = as received), for any radio.
+- **Choose which wanted filters show** (next release): View > Wanted
+  filters (or right-click a filter's label) shows or hides Callsign,
+  Prefix, Grid and Country one by one, to give the Rx window more room. A
+  hidden filter with text in it still applies.
 - **A new band starts with no automatic calling** (since v0.5.2). Changing
   band - from the band buttons or combo box, or on the radio / SDR
   program - switches **Auto CQ**, **AnsB4** and **1 QSO** off, and the

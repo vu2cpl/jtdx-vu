@@ -1196,6 +1196,33 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     ui->menuView->addSeparator ();
     ui->menuView->addAction (action);
     connect (action, &QAction::triggered, this, [this] {m_switcher->settings_dialog (this);});
+    // JTDX-VU: choose which wanted filters show (they take room above the Rx
+    // pane) - View > Wanted filters, or right-click a filter's label.  A
+    // hidden filter with text in it still applies.
+    m_wantedShow = m_settings->value ("JTDXVU/WantedShow", 15).toInt () & 15;
+    auto * menu = ui->menuView->addMenu (tr ("Wanted filters"));
+    QStringList const names {tr ("Callsign"), tr ("Prefix"), tr ("Grid"), tr ("Country")};
+    for (int i = 0; i < names.size (); ++i)
+      {
+        auto * a = menu->addAction (names[i]);
+        a->setCheckable (true);
+        m_wantedShowActions << a;
+        connect (a, &QAction::toggled, this, [this, i] (bool on) {
+            m_wantedShow = on ? (m_wantedShow | (1 << i)) : (m_wantedShow & ~(1 << i));
+            m_settings->setValue ("JTDXVU/WantedShow", m_wantedShow);
+            on_cbShowWanted_toggled (m_wantedchkd);
+          });
+      }
+    for (auto * label : {ui->labWantCall, ui->labWantPfx, ui->labWantGrid, ui->labWantCountry})
+      {
+        label->setContextMenuPolicy (Qt::CustomContextMenu);
+        label->setToolTip (tr ("Right-click to choose which wanted filters are shown.\n"
+                               "A hidden filter with text in it still applies."));
+        connect (label, &QWidget::customContextMenuRequested, this, [this, label, menu] (QPoint const& pos) {
+            menu->exec (label->mapToGlobal (pos));
+          });
+      }
+    on_cbShowWanted_toggled (m_wantedchkd);   // apply the saved choice
   }
   connect (m_switcher, &BandModeSwitcher::band_clicked, this, &MainWindow::switch_to_band);
   {
@@ -8667,9 +8694,15 @@ void MainWindow::on_cbMenus_toggled(bool b)
 void MainWindow::on_cbShowWanted_toggled(bool b)
 {
   m_wantedchkd=b;
-  ui->labWantCall->setVisible(b); ui->wantedCall->setVisible(b); ui->labWantCountry->setVisible(b); ui->wantedCountry->setVisible(b);
-  ui->labWantPfx->setVisible(b); ui->wantedPrefix->setVisible(b); ui->labWantGrid->setVisible(b); ui->wantedGrid->setVisible(b);
-  ui->cbClearCallsign->setVisible(b); ui->cbClearGrid->setVisible(b); dynamicButtonsInit();
+  // JTDX-VU: each filter also has its own show tick (View > Wanted filters)
+  for (int i = 0; i < m_wantedShowActions.size (); ++i) {
+    QSignalBlocker block {m_wantedShowActions[i]};
+    m_wantedShowActions[i]->setChecked (m_wantedShow & (1 << i));
+  }
+  bool const call = b && (m_wantedShow & 1), pfx = b && (m_wantedShow & 2), grid = b && (m_wantedShow & 4), cntry = b && (m_wantedShow & 8);
+  ui->labWantCall->setVisible(call); ui->wantedCall->setVisible(call); ui->labWantCountry->setVisible(cntry); ui->wantedCountry->setVisible(cntry);
+  ui->labWantPfx->setVisible(pfx); ui->wantedPrefix->setVisible(pfx); ui->labWantGrid->setVisible(grid); ui->wantedGrid->setVisible(grid);
+  ui->cbClearCallsign->setVisible(call); ui->cbClearGrid->setVisible(grid); dynamicButtonsInit();
   jttyApplyLayout ();   // JTDX-VU: no wanted filters in JTTY
 }
 
