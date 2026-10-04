@@ -184,6 +184,14 @@ or Pi 5 is recommended.
   UDP server (Settings > Reporting) used to pop up a "Network Error" box on
   every send; now the status bar says "UDP host:port: ... - check Settings >
   Reporting", and a failed name lookup is retried every 30 s.
+- **TX and RX sliders** (next release). The Pwr slider is now labelled
+  **TX**. With TCI audio it shows the SDR program's own drive setting and
+  moves with it, so nothing changes the radio's power until you move it
+  (it used to show 0 after a start, and moving it set the SDR program's RF
+  power). With sound card audio it is the transmit audio level as before,
+  now shown at its saved level from the start. A new **RX** slider beside
+  it raises or lowers the received audio going to the decoder and the
+  level meter (-20 to +20 dB, 0 = as received), for any radio.
 - **A new band starts with no automatic calling** (since v0.5.2). Changing
   band - from the band buttons or combo box, or on the radio / SDR
   program - switches **Auto CQ**, **AnsB4** and **1 QSO** off, and the
