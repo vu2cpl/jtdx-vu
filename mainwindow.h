@@ -871,7 +871,7 @@ private:
   void queueToggle (QString const& call);
   void queueChanged ();
   bool queued (QString const& call) const;
-  void band_change_reset ();  // JTDX-VU: Auto CQ, AnsB4, 1 QSO off on a new band
+  void band_change_reset ();  // JTDX-VU: Auto CQ off on a new band (AnsB4 / 1 QSO stay)
   bool nonstop_active () const;  // JTDX-VU: Non-stop on and not in Hound mode
   bool singleshot_now () const;  // JTDX-VU: 1 QSO, or Non-stop with a QSO we answered
   // JTDX-VU JTTY (mainwindow_jtty.cpp)

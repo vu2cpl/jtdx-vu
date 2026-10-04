@@ -186,6 +186,13 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-04 — Band change keeps AnsB4 and 1 QSO (for the next release)
+
+Manoj: AnsB4 and 1 QSO should stick instead of clearing on each band /
+mode change. `band_change_reset()` now switches off only Auto CQ (it
+transmits by itself); AnsB4 and 1 QSO are left as set. Mode changes never
+reset any of them. Reverses part of the v0.5.2 behaviour.
+
 ### 2026-10-04 — Wanted filters: choose which ones show (for the next release)
 
 Manoj (after confirming the Fake It fix works on the MacBook): the wanted

@@ -2739,8 +2739,8 @@ void MainWindow::band_change_reset ()
 {
   QStringList off;
   if (m_cnsButton && m_cnsButton->isChecked ()) { m_cnsButton->setChecked (false); off << tr ("Auto CQ"); }
-  if (ui->actionAnswerWorkedB4->isChecked ()) { ui->actionAnswerWorkedB4->setChecked (false); off << tr ("AnsB4"); }
-  if (ui->actionSingleShot->isChecked ()) { ui->actionSingleShot->setChecked (false); off << tr ("1 QSO"); }
+  // AnsB4 and 1 QSO stay as set (Manoj, 2026-10-04) - only Auto CQ, which
+  // transmits by itself, is stopped by a band change
   if (!off.isEmpty ()) showStatusMessage (tr ("Band changed: %1 switched off").arg (off.join (", ")), 10000);
 }
 

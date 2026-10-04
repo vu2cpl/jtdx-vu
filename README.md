@@ -196,10 +196,11 @@ or Pi 5 is recommended.
   filters (or right-click a filter's label) shows or hides Callsign,
   Prefix, Grid and Country one by one, to give the Rx window more room. A
   hidden filter with text in it still applies.
-- **A new band starts with no automatic calling** (since v0.5.2). Changing
-  band - from the band buttons or combo box, or on the radio / SDR
-  program - switches **Auto CQ**, **AnsB4** and **1 QSO** off, and the
-  status bar says which ones were on.
+- **A new band starts with no automatic calling** (since v0.5.2).
+  Changing band - from the band buttons or combo box, or on the radio /
+  SDR program - switches **Auto CQ** off, and the status bar says so.
+  **AnsB4** and **1 QSO** stay as you set them (they were switched off too
+  up to v0.5.3); a mode change leaves all of them alone.
 - **TCI reconnects on its own** (since v0.5.2). If the SDR program
   (AetherSDR, ExpertSDR, Thetis, ...) is closed or restarted, Tx halts
   and the status bar says "TCI: ... reconnecting every 5 s" instead of
