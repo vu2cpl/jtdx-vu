@@ -208,7 +208,7 @@ in the label tooltip). Builds; not yet tried on screen.
 ### 2026-10-04 — Fake It split over TCI: runaway at Tx start (root cause found)
 
 The first candidate (below) did not help. A `JTDX_DEBUG_TO_FILE=ON` build
-on the MacBook (zip `~/Desktop/jdxvu/test/JTDX-VU-debug-arm64.zip`; log at
+on the MacBook (zip since deleted; log at
 `~/Library/Application Support/JTDX-VU/jtdx_debug.txt`) showed the cause:
 at PTT on, `EmulateSplitTransceiver::set` retunes the dial to the Tx
 frequency (14074536 = +536 Hz at Tx 2036 Hz); the TCI server echoes
@@ -220,8 +220,7 @@ Tx went 14.074 -> 14.211 MHz in 0.35 s (~260 steps) and returned to the
 wrong Rx after. Hamlib CAT never echoes that fast, hence never seen
 before; the Mac mini runs Split None. Fix: `ptt_requested_` (from the last
 `set`) - while we have asked for Tx, the Rx frequency is not taken from the
-rig either. The end-of-Tx `restoring_` guard is kept. Builds; test zip
-`~/Desktop/jdxvu/test/JTDX-VU-splitfix-arm64.zip` for the MacBook.
+rig either. The end-of-Tx `restoring_` guard is kept. Builds; test zip (superseded by `JTDX-VU-trial-arm64.zip`).
 - Manoj: "still drifting" with that build. Reproduced locally without the
   radio: `FAKE_TRX_DELAY=0.35 tools/fake_tci.py` (Tx echoed late, as
   AetherSDR does) + a `-r` test copy with Fake It, driven over UDP
@@ -290,7 +289,7 @@ would have set AetherSDR's RF power (top = 100 %), risky with an amp.
 Manoj: keep all six categories (zones, DXCC, grid, prefix, call) but make
 the page friendlier, and replace the Show dropdown with one tick as in his
 MSHV build. Mockup agreed ("lets try this"); trial build on the Desktop
-(`~/Desktop/jdxvu/test/notifications-trial/JTDX-VU.app`) for him to try.
+(now only `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip`) for him to try.
 - `Configuration::impl::vu_notifications_page()`: the original page
   (`verticalLayout_8`) is parked in a hidden widget; a new scrollable page
   takes its place. **Front end only** - every new control mirrors an
