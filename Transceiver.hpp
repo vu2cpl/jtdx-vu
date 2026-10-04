@@ -129,6 +129,7 @@ public:
     int level () const {return level_;}
     unsigned int power () const {return power_;}
     unsigned int swr () const {return swr_;}
+    int drive () const {return drive_;}   // JTDX-VU: TCI drive % as the SDR program reports it, -1 = unknown
 
     void online (bool state) {online_ = state;}
     void frequency (Frequency f) {rx_frequency_ = f;}
@@ -156,6 +157,7 @@ public:
     void level (int strength) {level_ = strength;}
     void power (unsigned int mwpower) {power_ = mwpower;}
     void swr (unsigned int mswr) {swr_ = mswr;}
+    void drive (int percent) {drive_ = percent;}
 
   private:
     bool online_;
@@ -184,6 +186,7 @@ public:
     int level_;
     unsigned int power_;
     unsigned int swr_;
+    int drive_ {-1};
     
     // Don't forget to update the debug print and != operator if you
     // add more members here

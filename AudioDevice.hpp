@@ -2,8 +2,19 @@
 #define AUDIODEVICE_HPP__
 
 #include <QIODevice>
+#include <atomic>
+#include <cmath>
 
 class QDataStream;
+
+// JTDX-VU: receive gain from the main window's RX slider (linear factor),
+// applied to every received sample - sound card (Detector) and TCI audio
+extern std::atomic<float> g_vuRxGain;
+inline qint16 vu_rx_sample (float v)
+{
+  float const g = v * g_vuRxGain.load (std::memory_order_relaxed);
+  return static_cast<qint16> (g > 32767.f ? 32767.f : g < -32768.f ? -32768.f : g);
+}
 
 //
 // abstract base class for audio devices
@@ -46,18 +57,18 @@ protected:
 	switch (m_channel)
 	  {
 	  case Mono:
-	    *dest++ = *i;
+	    *dest++ = vu_rx_sample (*i);
 	    break;
 
 	  case Right:
-	    *dest++ = *(i + 1);
+	    *dest++ = vu_rx_sample (*(i + 1));
 	    break;
 
 	  case Both:		// should be able to happen but if it
 				// does we'll take left
 	    Q_ASSERT (Both == m_channel);
 	  case Left:
-	    *dest++ = *i;
+	    *dest++ = vu_rx_sample (*i);
 	    break;
 	  }
       }

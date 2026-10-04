@@ -650,6 +650,11 @@ void TransceiverBase::update_swr (unsigned int p)
 //  requested_.swr (p);    // track rig changes
 }
 
+void TransceiverBase::update_drive (int percent)
+{
+  actual_.drive (percent);
+}
+
 void TransceiverBase::update_complete (bool force_signal)
 {
   if ((do_pre_update () && actual_ != last_) || force_signal)

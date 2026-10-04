@@ -1,6 +1,7 @@
 #ifndef TCI_TRANSCEIVER_HPP__
 #define TCI_TRANSCEIVER_HPP__
 
+#include "AudioDevice.hpp"   // JTDX-VU: vu_rx_sample
 #include <memory>
 
 #include "TransceiverFactory.hpp"
@@ -174,7 +175,7 @@ protected:
   {
     static constexpr float K = 0x7FFF;
     for (size_t i {0}; i < numFrames; ++i) {
-       dest[i] = static_cast<int16_t>(K*source[i*2]);
+       dest[i] = vu_rx_sample (K*source[i*2]);   // JTDX-VU: RX gain, clipped
     }
 
   }

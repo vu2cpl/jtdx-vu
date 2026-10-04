@@ -1586,6 +1586,10 @@ void TCITransceiver::do_poll ()
   }
   update_mode (get_mode());
   if (do_pwr_ && PTT_) {update_power (power_ * 100); update_swr (swr_*10);}
+  // JTDX-VU: the SDR program's drive, so the TX slider shows (and stays with) the radio's setting
+  bool driveOk = false;
+  int const drive = drive_.toInt (&driveOk);
+  if (driveOk) update_drive (qBound (0, drive, 100));
   if (do_snr_ && !PTT_) {
       update_level (level_);
       if(!ESDR3) {

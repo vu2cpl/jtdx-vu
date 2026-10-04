@@ -28,6 +28,7 @@
 #include <QVector>
 #include <QCursor>
 #include <QToolTip>
+#include <QSlider>
 #include <QButtonGroup>
 #include <QUdpSocket>
 #include <QtMath>
@@ -995,6 +996,44 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   ui->AnsB4Button->setMaximumSize(80,45);
   ui->stopButton->setMaximumSize(80,45);
   ui->stopButton->hide();   // JTDX-VU: Monitor starts and stops monitoring; Stop is redundant
+  {
+    // JTDX-VU: "Pwr" is the TX slider; an RX slider beside it is a receive
+    // gain (-20 to +20 dB, 0 = as received) on the audio going to the
+    // decoder and the level meter, for any radio
+    ui->PWRlabel->setText (tr ("TX"));
+    auto * grid = qobject_cast<QGridLayout *> (ui->outAttenuation->parentWidget ()->layout ());
+    std::function<QGridLayout * (QLayout *)> find = [&] (QLayout * l) -> QGridLayout * {
+        if (!l) return nullptr;
+        if (auto g = qobject_cast<QGridLayout *> (l); g && g->indexOf (ui->outAttenuation) >= 0) return g;
+        for (int i = 0; i < l->count (); ++i) if (auto r = find (l->itemAt (i)->layout ())) return r;
+        return nullptr;
+      };
+    grid = find (ui->outAttenuation->parentWidget ()->layout ());
+    m_rxGainSlider = new QSlider {Qt::Vertical};
+    m_rxGainSlider->setRange (-20, 20);
+    m_rxGainSlider->setTickPosition (QSlider::TicksBelow);
+    m_rxGainSlider->setTickInterval (10);
+    m_rxGainSlider->setMaximumWidth (ui->outAttenuation->maximumWidth ());
+    m_rxGainSlider->setFocusPolicy (Qt::NoFocus);
+    auto * rxLabel = new QLabel {tr ("RX")};
+    rxLabel->setAlignment (ui->PWRlabel->alignment ());
+    auto showGain = [this] (int dB) {
+        g_vuRxGain.store (std::pow (10.f, dB / 20.f));
+        m_rxGainSlider->setToolTip (tr ("Receive gain %1 dB (0 = as received)\nRaises or lowers the audio going to the decoder and the level meter.")
+                                    .arg (dB > 0 ? "+" + QString::number (dB) : QString::number (dB)));
+      };
+    connect (m_rxGainSlider, &QSlider::valueChanged, this, [this, showGain] (int dB) {
+        showGain (dB);
+        QToolTip::showText (QCursor::pos (), m_rxGainSlider->toolTip (), m_rxGainSlider);
+      });
+    int const saved = qBound (-20, m_settings->value ("Common/VURxGainDb", 0).toInt (), 20);
+    m_rxGainSlider->setValue (saved);
+    showGain (saved);
+    if (grid) {
+      grid->addWidget (rxLabel, 0, 1);
+      grid->addWidget (m_rxGainSlider, 1, 1);
+    }
+  }
   dynamicButtonsInit();
 
   m_audioThread.start (m_audioThreadPriority);
@@ -1443,6 +1482,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("WSPRfreq",ui->WSPRfreqSpinBox->value());
   m_settings->setValue("DialFreq",QVariant::fromValue(m_lastMonitoredFrequency));
   m_settings->setValue("OutAttenuation",ui->outAttenuation->value ());
+  if (m_rxGainSlider) m_settings->setValue ("VURxGainDb", m_rxGainSlider->value ());
   m_settings->setValue("GUItab",ui->tabWidget->currentIndex());
   m_settings->setValue("LockTxFreq",m_lockTxFreq);
   m_settings->setValue("SkipTx1", m_skipTx1);
@@ -1714,6 +1754,16 @@ void MainWindow::readSettings()
   // setup initial value of tx attenuator, range 0...450 (0...45dB attenuation)
   if(m_settings->value("OutAttenuation").toInt()>=0 && m_settings->value("OutAttenuation").toInt()<=450)
     m_outAttenuation = m_settings->value ("OutAttenuation", 225).toInt ();
+  // JTDX-VU: the TX slider used to keep its .ui value (1, the bottom) until the
+  // first band change from JTDX.  Sound card audio: show the saved level from
+  // the start.  TCI audio: the slider follows the SDR program's drive instead
+  // (handle_transceiver_update), so nothing is pushed to the radio at start.
+  if (!m_tci) {
+    m_block_pwr_tooltip = true;
+    ui->outAttenuation->setValue (m_outAttenuation);
+    m_block_pwr_tooltip = false;
+  }
+  m_outAttenuation = 1;
 
   int n=m_settings->value("GUItab",0).toInt(); if(!(n>=0 && n<=1)) n=0; ui->tabWidget->setCurrentIndex(n);
 
@@ -2322,7 +2372,7 @@ void MainWindow::on_actionSettings_triggered()               //Setup Dialog
       }
       if(!m_config.do_snr()) ui->S_meter_button->setText(tr("S meter"));
       ui->S_meter_button->setEnabled(m_config.do_snr());
-      if(!m_config.do_pwr()) {ui->PWRlabel->setText(tr("Pwr")); ui->SWRlabel->setText("");}
+      if(!m_config.do_pwr()) {ui->PWRlabel->setText(tr("TX")); ui->SWRlabel->setText("");}
       on_spotLineEdit_textChanged(ui->spotLineEdit->text());
       ui->bandComboBox->setCurrentText (m_config.bands ()->find (m_freqNominal));
   }
@@ -7618,6 +7668,16 @@ void MainWindow::on_skipGrid_clicked(bool checked)
 
 void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const& s)
 {
+  // JTDX-VU: TCI audio - the TX slider shows the SDR program's drive (0-100 %
+  // = slider 0-450, the inverse of TCITransceiver::do_txvolume); set quietly so
+  // nothing is sent back
+  if (m_tci && s.drive () >= 0 && !m_tune) {
+    int const a = qBound (0, qRound (4.5 * s.drive ()), 450);
+    if (qAbs (ui->outAttenuation->value () - a) > 2 && !ui->outAttenuation->isSliderDown ()) {
+      QSignalBlocker block {ui->outAttenuation};
+      ui->outAttenuation->setValue (a);
+    }
+  }
   // qDebug () << "MainWindow::handle_transceiver_update:" << s;
   Transceiver::TransceiverState old_state {m_rigState};
 
@@ -7651,7 +7711,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
   }
   if(m_config.do_pwr()) {
     if (m_rigState.power() != s.power()) {
-      ui->PWRlabel->setText(QString {tr("Pwr<br>%1 W")}.arg (round(s.power()/1000.)));
+      ui->PWRlabel->setText(QString {tr("TX<br>%1 W")}.arg (round(s.power()/1000.)));
     }
     if (m_rigState.swr() != s.swr()) {
       if (s.swr() > 0) {

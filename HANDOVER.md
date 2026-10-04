@@ -186,6 +186,33 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-04 — TX slider follows the TCI drive; new RX slider (trial, for the next release)
+
+Manoj: the Pwr slider sat at 0 while Tx worked. Cause: the saved
+`OutAttenuation` was only applied on the first band change made from JTDX
+(`ui->outAttenuation->value() == 1` sentinel in band_changed), so after a
+TCI start the slider showed the .ui value 1, and nothing was sent until it
+was moved - the radio kept its own drive (AetherSDR reported 8 %). Moving it
+would have set AetherSDR's RF power (top = 100 %), risky with an amp.
+- **TCI audio (`m_tci`)**: the slider follows the SDR program. New
+  `TransceiverState::drive()` (-1 = unknown, in `!=` and the debug print),
+  `TransceiverBase::update_drive`; `TCITransceiver::do_poll` reports the
+  `drive:` value it has seen. `MainWindow::handle_transceiver_update` sets
+  the slider to 4.5 x drive (the inverse of `do_txvolume`) with signals
+  blocked, not while tuning or dragging. Nothing is pushed at start-up.
+  Other TCI programs get the same.
+- **Sound card audio**: the saved level is shown from the start
+  (readSettings); the slider is still the digital audio gain, not radio power.
+- Labelled **TX** (was "Pwr"; also "TX<br>N W" while transmitting).
+- **RX slider** beside it: receive gain -20..+20 dB (0 = as received),
+  `[Common] VURxGainDb`. `g_vuRxGain` (atomic, AudioDevice.cpp) applied
+  with clipping in `vu_rx_sample()`, used by `AudioDevice::store` (sound
+  card, Detector) and `TCITransceiver::store` (TCI) - so it reaches the
+  decoder and the level meter for any radio. Not the radio's AF gain.
+- Builds clean; not yet tried live. Per-band power memory still sets the
+  slider on band change when enabled (Manoj has it off), which over TCI
+  sends that drive to the radio - as before.
+
 ### 2026-10-04 — Notifications tab redesigned; main-window "New only" tick (trial, for the next release)
 
 Manoj: keep all six categories (zones, DXCC, grid, prefix, call) but make
