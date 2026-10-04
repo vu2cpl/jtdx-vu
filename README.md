@@ -149,14 +149,19 @@ or Pi 5 is recommended.
   band's working frequency for the current mode. The current band and
   mode are shown green. Choose which buttons appear in View > Band &
   Mode Buttons....
-- **Show only needed decodes.** The "Show:" selector works as in MSHV:
-  **All**, **New DXCC** (entity never worked), **New band** (not
-  worked on this band) or **New mode** (not worked in this mode on any
-  band). Each option is its own test, and an ATNO counts for all three.
-  It uses Club Log when enabled, turns amber while active, and is live:
-  changing it re-filters every decode already on screen, and a
-  just-worked station drops out. Traffic with your call and your QSO
-  partner always shows, and the Rx Frequency pane is never filtered.
+- **Show only needed decodes.** A **New only** tick above the decodes
+  (since the next release; a four-way "Show:" dropdown before) hides
+  everything that doesn't get a "new" colour from Settings > Notifications -
+  so what counts as new (DXCC, on this band, in this mode, zones, grid,
+  prefix, call) is chosen once, there. It uses Club Log when enabled, turns
+  amber while active, and is live: ticking it re-filters every decode
+  already on screen, and a just-worked station drops out. Traffic with your
+  call and your QSO partner always shows, and the Rx Frequency pane is never
+  filtered.
+- **Notifications page redesigned** (next release): one row per kind of
+  "new" in priority order, each with its band / mode checks, colour squares
+  and beep on one line, plus "Already worked", "Messages and markers" and a
+  live preview.
 - **AutoSeq goes for what your log needs first** (next release). Always
   on, no switch: when picking a CQ to answer, and when choosing between
   stations calling your CQ, AutoSeq takes a **new DXCC** first, then a
