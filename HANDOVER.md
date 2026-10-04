@@ -201,8 +201,8 @@ MSHV build. Mockup agreed ("lets try this"); trial build on the Desktop
   `initialize_models`).
   - "New ones": one row per category in priority order (CQ zone, ITU zone,
     DXCC, Grid, Prefix, Call - the top row wins): on/off + never-worked
-    colour, "This band" + colour, "This mode" (the old "per band+mode"
-    tick: alone = this mode any band, with This band = band+mode slot; on
+    colour, "Band" + colour, "Mode" (the old "per band+mode"
+    tick: alone = this mode any band, with Band = band+mode slot; on
     DXCC = new in mode, own colour), Beep.
   - "Already worked": Colour + square, Strike through, Underline, Hide.
   - "Messages and markers": CQ/73, My call, My Tx, Other standard colours;

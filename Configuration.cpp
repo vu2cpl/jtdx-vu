@@ -4835,18 +4835,18 @@ void Configuration::impl::vu_notifications_page ()
   };
   QList<Cat> const cats {
     {tr ("CQ zone"), ui_->newCQZ_check_box, ui_->newCQZBand_check_box, ui_->newCQZBandMode_check_box, ui_->beep_on_newCQZ_check_box,
-     ui_->pbNewCQZ, ui_->pbNewCQZBand, nullptr, &next_color_NewCQZ_, &next_color_NewCQZ_dark_, &next_color_NewCQZBand_, &next_color_NewCQZBand_dark_, nullptr, nullptr, tr ("This mode")},
+     ui_->pbNewCQZ, ui_->pbNewCQZBand, nullptr, &next_color_NewCQZ_, &next_color_NewCQZ_dark_, &next_color_NewCQZBand_, &next_color_NewCQZBand_dark_, nullptr, nullptr, tr ("Mode")},
     {tr ("ITU zone"), ui_->newITUZ_check_box, ui_->newITUZBand_check_box, ui_->newITUZBandMode_check_box, ui_->beep_on_newITUZ_check_box,
-     ui_->pbNewITUZ, ui_->pbNewITUZBand, nullptr, &next_color_NewITUZ_, &next_color_NewITUZ_dark_, &next_color_NewITUZBand_, &next_color_NewITUZBand_dark_, nullptr, nullptr, tr ("This mode")},
+     ui_->pbNewITUZ, ui_->pbNewITUZBand, nullptr, &next_color_NewITUZ_, &next_color_NewITUZ_dark_, &next_color_NewITUZBand_, &next_color_NewITUZBand_dark_, nullptr, nullptr, tr ("Mode")},
     {tr ("DXCC"), ui_->newDXCC_check_box, ui_->newDXCCBand_check_box, ui_->newDXCCBandMode_check_box, ui_->beep_on_newDXCC_check_box,
      ui_->pbNewDXCC, ui_->pbNewDXCCBand, pbNewDXCCMode_, &next_color_NewDXCC_, &next_color_NewDXCC_dark_, &next_color_NewDXCCBand_, &next_color_NewDXCCBand_dark_,
-     &next_color_NewDXCCMode_, &next_color_NewDXCCMode_dark_, tr ("This mode")},
+     &next_color_NewDXCCMode_, &next_color_NewDXCCMode_dark_, tr ("Mode")},
     {tr ("Grid"), ui_->newGrid_check_box, ui_->newGridBand_check_box, ui_->newGridBandMode_check_box, ui_->beep_on_newGrid_check_box,
-     ui_->pbNewGrid, ui_->pbNewGridBand, nullptr, &next_color_NewGrid_, &next_color_NewGrid_dark_, &next_color_NewGridBand_, &next_color_NewGridBand_dark_, nullptr, nullptr, tr ("This mode")},
+     ui_->pbNewGrid, ui_->pbNewGridBand, nullptr, &next_color_NewGrid_, &next_color_NewGrid_dark_, &next_color_NewGridBand_, &next_color_NewGridBand_dark_, nullptr, nullptr, tr ("Mode")},
     {tr ("Prefix"), ui_->newPx_check_box, ui_->newPxBand_check_box, ui_->newPxBandMode_check_box, ui_->beep_on_newPx_check_box,
-     ui_->pbNewPx, ui_->pbNewPxBand, nullptr, &next_color_NewPx_, &next_color_NewPx_dark_, &next_color_NewPxBand_, &next_color_NewPxBand_dark_, nullptr, nullptr, tr ("This mode")},
+     ui_->pbNewPx, ui_->pbNewPxBand, nullptr, &next_color_NewPx_, &next_color_NewPx_dark_, &next_color_NewPxBand_, &next_color_NewPxBand_dark_, nullptr, nullptr, tr ("Mode")},
     {tr ("Call"), ui_->newCall_check_box, ui_->newCallBand_check_box, ui_->newCallBandMode_check_box, ui_->beep_on_newCall_check_box,
-     ui_->pbNewCall, ui_->pbNewCallBand, nullptr, &next_color_NewCall_, &next_color_NewCall_dark_, &next_color_NewCallBand_, &next_color_NewCallBand_dark_, nullptr, nullptr, tr ("This mode")},
+     ui_->pbNewCall, ui_->pbNewCallBand, nullptr, &next_color_NewCall_, &next_color_NewCall_dark_, &next_color_NewCallBand_, &next_color_NewCallBand_dark_, nullptr, nullptr, tr ("Mode")},
   };
   int row = 0;
   for (auto const& c : cats)
@@ -4856,15 +4856,15 @@ void Configuration::impl::vu_notifications_page ()
       on->setToolTip (tr ("Colour stations from a %1 you have never worked").arg (c.name));
       grid->addWidget (on, row, 0);
       grid->addWidget (swatch (c.pbNew, [=] {return dark (*c.cNew, *c.cNewDark);}, tr ("Never worked")), row, 1);
-      auto * band = mirror (tr ("This band"), c.band);
+      auto * band = mirror (tr ("Band"), c.band);
       band->setToolTip (tr ("Also colour a %1 you have worked, but not on this band").arg (c.name));
       grid->addWidget (band, row, 2);
       grid->addWidget (swatch (c.pbBand, [=] {return dark (*c.cBand, *c.cBandDark);},
                                c.pbSecond ? tr ("Not worked on this band") : tr ("Not worked on this band / in this mode")), row, 3);
       auto * second = mirror (c.secondText, c.second);
       second->setToolTip (c.pbSecond ? tr ("Also colour a DXCC you have worked, but never in this mode (any band)")
-                                     : tr ("Also colour a %1 you have worked, but never in this mode - with This band ticked too: "
-                                           "not on this band in this mode. Uses the This band colour").arg (c.name));
+                                     : tr ("Also colour a %1 you have worked, but never in this mode - with Band ticked too: "
+                                           "not on this band in this mode. Uses the Band colour").arg (c.name));
       grid->addWidget (second, row, 4);
       if (c.pbSecond)
         grid->addWidget (swatch (c.pbSecond, [=] {return dark (*c.cSecond, *c.cSecondDark);}, tr ("Not worked in this mode")), row, 5);
