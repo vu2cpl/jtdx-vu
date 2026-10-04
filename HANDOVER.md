@@ -186,6 +186,17 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-04 — UDP "Network Error" box replaced by a status-bar message (for the next release)
+
+On the MacBook the UDP server was the default 255.255.255.255:2237, which
+macOS refuses, so a modal "Network Error / Unable to send a message" box
+came up again and again. `MainWindow::networkError` now shows "UDP
+host:port: <first line of the error> - check Settings > Reporting" for
+15 s (`showStatusMessage`), and on "UDP server lookup failed" re-runs
+`set_server` after 30 s (what the box's Retry did). Fix for the MacBook
+itself: Settings > Reporting > UDP Server 192.168.1.109 port 2334 (as the
+mini) or UDP off. Builds clean; not yet seen live.
+
 ### 2026-10-03 — AutoSeq queue, current-decode rule, JTTY calls heard (for the next release)
 
 **Queue.** Manoj: "can we right click a station to add it to a q?" His

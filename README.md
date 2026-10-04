@@ -175,6 +175,10 @@ or Pi 5 is recommended.
   could go back to a station that called your CQ up to 5 minutes ago and
   isn't heard any more; now every AutoSeq pick must be in the latest
   decode period.
+- **UDP errors on the status bar** (next release). A wrong or unreachable
+  UDP server (Settings > Reporting) used to pop up a "Network Error" box on
+  every send; now the status bar says "UDP host:port: ... - check Settings >
+  Reporting", and a failed name lookup is retried every 30 s.
 - **A new band starts with no automatic calling** (since v0.5.2). Changing
   band - from the band buttons or combo box, or on the radio / SDR
   program - switches **Auto CQ**, **AnsB4** and **1 QSO** off, and the

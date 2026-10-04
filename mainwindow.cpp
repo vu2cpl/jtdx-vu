@@ -8193,16 +8193,15 @@ void MainWindow::postWSPRDecode (bool is_new, QStringList parts)
 
 void MainWindow::networkError (QString const& e)
 {
-  if (JTDXMessageBox::Retry == JTDXMessageBox::warning_message (this, "", tr ("Network Error")
-                                                  , tr ("Error: %1\nUDP server %2:%3")
-                                                  .arg (e)
-                                                  .arg (m_config.udp_server_name ())
-                                                  .arg (m_config.udp_server_port ())
-                                                  , "", JTDXMessageBox::Cancel | JTDXMessageBox::Retry, JTDXMessageBox::Cancel))
-    {
-      // retry server lookup
-      m_messageClient->set_server (m_config.udp_server_name ());
-    }
+  // JTDX-VU: on the status bar, not a modal box - a bad UDP address fails on
+  // every decode, and the box stacked up over the main window (MacBook,
+  // 255.255.255.255:2237).  A failed lookup is retried every 30 s.
+  QString first = e.section ('\n', 0, 0).trimmed ();
+  if (first.startsWith ("Error: ")) first = first.mid (7);
+  showStatusMessage (tr ("UDP %1:%2: %3 - check Settings > Reporting")
+                     .arg (m_config.udp_server_name ()).arg (m_config.udp_server_port ()).arg (first), 15000);
+  if (e.contains ("lookup failed"))
+    QTimer::singleShot (30000, this, [this] {m_messageClient->set_server (m_config.udp_server_name ());});
 }
 
 void MainWindow::p1ReadFromStdout()                        //p1readFromStdout
