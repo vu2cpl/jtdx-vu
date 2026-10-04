@@ -10,6 +10,22 @@ unregister - `refreshRxBindings()` missing in `onDaxStreamUnregistered()` /
 macOS 26, probe result) was posted there on 2026-10-03:
 https://github.com/aethersdr/AetherSDR/issues/6006#issuecomment-5967032247
 
+**Fix:** [aethersdr/AetherSDR#6116](https://github.com/aethersdr/AetherSDR/pull/6116)
+(open as of 2026-10-04). Tested on macOS with the FLEX-6600 on 2026-10-04 -
+audio came back after every DAX release, and JTDX-VU decoded again after a
+close/reopen past the grace. Result posted:
+https://github.com/aethersdr/AetherSDR/pull/6116#issuecomment-5976784461
+
+How the test build was made (in case a later fix needs testing): clone the
+PR head, `scripts/setup/setup-qt.sh` (Qt 6.12 into
+`~/Library/Caches/aethersdr/qt`, ~2 GB), `brew install ninja autoconf
+automake`. Gotcha: Homebrew `qt@5` (JTDX-VU's Qt) is force-linked into
+`/opt/homebrew/include`, and AetherSDR's CMakeLists adds that folder, so the
+build fails with "Qt major version not 6 or 7". For the test build only,
+CMakeLists line ~244 was pointed at a copy of `/opt/homebrew/include`
+without the `Qt*` entries; Homebrew itself was not changed. The test build
+shares the normal AetherSDR settings (`~/Library/Preferences/AetherSDR`).
+
 The draft written before #6006 was found is kept below for reference.
 
 ---

@@ -1667,8 +1667,14 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       alarms during long JTTY sends or band changes.
 - [ ] **AetherSDR TCI audio bug** is upstream
       [aethersdr/AetherSDR#6006](https://github.com/aethersdr/AetherSDR/issues/6006)
-      (26.9.5 regression, fix proposed, not merged as of 2026-10-03);
-      Manoj's FLEX-6600 confirmation posted. When a fixed AetherSDR ships,
+      (26.9.5 regression). Fix PR
+      [aethersdr/AetherSDR#6116](https://github.com/aethersdr/AetherSDR/pull/6116)
+      (skerker, `refreshRxBindings()` in `onDaxStreamUnregistered()`), open
+      and awaiting review. **Tested here 2026-10-04** on a local build of
+      `c6103737` (FLEX-6600, macOS 26): probe got ~1.15 MB / 3 s after
+      each of three DAX releases; JTDX-VU closed/reopened past the grace
+      decoded 33 FT8 messages on 15 m. Result posted on the PR as Manoj.
+      Manoj is back on the installed 26.9.5 until the fix ships. When it does,
       check TCI audio survives a JTDX-VU close/reopen. Notes in
       `docs/aethersdr-tci-audio-issue.md`.
 - [ ] **CNS only after our own CQ** (v0.5.2): check on
