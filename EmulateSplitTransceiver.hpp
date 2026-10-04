@@ -2,6 +2,7 @@
 #define EMULATE_SPLIT_TRANSCEIVER_HPP__
 
 #include <memory>
+#include <QElapsedTimer>
 
 #include "Transceiver.hpp"
 
@@ -47,6 +48,13 @@ private:
   Frequency rx_frequency_;        // requested Rx frequency
   Frequency tx_frequency_;        // requested Tx frequency
   bool split_; // requested split state
+  // JTDX-VU: after a Fake It transmission the rig can report "not
+  // transmitting" while its dial is still on the Tx frequency; until it is
+  // back on the Rx frequency (or 3 s pass) keep reporting the Rx frequency,
+  // or the shifted dial becomes the new Rx frequency and every Tx creeps up
+  bool was_tx_ {false};
+  bool restoring_ {false};
+  QElapsedTimer restore_timer_;
 };
 
 #endif

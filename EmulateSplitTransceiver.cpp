@@ -32,6 +32,13 @@ void EmulateSplitTransceiver::set (TransceiverState const& s, unsigned sequence_
   split_ = s.split ();
 
   TransceiverState emulated_state {s};
+  bool const tx_shift = s.ptt () && split_ && s.tx_frequency () && s.tx_frequency () != s.frequency ();
+  if (was_tx_ && !s.ptt ())   // JTDX-VU: Tx over, the dial is being put back
+    {
+      restoring_ = true;
+      restore_timer_.start ();
+    }
+  was_tx_ = tx_shift;
   if (s.ptt () && split_) emulated_state.frequency (s.tx_frequency ());
   emulated_state.split (false);
   emulated_state.tx_frequency (0);
@@ -54,6 +61,12 @@ void EmulateSplitTransceiver::handle_update (TransceiverState const& state,
       TransceiverState new_state {state};
       // Follow the rig if in RX mode.
       if (state.ptt ()) new_state.frequency (rx_frequency_);
+      else if (restoring_)
+        {
+          // JTDX-VU: not back on the Rx frequency yet - don't follow
+          if (state.frequency () == rx_frequency_ || restore_timer_.elapsed () > 3000) restoring_ = false;
+          else new_state.frequency (rx_frequency_);
+        }
 
       // These are always what was requested in prior set state operation
       new_state.tx_frequency (tx_frequency_);

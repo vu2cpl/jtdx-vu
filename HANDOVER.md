@@ -186,6 +186,21 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-04 — Fake It split: Rx frequency crept up after each Tx (candidate fix, untested)
+
+Manoj on the MacBook, TCI + Split "Fake It", 14.074: after a Tx the dial
+showed 14.077, during the next Tx 14.078 (not AetherSDR - Fake It retunes
+the dial itself). Likely race in `EmulateSplitTransceiver` (upstream code):
+when PTT drops, the rig can report "not transmitting" while its dial is
+still on the Tx frequency; `handle_update` then "follows the rig" and the
+shifted dial becomes the new Rx frequency, so every Tx shifts again (with
+TCI, Tx = dial + TxHz - 1500, about +1 kHz per Tx at 2500 Hz). Fix: after a
+Tx with a shifted frequency (`was_tx_`), `restoring_` keeps reporting the
+requested Rx frequency until the rig reports it (or 3 s pass). Builds; not
+yet tested - trial zip `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip` for
+the MacBook. Open: why it never showed before (the mini uses split None;
+the MacBook setup is new) - asked Manoj.
+
 ### 2026-10-04 — Auto CQ and 1 QSO exclude each other (for the next release)
 
 Manoj asked whether 1 QSO makes sense with Auto CQ on; agreed to make them
