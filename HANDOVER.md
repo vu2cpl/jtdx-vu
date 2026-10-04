@@ -1638,6 +1638,18 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
+- [ ] **Decision pending (Manoj thinking it over, 2026-10-04): simplify to
+      MSHV's DXCC model.** MSHV-Mac private build: one checkbox "DXCC: show
+      new entity / band / mode only" above the decodes; one Club Log status
+      (ATNO / need band / need mode / none) drives colour, filter and alerts;
+      nothing chosen twice. Proposal for JTDX-VU: drop the CQZ / ITUZ / grid /
+      prefix / call rows (24 ticks, 10 colour buttons) from Settings >
+      Notifications; DXCC new / band / mode colours always on; Show dropdown
+      -> one "New DXCC / band / mode only" tick box using
+      `DisplayText::wanted()`, the same test as AutoSeq wanted-first; drop
+      worked-B4 "Don't show". Keep CQ/MyCall/Tx colours, markers, beeps,
+      worked-B4 colour/strike, and the Wanted call/prefix/country lists.
+      Do nothing until he says go.
 - [ ] **AutoSeq queue + current-decode rule + JTTY heard** (unreleased,
       2026-10-03): try right-click Queue in the GUI and on air; check
       the JTTY calls-heard list on live traffic.
