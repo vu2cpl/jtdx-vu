@@ -203,6 +203,15 @@ before; the Mac mini runs Split None. Fix: `ptt_requested_` (from the last
 `set`) - while we have asked for Tx, the Rx frequency is not taken from the
 rig either. The end-of-Tx `restoring_` guard is kept. Builds; test zip
 `~/Desktop/jdxvu/test/JTDX-VU-splitfix-arm64.zip` for the MacBook.
+- Manoj: "still drifting" with that build. Reproduced locally without the
+  radio: `FAKE_TRX_DELAY=0.35 tools/fake_tci.py` (Tx echoed late, as
+  AetherSDR does) + a `-r` test copy with Fake It, driven over UDP
+  (TriggerCQ, type 51, after reading the client id from its heartbeat;
+  controller script was scratch). Unfixed /Applications build: one Tx ran
+  14.074 -> 13.27 MHz in 0.35 s (725 vfo commands). Fixed build: one vfo
+  at Tx start, one at Tx end. Rebuilt with a fresh label (aacaf7) as
+  `JTDX-VU-splitfix2-arm64.zip`; asked Manoj to check the revision on the
+  MacBook, since the fix works under the logged timing.
 
 ### 2026-10-04 — Fake It split: Rx frequency crept up after each Tx (first candidate - not the cause)
 
