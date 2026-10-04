@@ -1228,6 +1228,9 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
 
     auto set = [this, action] (bool on) {
         m_nonstop = on;
+        // JTDX-VU: Auto CQ and 1 QSO exclude each other - Auto CQ on clears 1 QSO
+        m_stopAfterQso = false;
+        if (on && ui->actionSingleShot->isChecked ()) ui->actionSingleShot->setChecked (false);
         m_settings->setValue ("JTDXVU/NonStop", on);
         QSignalBlocker b1 {action};
         action->setChecked (on);
@@ -3350,6 +3353,10 @@ void MainWindow::on_actionCallHigherNewCall_toggled(bool checked) { m_callHigher
 void MainWindow::on_actionSingleShot_toggled(bool checked)
 {
   m_singleshot=checked;
+  // JTDX-VU: 1 QSO while Auto CQ runs = finish this QSO, then stop (both go
+  // off when Tx halts - see on_stopTxButton_clicked)
+  m_stopAfterQso = checked && m_nonstop && m_mode != "JTTY";
+  if (m_stopAfterQso) showStatusMessage (tr ("Auto CQ: stopping after this QSO"), 10000);
   setAutoSeqButtonStyle(m_autoseq);
   ui->singleQSOButton->setChecked(checked);
 }
@@ -7470,6 +7477,12 @@ void MainWindow::stopTuneATU() { on_tuneButton_clicked(false); m_bTxTime=false; 
 
 void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
 {
+  if (m_stopAfterQso) {   // JTDX-VU: the QSO Auto CQ was finishing is over (or Tx was halted)
+    m_stopAfterQso = false;
+    if (m_cnsButton && m_nonstop) m_cnsButton->click ();
+    if (ui->actionSingleShot->isChecked ()) ui->actionSingleShot->setChecked (false);
+    showStatusMessage (tr ("Auto CQ stopped after the QSO"), 10000);
+  }
   if (m_mode == "JTTY") jttyClearTx ();          // JTDX-VU: Halt Tx stops a JTTY send too
   if (m_transmitting || m_tune) m_addtx = -1;
   if (m_tune) stop_tuning ();

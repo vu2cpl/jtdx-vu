@@ -217,7 +217,10 @@ or Pi 5 is recommended.
   answer is dropped after the AutoSeq counters (Settings > Sequencing),
   as usual. While CNS is on the Tx watchdog is the **Auto CQ time
   limit** (Settings > JTTY, 5 minutes by default; 10 minutes fixed up to
-  v0.5.0), so unanswered CQ still stops.
+  v0.5.0), so unanswered CQ still stops. Auto CQ and **1 QSO** exclude each
+  other (next release): switching Auto CQ on clears 1 QSO, and pressing
+  1 QSO during an Auto CQ run means "finish this QSO, then stop" - both go
+  off when Tx halts after it.
 - **No Stop button:** Monitor is the one start/stop control for
   monitoring (switching it off also ends a "Decode remaining files" run).
 - **Needed-DXCC alerts** when a decoded station is ATNO, a new band or

@@ -186,6 +186,17 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-04 — Auto CQ and 1 QSO exclude each other (for the next release)
+
+Manoj asked whether 1 QSO makes sense with Auto CQ on; agreed to make them
+exclusive. Switching Auto CQ on (the `set` lambda behind the button / CNS
+action) unchecks 1 QSO. Pressing 1 QSO while Auto CQ runs sets
+`m_stopAfterQso` ("Auto CQ: stopping after this QSO"); the next Halt Tx -
+normally `autoStopTx` at FIN of that QSO, or a manual halt - switches Auto
+CQ and 1 QSO off ("Auto CQ stopped after the QSO") in
+`on_stopTxButton_clicked`. Band change resets clear the flag too. Builds
+clean; not yet tried on air.
+
 ### 2026-10-04 — TX slider follows the TCI drive; new RX slider (trial, for the next release)
 
 Manoj: the Pwr slider sat at 0 while Tx worked. Cause: the saved

@@ -688,6 +688,7 @@ private:
   QWidget * m_queueBox {nullptr};
   QListWidget * m_queueList {nullptr};
   QSlider * m_rxGainSlider {nullptr};   // JTDX-VU: RX gain
+  bool m_stopAfterQso {false};  // JTDX-VU: 1 QSO pressed during Auto CQ - stop after this QSO
   bool m_cqRunQso {false}; // JTDX-VU: this QSO answers our CQ - only then does Non-stop continue
   JttyPanel *m_jttyPanel {nullptr};   // JTDX-VU JTTY
   QAction *m_actionJTTY {nullptr};
