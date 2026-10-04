@@ -39,6 +39,7 @@ void EmulateSplitTransceiver::set (TransceiverState const& s, unsigned sequence_
       restore_timer_.start ();
     }
   was_tx_ = tx_shift;
+  ptt_requested_ = s.ptt ();
   if (s.ptt () && split_) emulated_state.frequency (s.tx_frequency ());
   emulated_state.split (false);
   emulated_state.tx_frequency (0);
@@ -59,8 +60,12 @@ void EmulateSplitTransceiver::handle_update (TransceiverState const& state,
   else
     {
       TransceiverState new_state {state};
-      // Follow the rig if in RX mode.
-      if (state.ptt ()) new_state.frequency (rx_frequency_);
+      // Follow the rig if in RX mode.  JTDX-VU: "in RX mode" means neither
+      // the rig nor we say Tx - over TCI the rig echoes the Tx frequency
+      // before it confirms PTT, and following that echo made the Rx
+      // frequency step up by the split offset several times per Tx
+      // (14.074 -> 14.077 in one Tx, MacBook debug log 2026-10-04)
+      if (state.ptt () || ptt_requested_) new_state.frequency (rx_frequency_);
       else if (restoring_)
         {
           // JTDX-VU: not back on the Rx frequency yet - don't follow

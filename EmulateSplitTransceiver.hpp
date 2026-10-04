@@ -53,6 +53,7 @@ private:
   // back on the Rx frequency (or 3 s pass) keep reporting the Rx frequency,
   // or the shifted dial becomes the new Rx frequency and every Tx creeps up
   bool was_tx_ {false};
+  bool ptt_requested_ {false};   // JTDX-VU: what we asked for, before the rig confirms it
   bool restoring_ {false};
   QElapsedTimer restore_timer_;
 };

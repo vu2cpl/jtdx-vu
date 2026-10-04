@@ -186,7 +186,25 @@ Last updated: 2026-10-03
 
 ## What changed
 
-### 2026-10-04 — Fake It split: Rx frequency crept up after each Tx (candidate fix, untested)
+### 2026-10-04 — Fake It split over TCI: runaway at Tx start (root cause found)
+
+The first candidate (below) did not help. A `JTDX_DEBUG_TO_FILE=ON` build
+on the MacBook (zip `~/Desktop/jdxvu/test/JTDX-VU-debug-arm64.zip`; log at
+`~/Library/Application Support/JTDX-VU/jtdx_debug.txt`) showed the cause:
+at PTT on, `EmulateSplitTransceiver::set` retunes the dial to the Tx
+frequency (14074536 = +536 Hz at Tx 2036 Hz); the TCI server echoes
+`vfo:0,0,14074536` within ~4 ms, **before** it confirms `trx:0,true`;
+`handle_update` sees rig PTT false, "follows the rig", reports 14074536 as
+the Rx frequency; MainWindow recomputes Tx = new Rx + 536 and sets again -
+a loop of +536 Hz steps every ~1 ms until PTT is confirmed. In the log one
+Tx went 14.074 -> 14.211 MHz in 0.35 s (~260 steps) and returned to the
+wrong Rx after. Hamlib CAT never echoes that fast, hence never seen
+before; the Mac mini runs Split None. Fix: `ptt_requested_` (from the last
+`set`) - while we have asked for Tx, the Rx frequency is not taken from the
+rig either. The end-of-Tx `restoring_` guard is kept. Builds; test zip
+`~/Desktop/jdxvu/test/JTDX-VU-splitfix-arm64.zip` for the MacBook.
+
+### 2026-10-04 — Fake It split: Rx frequency crept up after each Tx (first candidate - not the cause)
 
 Manoj on the MacBook, TCI + Split "Fake It", 14.074: after a Tx the dial
 showed 14.077, during the next Tx 14.078 (not AetherSDR - Fake It retunes
