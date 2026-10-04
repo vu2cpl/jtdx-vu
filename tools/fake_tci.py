@@ -7,6 +7,8 @@
 # which imitates an SDR program that acknowledges audio_start but sends
 # nothing (AetherSDR 26.9.5 after its DAX release). No IQ. Kill it to
 # simulate the SDR program closing; start it again to see the client reconnect.
+# FAKE_TRX_DELAY=0.35 delays the trx (PTT) echo as AetherSDR does - the Fake It
+# split runaway needs it.
 import socket, hashlib, base64, threading, time, sys, struct
 G = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 log = open(sys.argv[1], 'a', buffering=1)
@@ -81,6 +83,7 @@ def stream_audio(c, alive, lock):
         time.sleep(2048 / 48000)
 
 PUSH = sys.argv[1] + ".push"
+TRX_DELAY = float(os.environ.get("FAKE_TRX_DELAY", "0"))   # seconds before trx is echoed
 def pusher(c, alive, lock):
     # a file <log file>.push is sent as one text message, as if the SDR program
     # changed something itself (e.g. "vfo:0,0,21074000;"), then deleted
@@ -120,6 +123,14 @@ def serve(c):
                 elif cmd.startswith("audio_stop"):
                     alive[0] = False
                 if not cmd.startswith("rx_smeter"): log.write("%.3f < %s  > %s\n" % (time.time(), cmd, r))
+                if cmd.startswith("trx") and TRX_DELAY:
+                    # like AetherSDR: Tx confirmed ~0.35 s later, after the vfo echo
+                    def late(r=r):
+                        try:
+                            with lock: c.sendall(frame(r))
+                        except OSError: pass
+                    threading.Timer(TRX_DELAY, late).start()
+                    continue
                 with lock: c.sendall(frame(r))
     except OSError:
         pass
