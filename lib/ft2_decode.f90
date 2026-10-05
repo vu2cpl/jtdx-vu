@@ -47,6 +47,7 @@ contains
     real a(5)
     real bitmetrics(2*NN,3)
     real llr(2*ND),llra(2*ND),llrb(2*ND),llrc(2*ND),llrd(2*ND)
+    real llrmx(2*ND),llrav(2*ND)   ! JTDX-VU: MSHV's sets D (max |LLR| of A/B/C) and E (mean)
     real candidate(2,100)
     integer apbits(2*ND)
     integer*1 message77(77),rvec(77),apmask(2*ND),cw(2*ND)
@@ -255,15 +256,24 @@ contains
           llrc=scalefac*llrc
 
           apmag=maxval(abs(llra))*1.1
-          npasses=3+nappasses(nQSOProgress)
-          if(stophint) npasses=4
-          if(ndepth.eq.1) npasses=3
+! JTDX-VU: two more non-AP passes as MSHV's FT2 - D takes, per bit, whichever
+! of the 1/2/4-symbol metrics is most confident; E averages the three
+          do i=1,2*ND
+            if(abs(llra(i)).ge.abs(llrb(i)) .and. abs(llra(i)).ge.abs(llrc(i))) then; llrmx(i)=llra(i)
+            elseif(abs(llrb(i)).ge.abs(llrc(i))) then; llrmx(i)=llrb(i)
+            else; llrmx(i)=llrc(i); endif
+            llrav(i)=(llra(i)+llrb(i)+llrc(i))/3.0
+          enddo
+          npasses=5+nappasses(nQSOProgress)
+          if(stophint) npasses=6
+          if(ndepth.eq.1) npasses=5
           do ipass=1,npasses
             if(ipass.eq.1) llr=llra; if(ipass.eq.2) llr=llrb; if(ipass.eq.3) llr=llrc
-            if(ipass.le.3) then; apmask=0; iaptype=0; endif
-            if(ipass.gt.3) then
+            if(ipass.eq.4) llr=llrmx; if(ipass.eq.5) llr=llrav
+            if(ipass.le.5) then; apmask=0; iaptype=0; endif
+            if(ipass.gt.5) then
               llrd=llra
-              iaptype=naptypes(nQSOProgress,ipass-3)
+              iaptype=naptypes(nQSOProgress,ipass-5)
               if(stophint) iaptype=1
 ! Conditions that cause us to bail out of AP decoding
               napwid=50

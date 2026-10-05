@@ -1901,6 +1901,14 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       (2) MSHV's channel estimation / MMSE equalisation blend (fading>6 dB);
       (3) AP7. All measurable on the fading bench. Bench scripts live in
       the session scratchpad; regenerate with the FIXED ft2sim.
+      **LLR sets D/E + 5 non-AP passes (MSHV) - measured neutral.** Fading:
+      -14 29 (same), -15 25 (was 24), -16 12 (same); flat: -14 27, -16 2 (one
+      file back each). Within the noise of 30 files, 0/10 false decodes,
+      6/6 message types exact. Kept (MSHV runs it and its equalisation
+      blend writes into these sets) but NOT claimed as a gain. The two big
+      MSHV pieces still missing - channel estimation / MMSE equalisation
+      (built for fading, where the demapper gain showed) and AP7 - are
+      what to measure next, not more LLR variants.
 - [ ] **Decision pending (Manoj thinking it over, 2026-10-04): simplify to
       MSHV's DXCC model.** MSHV-Mac private build: one checkbox "DXCC: show
       new entity / band / mode only" above the decodes; one Club Log status
