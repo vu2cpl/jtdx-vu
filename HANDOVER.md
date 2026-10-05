@@ -1883,6 +1883,24 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       decoder is NOT fading-fragile, and the clean-channel results stand.
       Fading bench rerun with the fixed simulator (0.5 Hz, 1 ms, 30/SNR):
       see the next note.
+      **Fading bench (fixed simulator, 0.5 Hz / 1 ms, 30 files per SNR):**
+      baseline -10 30, -12 30, -13 27, -14 24, -15 21, -16 13; the lowered
+      gates again identical to baseline (closed for good); **MSHV's LSE
+      demapper -14 29, -15 24, -16 12** - the +0.5-1 dB LZ2HV's comment
+      claims, visible only under fading (flat channel: no change, the
+      demod is already near-optimum there). Note the baseline decodes
+      deeper under fading (-16: 13 vs 2 flat) because the 2/4-symbol
+      coherent combining recovers spread energy - which is why the flat
+      bench hid everything. Demapper committed (`get_ft2_bitmetrics.f90`:
+      power |s|^2, noise variance from the 48 off-tone Costas bins ->
+      beta=0.5/var clamped 0.01..50, beta/nsym for coherent sums, exact
+      log-sum-exp per bit; normalizebmet unchanged). Checks: strong
+      signals +20/0/-10 dB decode with correct SNR, 0/10 false decodes on
+      noise, 10/10 message types exact at -8 dB faded. Next, in order:
+      (1) LLR sets D (max-|LLR| of A/B/C) and E (mean) + 5 non-AP passes;
+      (2) MSHV's channel estimation / MMSE equalisation blend (fading>6 dB);
+      (3) AP7. All measurable on the fading bench. Bench scripts live in
+      the session scratchpad; regenerate with the FIXED ft2sim.
 - [ ] **Decision pending (Manoj thinking it over, 2026-10-04): simplify to
       MSHV's DXCC model.** MSHV-Mac private build: one checkbox "DXCC: show
       new entity / band / mode only" above the decodes; one Club Log status
