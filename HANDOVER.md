@@ -1839,6 +1839,19 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
+- [ ] **FT2 weak-signal gap vs MSHV** (2026-10-05 screen recording from
+      LZ2HV, KN23, 14.084 FT2, JTDX-VU 0.6.0 beside MSHV 2.76.7, 15
+      periods 18:37:52-18:38:45). MSHV 41 decodes, JTDX-VU 34. Everything
+      above about -15 dB matched (dB / DT agree). Missed: 3 normal decodes at
+      -16..-20 dB (CQ GM4VAC IO77 -16, SP2WEI UA3DIB R-04 -18, SP2WEI UA3DIB
+      -06 -20) and 4 MSHV "AP7" decodes at -17..-21 dB (a priori from the
+      callsigns of QSOs it is following: SP9FBN/UA3DIB, SQ1EIC/RK3AF). So:
+      (1) the scaled-FT4 FT2 chain is a few dB short of MSHV's FT2 decoder
+      (our simulation only went to -14 dB); (2) no AP for other stations'
+      QSOs in FT2. Plan: Manoj saves MSHV FT2 WAVs (SAVE THIS / SAVE
+      PREVIOUS) on a busy band and shares them; then decode them offline in
+      both and compare with MSHV's FT2 decoder source (LZ2HV, credit),
+      tuning thresholds / passes and adding QSO-tracking AP.
 - [ ] **Decision pending (Manoj thinking it over, 2026-10-04): simplify to
       MSHV's DXCC model.** MSHV-Mac private build: one checkbox "DXCC: show
       new entity / band / mode only" above the decodes; one Club Log status
