@@ -54,7 +54,7 @@ namespace Radio
   constexpr Frequency qo100_ft8 {10489540000ull};     // FT8, downlink (uplink 2400.040)
   // the dial may show either side: the downlink (Rx, 10489.5-10490 MHz) or
   // the uplink (Tx, 2400.0-2400.5 MHz)
-  inline bool is_qo100_down (Frequency f) {return f >= 10489500000ull && f <= 10490000000ull;}
+  inline bool is_qo100_down (Frequency f) {return f >= 10489400000ull && f <= 10490000000ull;}   // as MSHV's QO-100 band
   inline bool is_qo100_up (Frequency f) {return f >= 2400000000ull && f <= 2400500000ull;}
   inline bool is_qo100 (Frequency f) {return is_qo100_down (f) || is_qo100_up (f);}
   inline Frequency qo100_uplink (Frequency f) {return is_qo100_down (f) ? f - qo100_offset : f;}

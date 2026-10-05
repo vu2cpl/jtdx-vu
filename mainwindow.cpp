@@ -6546,11 +6546,20 @@ void MainWindow::acceptQSO2(QDateTime const& QSO_date_off, QString const& call, 
 {
   QString date = QSO_date_on.toString("yyyyMMdd");
   m_qsoLogged=true;
-  m_logBook.addAsWorked (call, m_config.bands ()->find (dial_freq), mode, date, grid, name);
+  // JTDX-VU: a QO-100 QSO is worked on the uplink band (13cm), as it is logged
+  Frequency const log_freq = Radio::qo100_uplink (dial_freq);
+  bool const qo100 = Radio::is_qo100 (dial_freq);
+  m_logBook.addAsWorked (call, m_config.bands ()->find (log_freq), mode, date, grid, name);
   if (m_mode == "JTTY") jttyRestyleHeard ();   // JTDX-VU: the call is worked now
   ui->decodedTextBrowser->refilter (m_logBook);  // JTDX-VU: a just-worked station drops out of "New ..." views
   QString operator_call = m_config.my_callsign(); QString my_call = m_config.my_callsign(); QString my_grid = m_config.my_grid();
-  m_messageClient->qso_logged (QSO_date_off, call, grid, dial_freq, mode, rpt_sent, rpt_received, tx_power, comments, name, QSO_date_on, operator_call, my_call, my_grid);
+  // JTDX-VU: the WSJT-X "QSO Logged" message has no satellite fields, and
+  // RUMlog logs from it (then ignores the full ADIF). For a QO-100 QSO with the
+  // secondary UDP server set (MSHV-Mac's mshv_rumlog_bridge.py, 127.0.0.1:2233,
+  // which saves the ADIF into RUMlog with PROP_MODE / SAT_NAME) it is not sent;
+  // otherwise it carries the uplink frequency, so the band is 13cm as in the ADIF.
+  if (!(qo100 && m_config.enable_udp2_broadcast () && m_config.valid_udp2 ()))
+    m_messageClient->qso_logged (QSO_date_off, call, grid, log_freq, mode, rpt_sent, rpt_received, tx_power, comments, name, QSO_date_on, operator_call, my_call, my_grid);
   if(m_config.enable_udp1_adif_sending()) m_messageClient->logged_ADIF(myadif2);
   if(m_config.enable_udp2_broadcast() && m_config.valid_udp2()) {
     QUdpSocket sock;
@@ -6558,7 +6567,7 @@ void MainWindow::acceptQSO2(QDateTime const& QSO_date_off, QString const& call, 
       { JTDXMessageBox::warning_message (this, "", tr ("Error sending QSO ADIF data to secondary UDP server"), tr ("Write returned \"%1\"").arg (sock.errorString ())); }
   }
   if (m_config.send_to_eqsl())
-      Eqsl->upload(m_config.eqsl_username(),m_config.eqsl_passwd(),m_config.eqsl_nickname(),call,mode,QSO_date_on,rpt_sent,m_config.bands ()->find (dial_freq),eqslcomments);
+      Eqsl->upload(m_config.eqsl_username(),m_config.eqsl_passwd(),m_config.eqsl_nickname(),call,mode,QSO_date_on,rpt_sent,m_config.bands ()->find (log_freq),eqslcomments);
   ui->dxCallEntry->setStyleSheet(QString("QLineEdit {color: %1; background: %2}").arg(Radio::convert_dark("#000000",m_useDarkStyle),Radio::convert_dark("#7fff7f",m_useDarkStyle)));
   m_lastloggedcall=call;
   if (queued (call)) {     // JTDX-VU: worked, off the queue
@@ -7180,11 +7189,12 @@ void MainWindow::switch_to_band (QString const& band)
           m_bandEdited = true;
           band_changed (Radio::qo100_ft8);
           m_wideGraph->setRxBand (m_config.bands ()->find (Radio::qo100_ft8));
-          statusBar ()->showMessage (tr ("QO-100: FT8 on %1 MHz downlink (uplink %2 MHz)")
+          statusBar ()->showMessage (tr ("QO-100: %1 MHz downlink (uplink %2 MHz)")
                                      .arg (Radio::qo100_ft8 / 1.e6, 0, 'f', 3)
                                      .arg (Radio::qo100_uplink (Radio::qo100_ft8) / 1.e6, 0, 'f', 3), 8000);
         };
-      if (m_mode != "FT8")
+      // FT8 and FT4 (and FT2) share the QO-100 spot, as in MSHV; anything else -> FT8
+      if (m_mode != "FT8" && m_mode != "FT4" && m_mode != "FT2")
         {
           ui->actionFT8->trigger ();
           QTimer::singleShot (1500, this, tune);   // after the mode switch has re-tuned

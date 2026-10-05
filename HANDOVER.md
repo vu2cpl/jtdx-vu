@@ -228,9 +228,25 @@ station: uplink (Tx) 2.4 GHz, downlink (Rx) 10.489 GHz.
   existing setups via `[Switcher] QO100Offered`): switches to FT8 if needed
   and tunes the downlink 10489.540; highlighted while on the transponder.
   Default frequency list gains 10489.540 FT8 (new / reset lists only).
-- Open: the button tunes the **downlink**; Manoj's first answer was that the
-  rig dial shows the downlink, then he was unsure - to confirm. Builds; not
-  tried on air.
+- **Aligned with MSHV-Mac** (Manoj: "we have already implemented the same
+  there"). MSHV's 70 QO-100 QSOs in `mshvlog.adi` log BAND 13CM, FREQ
+  2400.040000, PROP_MODE SAT, SAT_NAME QO-100, **SAT_MODE SX**, FREQ_RX
+  10489.540; its QO-100 user band is the downlink window 10489.4-10489.9
+  MHz with 10489.540 for every mode. So: SAT_MODE SX added, downlink window
+  from 10489.4 MHz, the button keeps FT4 / FT2 (else FT8), tunes the
+  downlink (settles the open question).
+- **RUMlog**: RUMlog logs from the WSJT-X "QSO Logged" message (no satellite
+  fields) and ignores the Logged-ADIF, so the fields were lost (MSHV-Mac
+  `tools/README.md`, `mshv_rumlog_bridge.py`). JTDX-VU now, for a QO-100
+  QSO with the secondary UDP server enabled, does **not** send "QSO Logged"
+  and lets the ADIF go to that server - set it to the bridge,
+  **127.0.0.1:2233** (LaunchAgent `com.vu2cpl.mshv-rumlog-bridge`, running),
+  which saves the record into RUMlog via `SaveAdif` with the satellite
+  fields. Without the secondary server, "QSO Logged" carries the uplink
+  frequency (13cm). Worked-before (`addAsWorked`) and eQSL use the uplink
+  band too. Bridge dry run on a JTDX-VU-style record: "would save ... 13cm
+  FT8 ... PROP_MODE=SAT, SAT_NAME=QO-100, SAT_MODE=SX, BAND_RX=3cm,
+  FREQ_RX=10489.540000". Not yet tried on air.
 
 ### 2026-10-04 — Band change keeps AnsB4 and 1 QSO (for the next release)
 

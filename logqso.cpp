@@ -145,7 +145,7 @@ void LogQSO::accept()
       strDialFreq = QString::number (Radio::qo100_uplink (m_dialFreq) / 1.e6, 'f', 6);
       satFields = " <FREQ_RX:" + QString::number (rx.length ()) + ">" + rx
         + " <BAND_RX:" + QString::number (rxBand.length ()) + ">" + rxBand
-        + " <PROP_MODE:3>SAT <SAT_NAME:6>QO-100";
+        + " <PROP_MODE:3>SAT <SAT_NAME:6>QO-100 <SAT_MODE:2>SX";   // as MSHV logs it
     }
 
   //Log this QSO to ADIF file "wsjtx_log.adi"

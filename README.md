@@ -188,8 +188,11 @@ or Pi 5 is recommended.
   satellite (10489.540 MHz downlink / 2400.040 MHz uplink). QSOs made on the
   transponder log as a satellite QSO, as LoTW wants: FREQ / BAND = uplink
   (13cm), FREQ_RX / BAND_RX = downlink (3cm), PROP_MODE SAT, SAT_NAME
-  QO-100, whichever side the radio's dial shows. New DXCC / band colours
-  check against 13cm, the band these QSOs are logged on.
+  QO-100, SAT_MODE SX - as MSHV logs them - whichever side the radio's dial
+  shows. New DXCC / band colours check against 13cm, the band these QSOs are
+  logged on. RUMlog drops satellite fields from the usual WSJT-X UDP path, so
+  with a secondary UDP server set (e.g. a RUMlog bridge) a QO-100 QSO is sent
+  only as ADIF there.
 - **TX and RX sliders** (since v0.6.0). The Pwr slider is now labelled
   **TX**. With TCI audio it shows the SDR program's own drive setting and
   moves with it, so nothing changes the radio's power until you move it
