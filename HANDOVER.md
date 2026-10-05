@@ -1852,6 +1852,23 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       PREVIOUS) on a busy band and shares them; then decode them offline in
       both and compare with MSHV's FT2 decoder source (LZ2HV, credit),
       tuning thresholds / passes and adding QSO-tracking AP.
+      **2026-10-06 step 1 measured - the hard gates are NOT the loss.**
+      Bench: `ft2sim` (fading off) -> `ft2dec`, a FIXED set of 30 files per
+      SNR (ft2sim reseeds from time+PID, so regenerating per run gave
+      run-to-run noise bigger than the effect; the first "worse" result was
+      that). Baseline: -13 30/30, -14 27, -15 7, -16 2, -17 1, -18 0 (the
+      -14 dB cliff from 09-29 confirmed). Lowering syncmin 1.2->0.8, smax
+      1.2->0.65, nsync_qual 20->13, badsync 8->7, and the return->cycle
+      give-up fix - all together and each alone - decoded EXACTLY the same
+      files. No false decodes either (0/10 noise-only). So on a clean signal
+      every gate passes and the LDPC/demod is what fails; MSHV's deeper
+      reach must come from its demapper / channel estimation / extra LLR
+      sets and passes, and on air from AP7. Revised order: (1) MSHV's
+      log-sum-exp demapper with noise-variance beta + LLR sets D/E and 5
+      passes; (2) AP7; (3) the gates only matter on crowded bands (keep the
+      return->cycle fix, it is harmless). Source left clean (gates at FT4
+      values). Bench scripts in the session scratchpad (regenerate: ft2sim
+      ... 30 files per SNR into fixed/snr-NN/).
 - [ ] **Decision pending (Manoj thinking it over, 2026-10-04): simplify to
       MSHV's DXCC model.** MSHV-Mac private build: one checkbox "DXCC: show
       new entity / band / mode only" above the decodes; one Club Log status
