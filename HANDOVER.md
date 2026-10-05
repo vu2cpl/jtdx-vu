@@ -1869,6 +1869,20 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       return->cycle fix, it is harmless). Source left clean (gates at FT4
       values). Bench scripts in the session scratchpad (regenerate: ft2sim
       ... 30 files per SNR into fixed/snr-NN/).
+      **2026-10-06, later: JTDX's fading simulation never worked.** Chasing
+      "FT2 fails under the mildest fading" (a 0 dB signal: no decode with
+      ft2sim fdop 0.1 / delay 0.5) led to the coarse candidate search, which
+      showed the file held NO signal, only noise. Cause: `ft8sim`, `ft4sim`
+      and our `ft2sim` copy call `watterson(c,NZZ,NWAVE,fs,delay,fspread)`
+      but `lib/watterson.f90` takes `(c,npts,fs,delay,fspread)` - the extra
+      NWAVE shifts fs/delay/fspread one slot (delay becomes 12000 ms) and the
+      output is noise. Fixed in ft2sim only (`2520b643`); a 0 dB signal now
+      decodes under 2 Hz / 2 ms. The upstream ft4sim/ft8sim have the same
+      bug and are left alone (upstream is dormant; nobody has reported it).
+      So the earlier "faded bench: 0 decodes everywhere" rows are void, the
+      decoder is NOT fading-fragile, and the clean-channel results stand.
+      Fading bench rerun with the fixed simulator (0.5 Hz, 1 ms, 30/SNR):
+      see the next note.
 - [ ] **Decision pending (Manoj thinking it over, 2026-10-04): simplify to
       MSHV's DXCC model.** MSHV-Mac private build: one checkbox "DXCC: show
       new entity / band / mode only" above the decodes; one Club Log status
