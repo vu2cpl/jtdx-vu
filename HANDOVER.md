@@ -1837,6 +1837,12 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       so it keeps the submode as its mode and maps on export; don't hand-
       edit these to MFSK. Before uploading, check what RUMlog sends TQSL
       for JTTY (TQSL config update may be needed).
+      2026-10-05: Manoj asked for all JTTY QSOs as MODE MFSK / SUBMODE
+      JTTY. JTDX-VU's own `wsjtx_log.adi`: the 7 pre-v0.4.0 records (mode
+      JTTY, 09-28..09-30) changed to MFSK/JTTY, all 11 now MFSK/JTTY; backup
+      `wsjtx_log.before-jtty-mfsk-20261005.adi`. `~/Downloads/jtty-qsos-mfsk.adi`
+      holds the 11 corrected records for RUMlog / Club Log. RUMlog itself
+      not touched (its DB is unreadable from here) - see the caveat above.
 - [ ] **JTTY start-time fix** installed 2026-10-01; check the next
       JTTY QSO logs a sensible start time.
 - [ ] **JTTY screen redesign (2026-10-02):** installed; try on air -
