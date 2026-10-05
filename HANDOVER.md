@@ -61,7 +61,7 @@ Last updated: 2026-10-03
     and new Notifications settings (v0.6.0)", table / release link / apt
     command on v0.6.0, card sentence; pushed (`14806fc`) after all eight
     URLs answered 200.
-  - Not installed on the Mac mini yet (it runs the v0.5.3 build).
+  - Installed on the Mac mini 2026-10-05 from the verified release zip (reports 0.6.0, Rev b15929).
 - **Release v0.5.3: COMPLETE 2026-10-03** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.3,
   tag `v0.5.3` on `bcad6f8c`: Auto CQ under Monitor everywhere
   (`41936ec2`), status-bar overlap fix (`776ef8e0`); notes add a "Known
