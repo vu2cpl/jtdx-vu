@@ -122,7 +122,10 @@ program ft2sim
 
   do ifile=1,nfiles
      c=c0
-     if(fspread.ne.0.0 .or. delay.ne.0.0) call watterson(c,NZZ,NWAVE,fs,delay,fspread)
+! JTDX-VU: watterson takes (c,npts,fs,delay,fspread); JTDX's ft4sim/ft8sim pass an
+! extra NWAVE, which shifts fs/delay/fspread one slot and destroys the signal, so
+! their fading option never worked.  Fixed here.
+     if(fspread.ne.0.0 .or. delay.ne.0.0) call watterson(c,NZZ,fs,delay,fspread)
      c=sig*c
      wave=real(c)
      peak=maxval(abs(wave))
