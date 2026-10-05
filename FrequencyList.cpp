@@ -168,6 +168,7 @@ namespace
       {3400065000, Modes::JT65, IARURegions::ALL,true},
       
       {5760065000, Modes::JT65, IARURegions::ALL,true},
+      {10489540000ull, Modes::FT8, IARURegions::ALL,true},   // JTDX-VU: QO-100 FT8 (downlink)
       // JTDX-VU: FT2 dial frequencies as MSHV ships them (config_band_all.h)
       {1843000, Modes::FT2, IARURegions::ALL,true},
       {3578000, Modes::FT2, IARURegions::ALL,true},

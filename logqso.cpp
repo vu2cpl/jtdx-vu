@@ -105,7 +105,8 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
   m_tcp_server_port=m_config->tcp_server_port();
   m_enable_tcp_connection=m_config->enable_tcp_connection();
   m_debug=m_config->write_decoded_debug();
-  ui->band->setText(m_config->bands ()->find (dialFreq));
+  // JTDX-VU: on QO-100 the band logged is the uplink's (13cm)
+  ui->band->setText(m_config->bands ()->find (Radio::qo100_uplink (dialFreq)));
 
   if(!autologging) {
 	 show ();
@@ -134,13 +135,25 @@ void LogQSO::accept()
   eqslcomments=ui->eqslcomments->text();
   m_eqslcomments=eqslcomments;
   QString strDialFreq(QString::number(m_dialFreq / 1.e6,'f',6));
+  // JTDX-VU: QO-100 - FREQ / BAND are the uplink, the downlink goes in
+  // FREQ_RX / BAND_RX, with PROP_MODE SAT and SAT_NAME QO-100 (as LoTW wants)
+  QString satFields;
+  if (Radio::is_qo100 (m_dialFreq))
+    {
+      QString const rx = QString::number (Radio::qo100_downlink (m_dialFreq) / 1.e6, 'f', 6);
+      QString const rxBand = m_config->bands ()->find (Radio::qo100_downlink (m_dialFreq));
+      strDialFreq = QString::number (Radio::qo100_uplink (m_dialFreq) / 1.e6, 'f', 6);
+      satFields = " <FREQ_RX:" + QString::number (rx.length ()) + ">" + rx
+        + " <BAND_RX:" + QString::number (rxBand.length ()) + ">" + rxBand
+        + " <PROP_MODE:3>SAT <SAT_NAME:6>QO-100";
+    }
 
   //Log this QSO to ADIF file "wsjtx_log.adi"
   QString filename = "wsjtx_log.adi";  // TODO allow user to set
   ADIF adifile;
   auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("wsjtx_log.adi");
   adifile.init(adifilePath);
-  if (!adifile.addQSOToFile(hisCall,hisGrid,mode,rptSent,rptRcvd,m_dateTimeOn,m_dateTimeOff,band,comments,name,strDialFreq,m_myCall,m_myGrid,m_txPower,m_send_to_eqsl))
+  if (!adifile.addQSOToFile(hisCall,hisGrid,mode,rptSent,rptRcvd,m_dateTimeOn,m_dateTimeOff,band,comments,name,strDialFreq,m_myCall,m_myGrid,m_txPower,m_send_to_eqsl,satFields))
   {
       JTDXMessageBox::information_message(0,"","Cannot open file \"" + adifilePath + "\".");
    }
@@ -204,6 +217,7 @@ void LogQSO::accept()
     if (m_send_to_eqsl) {
       myadif+=" <EQSL_QSL_SENT:1>Y <EQSL_QSLSDATE:8>" + m_jtdxtime->currentDateTimeUtc2().toString("yyyyMMdd");
     }
+    myadif+=satFields;
     myadif+=" <EOR> ";
     myadif2 = myadif.trimmed().toUtf8();
 

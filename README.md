@@ -184,6 +184,12 @@ or Pi 5 is recommended.
   UDP server (Settings > Reporting) used to pop up a "Network Error" box on
   every send; now the status bar says "UDP host:port: ... - check Settings >
   Reporting", and a failed name lookup is retried every 30 s.
+- **QO-100** (next release). A **QO-100** band button tunes FT8 on the
+  satellite (10489.540 MHz downlink / 2400.040 MHz uplink). QSOs made on the
+  transponder log as a satellite QSO, as LoTW wants: FREQ / BAND = uplink
+  (13cm), FREQ_RX / BAND_RX = downlink (3cm), PROP_MODE SAT, SAT_NAME
+  QO-100, whichever side the radio's dial shows. New DXCC / band colours
+  check against 13cm, the band these QSOs are logged on.
 - **TX and RX sliders** (since v0.6.0). The Pwr slider is now labelled
   **TX**. With TCI audio it shows the SDR program's own drive setting and
   moves with it, so nothing changes the radio's power until you move it

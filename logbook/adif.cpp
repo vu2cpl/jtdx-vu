@@ -367,7 +367,7 @@ int ADIF::getCount(const QString mode)
 
 // open ADIF file and append the QSO details. Return true on success
 bool ADIF::addQSOToFile(const QString hisCall, const QString hisGrid, const QString mode, const QString rptSent, const QString rptRcvd, QDateTime const& dateTimeOn, QDateTime const& dateTimeOff, const QString band,
-                        const QString comments, const QString name, const QString strDialFreq, const QString m_myCall, const QString m_myGrid, const QString m_txPower,const bool send_to_eqsl)
+                        const QString comments, const QString name, const QString strDialFreq, const QString m_myCall, const QString m_myGrid, const QString m_txPower,const bool send_to_eqsl, const QString extra)
 {
     QFile f2(_filename);
     if (!f2.open(QIODevice::Text | QIODevice::Append))
@@ -408,6 +408,7 @@ bool ADIF::addQSOToFile(const QString hisCall, const QString hisGrid, const QStr
         if(!name.isEmpty ()) t+=" <name:" + QString::number(name.length()) +
                 ">" + name;
         if (send_to_eqsl) t+=" <eqsl_qsl_sent:1>Y";
+        t+=extra;   // JTDX-VU: satellite fields (QO-100)
         t+=" <eor>";
         out << t <<
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)

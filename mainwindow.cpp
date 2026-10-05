@@ -1294,7 +1294,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   {
     auto timer = new QTimer {this};  // keep the active-button highlight in step with rig and menus
     connect (timer, &QTimer::timeout, this, [this] {
-        m_switcher->set_active (m_config.bands ()->find (m_freqNominal), m_mode);
+        m_switcher->set_active (Radio::is_qo100 (m_freqNominal) ? QString {"QO-100"} : m_config.bands ()->find (m_freqNominal), m_mode);
       });
     timer->start (500);
   }
@@ -7172,6 +7172,26 @@ void MainWindow::band_changed (Frequency f)
 
 void MainWindow::switch_to_band (QString const& band)
 {
+  if (band == "QO-100")
+    {
+      // JTDX-VU: the satellite - FT8 on the downlink (QSOs log as PROP_MODE
+      // SAT, SAT_NAME QO-100, with the uplink as FREQ / BAND)
+      auto tune = [this] {
+          m_bandEdited = true;
+          band_changed (Radio::qo100_ft8);
+          m_wideGraph->setRxBand (m_config.bands ()->find (Radio::qo100_ft8));
+          statusBar ()->showMessage (tr ("QO-100: FT8 on %1 MHz downlink (uplink %2 MHz)")
+                                     .arg (Radio::qo100_ft8 / 1.e6, 0, 'f', 3)
+                                     .arg (Radio::qo100_uplink (Radio::qo100_ft8) / 1.e6, 0, 'f', 3), 8000);
+        };
+      if (m_mode != "FT8")
+        {
+          ui->actionFT8->trigger ();
+          QTimer::singleShot (1500, this, tune);   // after the mode switch has re-tuned
+        }
+      else tune ();
+      return;
+    }
   // pick this band's working frequency for the current mode, as if chosen
   // from the band combo box: prefer the entry marked default for this mode
   // (the standard FT8/FT4/... frequency), then any entry for exactly this

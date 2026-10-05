@@ -262,6 +262,7 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
                             QStringList wantedCallList, QStringList wantedPrefixList, QStringList wantedGridList, 
                             QStringList wantedCountryList, bool windowPopup, QWidget* window)
 {
+    dialFreq = Radio::qo100_uplink (Radio::Frequency (dialFreq));   // JTDX-VU: QO-100 QSOs are logged on 13cm
     QString bgColor = Radio::convert_dark("#ffffff",useDarkStyle_);
     QString txtColor = Radio::convert_dark("#000000",useDarkStyle_);
     QString swpColor = "";

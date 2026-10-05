@@ -25,7 +25,7 @@ QStringList const& BandModeSwitcher::all_modes ()
 QStringList const& BandModeSwitcher::all_bands ()
 {
   static QStringList const bands {"160m", "80m", "60m", "40m", "30m", "20m", "17m", "15m",
-                                  "12m", "10m", "6m", "4m", "2m"};
+                                  "12m", "10m", "6m", "4m", "2m", "QO-100"};   // JTDX-VU: QO-100 = the satellite (3cm downlink)
   return bands;
 }
 
@@ -42,7 +42,14 @@ BandModeSwitcher::BandModeSwitcher (QSettings * settings, bool dark, QWidget * p
   bands_ = settings_->value ("Bands", QStringList {"160m", "80m", "40m", "30m", "20m", "17m",
                                                    "15m", "12m", "10m", "6m"}).toStringList ();
   modes_ = settings_->value ("Modes", QStringList {"FT8", "FT4"}).toStringList ();
-  new_only_ = settings_->value ("NewOnly", 0).toInt () > 0 ? 1 : 0;   // the old 1-3 choices mean on
+  new_only_ = settings_->value ("NewOnly", 0).toInt () > 0 ? 1 : 0;
+  // JTDX-VU: offer the new QO-100 button once to existing setups
+  if (!settings_->value ("QO100Offered", false).toBool ())
+    {
+      if (!bands_.contains ("QO-100")) bands_ << "QO-100";
+      settings_->setValue ("Bands", bands_);
+      settings_->setValue ("QO100Offered", true);
+    }   // the old 1-3 choices mean on
   settings_->endGroup ();
 
   // JTDX-VU: one tick, as in MSHV - what counts as "new" is chosen once, in

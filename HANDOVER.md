@@ -209,6 +209,29 @@ Last updated: 2026-10-03
 
 ## What changed
 
+### 2026-10-05 — QO-100 support (for the next release)
+
+Manoj: QO-100 frequencies / mode, satellite prop mode and sat name. His
+station: uplink (Tx) 2.4 GHz, downlink (Rx) 10.489 GHz.
+- `Radio.hpp`: `is_qo100_down` (10489.5-10490 MHz), `is_qo100_up`
+  (2400.0-2400.5), `qo100_uplink/downlink` (offset 8089.5 MHz),
+  `qo100_ft8` = 10489.540 MHz downlink (2400.040 uplink).
+- **Logging** (`LogQSO::accept`, both the wsjtx_log.adi record via
+  `ADIF::addQSOToFile(..., extra)` and the UDP/TCP ADIF): when the dial is
+  on either side of the transponder, FREQ / BAND = uplink (13cm), FREQ_RX /
+  BAND_RX = downlink (3cm), `PROP_MODE` SAT, `SAT_NAME` QO-100 (what LoTW
+  needs). The dialog's Band field shows 13cm.
+- **Worked-before / colours / wanted**: `displayDecodedText` uses the uplink
+  frequency, so QO-100 decodes are checked against 13cm, the band QSOs are
+  logged on.
+- **QO-100 band button** (`BandModeSwitcher::all_bands`, offered once to
+  existing setups via `[Switcher] QO100Offered`): switches to FT8 if needed
+  and tunes the downlink 10489.540; highlighted while on the transponder.
+  Default frequency list gains 10489.540 FT8 (new / reset lists only).
+- Open: the button tunes the **downlink**; Manoj's first answer was that the
+  rig dial shows the downlink, then he was unsure - to confirm. Builds; not
+  tried on air.
+
 ### 2026-10-04 — Band change keeps AnsB4 and 1 QSO (for the next release)
 
 Manoj: AnsB4 and 1 QSO should stick instead of clearing on each band /
