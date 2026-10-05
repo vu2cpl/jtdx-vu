@@ -1843,6 +1843,14 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       `wsjtx_log.before-jtty-mfsk-20261005.adi`. `~/Downloads/jtty-qsos-mfsk.adi`
       holds the 11 corrected records for RUMlog / Club Log. RUMlog itself
       not touched (its DB is unreadable from here) - see the caveat above.
+      Manoj's RUMlog export (11 QSOs) shows RUMlog writes `<mode:4>JTTY
+      <submode:4>JTTY` for all of them, the 4 MFSK-logged ones included, so
+      the caveat was wrong: RUMlog itself needs MODE MFSK. Also EA1BAF has
+      IK3CHK's grid JN55UR and N8DC has EA3NE's JN11AN (old JTTY bug: grid
+      not cleared). All 11 already marked sent to LoTW / eQSL / Club Log.
+      `~/Downloads/jtty-qsos-mfsk.adi` was rebuilt from the RUMlog export
+      (only mode JTTY -> MFSK; RUMlog's correct times kept) - the first
+      version came from JTDX-VU's log, whose early start times are wrong.
 - [ ] **JTTY start-time fix** installed 2026-10-01; check the next
       JTTY QSO logs a sensible start time.
 - [ ] **JTTY screen redesign (2026-10-02):** installed; try on air -
