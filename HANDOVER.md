@@ -225,7 +225,11 @@ right, and a Station-Information offset (added on writes too) cannot fix it.
   every frequency the rig reports (`handle_transceiver_update`, both the
   cached state and the update passed to the main window), never added to
   what JTDX-VU sets. For this setup: **2371.5**. Per profile, like every
-  setting. The QO-100 button then sets 10489.540, SDR-Control reports
+  setting. **Scoped** (Manoj: "if i fix profile, it applies to all
+  frequencies" - the same SDR-Control profile also works HF): the offset is
+  taken off only when the raw reading is in no amateur band and the
+  corrected one is (12861.040 -> 10489.540, 3cm); 14.074 from the same
+  server is a band already and passes through untouched. The QO-100 button then sets 10489.540, SDR-Control reports
   12861.040, JTDX-VU shows 10489.540 and logs 13cm/3cm as designed.
 - Not yet tried on air (Manoj's instance was running while this was built).
 - Profile naming note from the same session: the SDR-Control settings ended

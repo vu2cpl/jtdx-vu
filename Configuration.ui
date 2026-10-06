@@ -3213,9 +3213,10 @@ for assessing propagation and system performance.</string>
                <item row="2" column="1">
                 <widget class="QDoubleSpinBox" name="rig_report_offset_spin_box">
                  <property name="toolTip">
-                  <string>JTDX-VU: subtracted from every frequency the rig REPORTS, never added to what JTDX-VU sets.
-For a CAT server whose readback carries an extra offset. Example: SDR-Control for Icom on QO-100 with a
-2371.5 MHz transverter offset reports 12861.040 MHz for 10489.540 - enter 2371.5 here.</string>
+                  <string>JTDX-VU: taken off a frequency the rig REPORTS when that reading is in no amateur band
+but the corrected one is; never added to what JTDX-VU sets, and readings already in a band
+(HF on the same server) are left alone. Example: SDR-Control for Icom on QO-100 with a 2371.5 MHz
+transverter offset reports 12861.040 MHz for 10489.540 - enter 2371.5 here.</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

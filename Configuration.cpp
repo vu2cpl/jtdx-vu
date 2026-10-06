@@ -6410,8 +6410,14 @@ void Configuration::impl::handle_transceiver_update (TransceiverState const& sta
   // JTDX-VU: a CAT server whose readback carries an extra offset (SDR-Control on
   // QO-100 reports 10489.540 as 12861.040, its transverter offset applied once more)
   // - taken off reads only; what JTDX-VU sets is right as it is
+  // Applied only where it makes sense of the reading: the raw value is in no
+  // amateur band and the corrected one is (12861.040 -> 10489.540, 3cm).  HF
+  // readings from the same server (14.074 is a band) pass through untouched.
   Frequency const report_offset = std::llround (rig_report_offset_mhz_ * 1.e6);
-  auto const corrected = [report_offset] (Frequency f) {return f > report_offset ? f - report_offset : f;};
+  auto const corrected = [this, report_offset] (Frequency f) {
+    return report_offset && f > report_offset && bands_.find (f).isEmpty () && !bands_.find (f - report_offset).isEmpty ()
+      ? f - report_offset : f;
+  };
 
   // only follow rig on some information, ignore other stuff
   cached_rig_state_.online (state.online ());
