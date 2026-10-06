@@ -308,6 +308,7 @@ HamlibTransceiver::HamlibTransceiver (unsigned model_number, TransceiverFactory:
       if (params.poll_interval & rig__power) { set_conf ("auto_power_on","1"); }
       if (params.poll_interval & rig__power_off) { set_conf ("auto_power_off","1"); }
       if (params.poll_interval & do__snr) do_snr_ = true;
+      if (params.poll_interval & no__probe) no_freq_probe_ = true;   // JTDX-VU
       if (params.poll_interval & do__pwr) { do_pwr_ = true; do_pwr2_ = true; do_swr_ = true;}
       
       switch (rig_get_caps_int (model_, RIG_CAPS_PORT_TYPE))
@@ -751,7 +752,11 @@ m_jtdxtime = jtdxtime;
     }
 
   int resolution {0};
-  if (freq_query_works_)
+  // JTDX-VU: the probe below sets a test frequency and then writes the frequency
+  // it READ back to the rig.  SDR-Control for Icom takes a set as the radio's own
+  // frequency while it reports the dial with its offsets, so on a QO-100 profile
+  // the restore moved the radio by the offset at every start (readback 20950.540).
+  if (freq_query_works_ && !no_freq_probe_)
     {
       freq_t current_frequency;
       error_check (rig_get_freq (rig_.data (), RIG_VFO_CURR, &current_frequency), tr ("getting current VFO frequency"));

@@ -58,6 +58,7 @@ class HamlibTransceiver final
   bool back_ptt_port_;
   bool one_VFO_;
   bool is_dummy_;
+  bool no_freq_probe_ {false};   // JTDX-VU: no start-up set/restore of the read frequency
   bool ptt_on_;
   // these are saved on destruction so we can start new instances
   // where the last one left off

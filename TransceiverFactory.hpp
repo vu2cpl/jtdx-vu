@@ -80,6 +80,7 @@ public:
   #define do__pwr  0x20000
   #define rig__power 0x40000
   #define rig__power_off 0x80000
+  #define no__probe 0x100000   // JTDX-VU: skip the start-up resolution probe (it writes the read frequency back; SDR-Control takes that as the radio base)
   #define tci__audio 0x100000
   #define tci__agcc 0x200000
   #define ptt__share 0x400000

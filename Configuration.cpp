@@ -3295,6 +3295,7 @@ TransceiverFactory::ParameterPack Configuration::impl::gather_rig_data ()
   if(ui_->output_power_check_box->isChecked ()) result.poll_interval |= do__pwr;
   if(ui_->rig_power_check_box->isChecked ()) result.poll_interval |= rig__power;
   if(ui_->rig_power_off_check_box->isChecked ()) result.poll_interval |= rig__power_off;
+  if(ui_->qo100_rig_spin_box->value () > 0.) result.poll_interval |= no__probe;   // JTDX-VU: QO-100 through SDR-Control
   if(ui_->rig_ptt_share_check_box->isChecked ()) result.poll_interval |= ptt__share;
   if(is_tci_ && ui_->tci_audio_check_box->isChecked ()) result.poll_interval |= tci__audio;
   result.ptt_type = static_cast<TransceiverFactory::PTTMethod> (ui_->PTT_method_button_group->checkedId ());
@@ -6458,11 +6459,15 @@ void Configuration::impl::handle_transceiver_update (TransceiverState const& sta
     // answers 20950.540 = 10489.540 + its offset once something else has set its
     // base to the downlink) is not followed: the rig is put back on the IF instead.
     // A real retune in SDR-Control lands in a band and is followed as usual.
-    if (qo100_rig_mhz_ > 0. && state.online () && Radio::is_qo100 (qo100_last_nominal_)
+    // Before the main window has set anything (start-up: JTDX adopts what the rig
+    // reports) the QO-100 FT8 channel is assumed - this profile exists for it.
+    if (qo100_rig_mhz_ > 0. && state.online ()
+        && (!qo100_last_nominal_ || Radio::is_qo100 (qo100_last_nominal_))
         && !Radio::is_qo100 (nominal) && bands_.find (nominal).isEmpty ()
         && sequence_number == transceiver_command_number_)
       {
-        Frequency const want = apply_calibration (rig_side (qo100_last_nominal_) + current_offset_);
+        Frequency const back_to = qo100_last_nominal_ ? qo100_last_nominal_ : Radio::qo100_ft8;
+        Frequency const want = apply_calibration (rig_side (back_to) + current_offset_);
         if (cached_rig_state_.frequency () != want)
           {
             cached_rig_state_.frequency (want);

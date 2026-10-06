@@ -248,6 +248,16 @@ symptom and is now 0 in Manoj's QO-100 profile).
   not followed: the rig is put back on the IF (`handle_transceiver_update`,
   `qo100_last_nominal_`); a real retune into a band is still followed.
   The base was put back on 28.540 by hand (rigctl) meanwhile.
+- **23:00 - the real cause of the 20950.540 at every start:** JTDX's
+  `HamlibTransceiver::do_start` probes the rig's tuning resolution - sets a
+  test frequency, reads it back, then **writes the frequency it had read
+  back to the rig**. With SDR-Control that write (10489.540) becomes the
+  radio base and the readback jumps to 20950.540 at every launch; restarting
+  either program cannot escape it (Manoj: "tried restarting sdr control and
+  jtdx. still 20950540"). Now a profile with a QO-100 rig IF sets the
+  `no__probe` bit in the parameter pack (`gather_rig_data`) and the probe is
+  skipped (`no_freq_probe_`). The no-band readback guard above remains as
+  the safety net. Installed 23:0x after resetting the base by hand.
 - Lesson recorded: I moved the radio twice with `F` "tests" and built two
   fixes on readback numbers without seeing SDR-Control's display; the
   station owner's description of the chain settled it in one line.
