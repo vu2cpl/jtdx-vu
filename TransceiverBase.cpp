@@ -16,6 +16,16 @@ namespace
 
 void TransceiverBase::start (unsigned sequence_number,JTDXDateTime * jtdxdatetime) noexcept
 {
+  // JTDX-VU: like stop() below - a (re)start delivered inside a nested wait
+  // must not tear down the event loop the waiting code returns into
+  if (in_nested_wait ())
+    {
+      stop_aborting_ = true;
+      abort_waits ();
+      QTimer::singleShot (0, this, [this, sequence_number, jtdxdatetime] {start (sequence_number, jtdxdatetime);});
+      return;
+    }
+  stop_aborting_ = false;
   QString message;
 #if JTDX_DEBUG_TO_FILE
   FILE * pFile = fopen (debug_file_.c_str(),"a");
@@ -87,6 +97,24 @@ void TransceiverBase::set (TransceiverState const& s,
   fclose (pFile);
 #endif
   QString message;
+  // JTDX-VU: an online/offline transition shuts the rig down (and up again)
+  // below.  Delivered inside a nested wait (TCI start-up or a command still
+  // waiting for its echo) that deleted the event loop the waiting code was
+  // in - the 2026-10-07 crash in do_start during the TCI reconnect loop.
+  // Offline: end the waits and run once unwound, as stop() does.  Online
+  // while something is still in progress: try again shortly.
+  if (in_nested_wait () && s.online () != requested_.online ())
+    {
+      if (!s.online ())
+        {
+          stop_aborting_ = true;
+          abort_waits ();
+        }
+      TransceiverState const copy {s};
+      QTimer::singleShot (s.online () ? 50 : 0, this, [this, copy, sequence_number] {set (copy, sequence_number);});
+      return;
+    }
+  if (s.online () != requested_.online ()) stop_aborting_ = false;
   try
     {
       last_sequence_number_ = sequence_number;
@@ -666,6 +694,16 @@ void TransceiverBase::update_complete (bool force_signal)
 
 void TransceiverBase::offline (QString const& reason)
 {
+  // JTDX-VU: a poll that fails inside a nested wait of another command (TCI
+  // waiting for a frequency / PTT echo while the link drops) must not shut
+  // down under that wait - end the waits and report once unwound
+  if (in_nested_wait ())
+    {
+      stop_aborting_ = true;
+      abort_waits ();
+      QTimer::singleShot (0, this, [this, reason] {stop_aborting_ = false; offline (reason);});
+      return;
+    }
 #if JTDX_DEBUG_TO_FILE
   FILE * pFile = fopen (debug_file_.c_str(),"a");
   if (jtdxtime_ == nullptr)

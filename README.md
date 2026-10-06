@@ -215,6 +215,10 @@ or Pi 5 is recommended.
   SDR program - switches **Auto CQ** off, and the status bar says so.
   **AnsB4** and **1 QSO** stay as you set them (they were switched off too
   up to v0.5.3); a mode change leaves all of them alone.
+- **No crash while TCI is reconnecting** (next release). A frequency, PTT
+  or rig restart arriving while the TCI link was still connecting could
+  crash JTDX-VU (same fault as the quit crash fixed in v0.4.0, now closed for every
+  path).
 - **TCI reconnects on its own** (since v0.5.2). If the SDR program
   (AetherSDR, ExpertSDR, Thetis, ...) is closed or restarted, Tx halts
   and the status bar says "TCI: ... reconnecting every 5 s" instead of

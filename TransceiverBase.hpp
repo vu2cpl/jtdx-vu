@@ -105,9 +105,10 @@ protected:
   virtual void do_post_stop () {}
 
   // JTDX-VU: a sub class that waits in nested event loops (TCI) reports it
-  // here.  A stop() that arrives inside such a wait must not tear the rig
-  // down under the waiting code: it sets stop_aborting_, asks the waits to
-  // end (abort_waits) and re-queues itself to run once they have unwound.
+  // here.  A stop(), start(), offline() or an online/offline set() that
+  // arrives inside such a wait must not tear the rig down under the waiting
+  // code: it sets stop_aborting_, asks the waits to end (abort_waits) and
+  // re-queues itself to run once they have unwound.
   virtual bool in_nested_wait () const {return false;}
   virtual void abort_waits () {}
   bool stop_aborting () const {return stop_aborting_;}

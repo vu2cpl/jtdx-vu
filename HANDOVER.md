@@ -209,6 +209,45 @@ Last updated: 2026-10-06
 
 ## What changed
 
+### 2026-10-07 — Crash in the TCI reconnect loop (for the next release)
+
+JTDX-VU `-r tcitest` crashed at 00:17 during the FT2 loopback test
+(`jtdx-2026-10-07-001741.ips`): SIGSEGV in `QEventLoop::exec` under
+`TCITransceiver::do_start`, the same stack as the 2026-10-01 quit crash.
+Context from `202610_ALL.TXT`: for the last ~20 minutes every transmission
+was followed by "0 MHz" (rig offline) and "14.084 MHz" 5 s later - the TCI
+auto-reconnect was cycling on every TX (reason not captured; the status bar
+shows it as "TCI: ... - reconnecting every 5 s"), so `do_start` was running
+its 1.5 s connect wait in a nested event loop every few seconds, with the TX
+slider being moved (echo server log: drive 52 -> 100) and audio dropping
+("partial loss of data").
+- **Cause:** the 2026-10-01 fix guarded only `TransceiverBase::stop()`.
+  `start()`, `set()` with an online/offline transition, and `offline()`
+  (the poll's failure path) all call `shutdown()` -> `do_stop()`, which
+  deletes the TCI event loops and timers; delivered inside a nested wait
+  (`do_start`'s connect sleep, or a command waiting for its echo while the
+  poll fails) they delete the loop the waiting code returns into. Which of
+  them fired this time is not known for certain (no debug build); all three
+  are reachable in the reconnect loop.
+- **Fix** (`TransceiverBase.cpp`): the same deferral for all of them. In a
+  nested wait, `start()` and an offline `set()` set `stop_aborting_`, end the
+  waits (`abort_waits()`) and re-queue themselves with `QTimer::singleShot
+  (0)`; `offline()` likewise, clearing the flag before it reports; an online
+  `set()` while something is still in progress retries after 50 ms without
+  aborting. Non-transition `set()`s are untouched (they nest their own waits,
+  as before).
+- Builds clean; bundle rebuilt so the loopback test instance has it. Not yet
+  reproduced on purpose - the quit test (`tools/run_quit_test.sh`) covers the
+  stop path only.
+- **Open:** why the rig went offline on every TX in the loopback setup. The
+  echo server log shows `trx:0,true/false` for the first ~20 overs, then no
+  more `trx` at all, only audio_stop/audio_start pairs (reconnects). Candidates:
+  `TCI failed to set ptt` (the echo server not echoing `trx` within 1 s),
+  the audio watchdog, or the modulator not Idle. `error_` in `TCITransceiver`
+  is never cleared once set, so after any of these every poll throws until
+  the reconnect makes a fresh object. Needs the status-bar reason or a
+  `JTDX_DEBUG_TO_FILE` build.
+
 ### 2026-10-06 — 70cm and 23cm band buttons (for the next release)
 
 Frank PH2M (JO22hc), by email after installing v0.6.0 on his laptop: the
