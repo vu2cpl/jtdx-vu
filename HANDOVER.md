@@ -209,6 +209,41 @@ Last updated: 2026-10-06
 
 ## What changed
 
+### 2026-10-06 — QO-100 with SDR-Control: "QO-100 rig IF" (for the next release)
+
+The afternoon's real story, replacing the "Reported high by" analysis below
+(that setting stays, default 0, but it was the wrong fix for the wrong
+symptom and is now 0 in Manoj's QO-100 profile).
+- **How SDR-Control's rigctl really works** (Manoj's station: radio on
+  **28.540**, transverter; SDR-Control SAT/Transverter offsets named from
+  the SATELLITE's side, Marcus's convention — "RX offset" 2371.5 = sat RX =
+  our uplink 2400.040, "TX offset" 10461 = sat TX = our downlink
+  10489.540): `F` sets the RADIO's own frequency (the base), `f` returns
+  base + TX offset = **the downlink** — correct and what Manoj wants to
+  see. Every odd readback today (12861.040, 20950.540 ... 52333.540) was
+  base + offset after JTDX-VU had set the base to 10489.540 or re-sent a
+  readback. Nothing was wrong on SDR-Control's side; the Marcus draft is
+  withdrawn.
+- **Fix:** Settings > Frequencies > Frequency Calibration > **QO-100 rig
+  IF** (`[Configuration] QO100RigMHz`, `qo100_rig_mhz_`, 0 = off):
+  `Configuration::impl::rig_side()` sends the rig this IF for any QO-100
+  nominal (QO-100 button, startup DialFreq, Tx frequency), and
+  `handle_transceiver_update` maps a readback of the downlink, the uplink
+  or the IF itself to the downlink for display (`as_seen`). Manoj's
+  profile: 28.54.
+- **Second bug, found on air ("with each tx, freq is going up"):**
+  `cached_rig_state_.frequency` — what TransceiverBase::set compares with
+  its last request and re-sends on every PTT/mode set — was filled from
+  the readback (10489.540), so each over set SDR-Control's base to
+  10489.540 and the readback climbed 10461 per TX (10489 → 20950 → 31411 →
+  41872 → 52333, ALL.TXT 14:32-14:33). It is now kept on the rig side
+  (the IF). Manoj: **"freq is stable now"** (20:1x).
+- Also reset by hand (app closed): the profile's saved DialFreq had the
+  runaway 52333.54 and would have been sent at the next start.
+- Lesson recorded: I moved the radio twice with `F` "tests" and built two
+  fixes on readback numbers without seeing SDR-Control's display; the
+  station owner's description of the chain settled it in one line.
+
 ### 2026-10-06 — Rig "Reported high by" correction for SDR-Control on QO-100 (for the next release)
 
 Manoj made a profile for QO-100 with SDR-Control for Icom (rig Hamlib NET

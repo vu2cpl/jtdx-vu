@@ -632,6 +632,10 @@ private:
   double frequency_calibration_intercept_;
   double frequency_calibration_slope_ppm_;
   double rig_report_offset_mhz_;        // JTDX-VU: taken off every frequency the rig reports
+  double qo100_rig_mhz_;                // JTDX-VU: QO-100 through a transverter - the IF the rig is really set to (0 = off)
+  Frequency rig_side (Frequency f) const {   // what the rig is sent for a nominal frequency
+    return qo100_rig_mhz_ > 0. && Radio::is_qo100 (f) ? Frequency (std::llround (qo100_rig_mhz_ * 1.e6)) : f;
+  }
   unsigned transceiver_command_number_;
 
   // configuration fields that we publish
@@ -2246,6 +2250,7 @@ Radio::convert_dark("#fafbfe",useDarkStyle_),Radio::convert_dark("#dcdef1",useDa
   ui_->calibration_intercept_spin_box->setValue (frequency_calibration_intercept_);
   ui_->calibration_slope_ppm_spin_box->setValue (frequency_calibration_slope_ppm_);
   ui_->rig_report_offset_spin_box->setValue (rig_report_offset_mhz_);
+  ui_->qo100_rig_spin_box->setValue (qo100_rig_mhz_);
 
   if (rig_params_.ptt_port.isEmpty ())
     {
@@ -2710,6 +2715,7 @@ void Configuration::impl::read_settings ()
   frequency_calibration_intercept_ = settings_->value ("CalibrationIntercept", 0.).toDouble ();
   frequency_calibration_slope_ppm_ = settings_->value ("CalibrationSlopePPM", 0.).toDouble ();
   rig_report_offset_mhz_ = settings_->value ("RigReportOffsetMHz", 0.).toDouble ();
+  qo100_rig_mhz_ = settings_->value ("QO100RigMHz", 0.).toDouble ();
 
   if(settings_->value ("pwrBandTxMemory").toString()=="false" || settings_->value ("pwrBandTxMemory").toString()=="true")
     pwrBandTxMemory_ = settings_->value("pwrBandTxMemory").toBool ();
@@ -2977,6 +2983,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("CalibrationIntercept", frequency_calibration_intercept_);
   settings_->setValue ("CalibrationSlopePPM", frequency_calibration_slope_ppm_);
   settings_->setValue ("RigReportOffsetMHz", rig_report_offset_mhz_);
+  settings_->setValue ("QO100RigMHz", qo100_rig_mhz_);
   settings_->setValue ("pwrBandTxMemory", pwrBandTxMemory_);
   settings_->setValue ("pwrBandTuneMemory", pwrBandTuneMemory_);
   settings_->setValue ("Region", QVariant::fromValue (region_));  
@@ -3605,6 +3612,7 @@ void Configuration::impl::accept ()
   frequency_calibration_intercept_ = ui_->calibration_intercept_spin_box->value ();
   frequency_calibration_slope_ppm_ = ui_->calibration_slope_ppm_spin_box->value ();
   rig_report_offset_mhz_ = ui_->rig_report_offset_spin_box->value ();
+  qo100_rig_mhz_ = ui_->qo100_rig_spin_box->value ();
   pwrBandTxMemory_ = ui_->checkBoxPwrBandTxMemory->isChecked ();
   pwrBandTuneMemory_ = ui_->checkBoxPwrBandTuneMemory->isChecked ();  
 
@@ -6180,10 +6188,13 @@ void Configuration::impl::transceiver_frequency (Frequency f)
   // cannot absolutely determine if the offset should apply but by
   // simply picking an offset when the Rx frequency is set and
   // sticking to it we get sane behaviour
-  if (current_offset_ != stations_.offset (f) || cached_rig_state_.frequency() != apply_calibration (f + current_offset_) || mode_change)
+  // JTDX-VU: QO-100 through a transverter - the rig itself sits on the IF
+  // (SDR-Control: 28.540 for 10489.540 / 2400.040), so that is what it is sent
+  auto const r = rig_side (f);
+  if (current_offset_ != stations_.offset (r) || cached_rig_state_.frequency() != apply_calibration (r + current_offset_) || mode_change)
   {
-    current_offset_ = stations_.offset (f);
-    cached_rig_state_.frequency (apply_calibration (f + current_offset_));
+    current_offset_ = stations_.offset (r);
+    cached_rig_state_.frequency (apply_calibration (r + current_offset_));
 
 //    printf("%s(%0.1f) Configuration #:%d transceiver_frequency: %lld\n",jtdxtime_->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),jtdxtime_->GetOffset(),transceiver_command_number_+1,f);
     Q_EMIT set_transceiver (cached_rig_state_, ++transceiver_command_number_);
@@ -6211,8 +6222,9 @@ void Configuration::impl::transceiver_tx_frequency (Frequency f)
             // rig, we cannot absolutely determine if the offset should
             // apply but by simply picking an offset when the Rx
             // frequency is set and sticking to it we get sane behaviour
-            current_tx_offset_ = stations_.offset (f);
-            cached_rig_state_.tx_frequency (apply_calibration (f + current_tx_offset_));
+            auto const r = rig_side (f);   // JTDX-VU: QO-100 IF, see transceiver_frequency
+            current_tx_offset_ = stations_.offset (r);
+            cached_rig_state_.tx_frequency (apply_calibration (r + current_tx_offset_));
           }
 
 //        printf("%s(%0.1f) Configuration #:%d transceiver_tx_frequency: %lld\n",jtdxtime_->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),jtdxtime_->GetOffset(),transceiver_command_number_+1,f);
@@ -6418,10 +6430,29 @@ void Configuration::impl::handle_transceiver_update (TransceiverState const& sta
     return report_offset && f > report_offset && bands_.find (f).isEmpty () && !bands_.find (f - report_offset).isEmpty ()
       ? f - report_offset : f;
   };
+  // JTDX-VU: with a QO-100 IF set, a rig that reports the uplink (SDR-Control
+  // answers 2400.040 = IF + its TX offset), the downlink, or the IF itself is
+  // shown as the downlink, 10489.540, which is what was set and what the operator sees
+  auto const as_seen = [this] (Frequency f) {
+    if (qo100_rig_mhz_ <= 0.) return f;
+    Frequency const rig_if = std::llround (qo100_rig_mhz_ * 1.e6);
+    if (Radio::is_qo100_up (f)) return Radio::qo100_downlink (f);
+    if (f + 1000000 > rig_if && f < rig_if + 1000000) return f - rig_if + Radio::qo100_ft8;
+    return f;
+  };
 
   // only follow rig on some information, ignore other stuff
   cached_rig_state_.online (state.online ());
-  cached_rig_state_.frequency (corrected (state.frequency ()));
+  // The cached frequency is what the rig is SENT (it goes out again with every
+  // PTT and mode set), so on QO-100 it must stay the IF, not the 10489.540 the
+  // rig reports - 2026-10-06 each TX re-sent the readback and SDR-Control's base
+  // climbed by its offset every over
+  {
+    auto const nominal = as_seen (remove_calibration (corrected (state.frequency ())) - current_offset_);
+    cached_rig_state_.frequency (qo100_rig_mhz_ > 0. && Radio::is_qo100 (nominal)
+                                 ? apply_calibration (rig_side (nominal) + current_offset_)
+                                 : corrected (state.frequency ()));
+  }
   cached_rig_state_.split (state.split ());
 
   if (state.online ())
@@ -6451,12 +6482,12 @@ void Configuration::impl::handle_transceiver_update (TransceiverState const& sta
     {
       TransceiverState reported_state {state};
       // take off calibration & offset
-      reported_state.frequency (remove_calibration (corrected (reported_state.frequency ())) - current_offset_);
+      reported_state.frequency (as_seen (remove_calibration (corrected (reported_state.frequency ())) - current_offset_));
 
       if (reported_state.tx_frequency ())
         {
           // take off calibration & offset
-          reported_state.tx_frequency (remove_calibration (corrected (reported_state.tx_frequency ())) - current_tx_offset_);
+          reported_state.tx_frequency (as_seen (remove_calibration (corrected (reported_state.tx_frequency ())) - current_tx_offset_));
         }
 
       Q_EMIT self_->transceiver_update (reported_state);

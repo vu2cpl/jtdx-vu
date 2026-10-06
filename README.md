@@ -294,9 +294,11 @@ or Pi 5 is recommended.
   opens the profile last used. Under the hood these are JTDX's `-r <name>`
   instances (`JTDX-VU - <name>.ini`), so `-r` on the command line still
   works.
-  For a CAT server whose readback carries an extra offset (SDR-Control for
-  Icom on QO-100 reports 10489.540 as 12861.040), Settings > Radio >
-  Frequency Calibration > *Reported high by* takes it off reads only.
+  QO-100 through a transverter with SDR-Control for Icom: Settings >
+  Frequencies > Frequency Calibration > *QO-100 rig IF* (e.g. 28.540) is
+  what JTDX-VU sends the rig for the QO-100 channel; the readback (downlink,
+  uplink or IF) is shown as 10489.540 and the log carries 2400.040 /
+  10489.540, PROP_MODE SAT, SAT_NAME QO-100.
 - **FT2** (new in v0.3.0): FT4's protocol at twice
   the speed — 3.75 s periods, 41.67 baud — as introduced in MSHV. The
   mode was created by Martino IU8LMC (ARI Caserta); MSHV's C++

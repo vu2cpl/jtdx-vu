@@ -3238,6 +3238,41 @@ transverter offset reports 12861.040 MHz for 10489.540 - enter 2371.5 here.</str
                  </property>
                 </widget>
                </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_qo100_rig">
+                 <property name="text">
+                  <string>QO-100 rig IF:</string>
+                 </property>
+                 <property name="buddy">
+                  <cstring>qo100_rig_spin_box</cstring>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QDoubleSpinBox" name="qo100_rig_spin_box">
+                 <property name="toolTip">
+                  <string>JTDX-VU: QO-100 through a transverter. The frequency the RIG itself is set to for the
+QO-100 FT8 channel (10489.540 down / 2400.040 up) - e.g. 28.540 with SDR-Control's offsets
+(RX 10461, TX 2371.5). JTDX-VU then sends the rig this IF instead of 10489.540, and shows a
+readback of the uplink (2400.040) or of the IF as 10489.540. 0 = off (rig takes 10489.540).</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string> MHz</string>
+                 </property>
+                 <property name="decimals">
+                  <number>6</number>
+                 </property>
+                 <property name="maximum">
+                  <double>99999.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.001000000000000</double>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>
@@ -7344,6 +7379,7 @@ soundcard changes</string>
   <tabstop>frequencies_table_view</tabstop>
   <tabstop>calibration_intercept_spin_box</tabstop>
   <tabstop>rig_report_offset_spin_box</tabstop>
+  <tabstop>qo100_rig_spin_box</tabstop>
   <tabstop>calibration_slope_ppm_spin_box</tabstop>
   <tabstop>stations_table_view</tabstop>
   <tabstop>pbCQmsg</tabstop>
