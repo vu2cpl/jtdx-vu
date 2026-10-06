@@ -4407,7 +4407,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
 
         int audioFrequency = decodedtext.frequencyOffset();
         int snr = decodedtext.snr();
-        Frequency frequency = m_freqNominal + audioFrequency;
+        // JTDX-VU: QO-100 is worked on the downlink dial but spotted and logged on the
+        // uplink (13cm), the band the QSOs are on
+        Frequency frequency = Radio::qo100_uplink (m_freqNominal) + audioFrequency;
         pskSetLocal ();
         if(gridOK(grid) && !gridRR73(grid) && !decodedtext.isHint() && !decodedtext.isWrong())
           {
