@@ -21,7 +21,12 @@
 # never run a test head from that).
 set -u
 M=/Users/manoj/projects/MSHV-Mac/sent-to-LZ2HV
-SRV="$M/2026-09-16-tci-echoserver-received/build/echoserver_tci_hv_031/TCI_HV.app/Contents/MacOS/TCI_HV"
+# 2026-10-07: the as-received server's Noice slider spans only +-3.1 dB, which
+# with the MSHV head's Tx level at its lowest still left the signal at -14 dB -
+# too strong to exercise AP7.  build-widenoise/ is the same source with the
+# slider widened to +-12.5 dB (middle = 1.0 = as before); used when present.
+SRV="$M/2026-09-16-tci-echoserver-received/build-widenoise/echoserver_tci_hv_031/TCI_HV.app/Contents/MacOS/TCI_HV"
+[ -x "$SRV" ] || SRV="$M/2026-09-16-tci-echoserver-received/build/echoserver_tci_hv_031/TCI_HV.app/Contents/MacOS/TCI_HV"
 HEAD="$M/2026-09-16-tci-echoserver-received/heads/mshv-noblock/MSHV.app"
 SEED="$M/2026-09-15-rc029-received/build-and-radio-test/rc029-test-settings-scrubbed"
 JTDX="${JTDX:-/Users/manoj/projects/JTDX/build/bundle/JTDX-VU.app/Contents/MacOS/jtdx}"
@@ -58,6 +63,7 @@ Mode=FT2
 MyCall=VU2CPL
 MyGrid=MK83te
 Rig=TCI Client RX1
+PTTMethod=@Variant(\0\0\0\x7f\0\0\0\x1eTransceiverFactory::PTTMethod\0\0\0\0\xfPTT_method_CAT\0)
 CATTCIPort=127.0.0.1:$PORT
 TCIAudio=true
 Polling=1
@@ -70,7 +76,7 @@ INI
   "$JTDX" -r tcitest > "$W/jtdx.log" 2>&1 &
   sleep 8
   echo "clients on $PORT: $(lsof -nP -iTCP:$PORT | grep -c ESTABLISHED) (expect 6 = 3 clients x 2)"
-  echo "now: in the VU2AAA head start a CQ and lower the Tx level step by step"
+  echo "now: in the VU2AAA head start a CQ; raise the server's Noice slider step by step (middle = nominal)"
   ;;
 stop)
   # Quit JTDX-VU through its menu (never pkill: a killed jtdx leaks SysV shm)

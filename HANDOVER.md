@@ -209,6 +209,39 @@ Last updated: 2026-10-06
 
 ## What changed
 
+### 2026-10-07 — FT2 loopback test run: AP7 seen on air, MSHV still decodes deeper
+
+Manoj ran the loopback test (`tools/ft2_loopback.sh`, Noice slider up step
+by step, QSO VU2AAA <-> JTDX-VU `-r tcitest` at each step; log in
+`~/Library/Application Support/JTDX-VU - tcitest/202610_ALL.TXT`, 19:17-19:36
+UTC 2026-10-06). Test closed by Manoj ("not doing this monkey business"
+to the save-the-wavs step) - results as far as they go:
+- **AP7 fired once, correctly:** 19:22:33 `VU2CPL VU2AAA RR73  7` when the
+  plain decoder missed the period; true message, QSO completed. **No false
+  decodes** in the whole run (about 40 CQ decodes, 11 QSOs).
+- Every QSO completed, up to the server's new maximum noise, on plain
+  decodes (reports -13..-16). The printed SNR sits at -13..-15 from
+  mid-range on while the CQ decode rate falls from every period to 1 in 4:
+  JTDX-VU's FT2 SNR estimate bottoms out there.
+- **Manoj's observation: MSHV (VU2BBB head) "goes down to -21, JTDX stops
+  at -15".** Part of that is scale: MSHV reuses its FT4 constant
+  (`10*log10(snr)-14.8`, `decoderft4.cpp:2017`) for FT2 and clamps at -21,
+  JTDX-VU uses -11.3 (`ft2_decode.f90:355`) - MSHV prints 3.5 dB lower for
+  the same signal. The rest is real: MSHV kept decoding the CQ at noise
+  levels where JTDX-VU got 1 period in 4. Not quantified (no same-audio
+  comparison was made).
+- **Setup fixes along the way:** PTT method CAT in the test ini (a missed
+  `trx` echo otherwise costs a 5 s reconnect, see the crash entry); the
+  echo server's Noice slider spans only +-3.1 dB, so a copy with +-12.5 dB
+  was built (`MSHV-Mac/sent-to-LZ2HV/2026-09-16-tci-echoserver-received/
+  build-widenoise/`, one constant changed in `NSlidChanged`); the script
+  prefers it when present. The MSHV head's Tx level slider stops
+  transmitting near zero, so it is no use as the attenuator.
+- **Open:** a same-audio comparison (JTDX-VU Save > Save all at high noise,
+  then `build/ft2dec` vs MSHV File > Open WAV on the same files) is the way
+  to put a number on the remaining gap; not done. The SNR estimate floor
+  could be looked at too (MSHV's AP7 path uses `pbest/xbase - 42`).
+
 ### 2026-10-07 — Crash in the TCI reconnect loop (for the next release)
 
 JTDX-VU `-r tcitest` crashed at 00:17 during the FT2 loopback test
