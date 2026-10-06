@@ -2134,6 +2134,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       `~/Downloads/jtty-qsos-mfsk.adi` was rebuilt from the RUMlog export
       (only mode JTTY -> MFSK; RUMlog's correct times kept) - the first
       version came from JTDX-VU's log, whose early start times are wrong.
+      **Done 2026-10-06 (Manoj): the 11 QSOs changed to MFSK/JTTY in RUMlog
+      and the EA1BAF / N8DC grids corrected by hand.**
 - [ ] **JTTY start-time fix** installed 2026-10-01; check the next
       JTTY QSO logs a sensible start time.
 - [ ] **JTTY screen redesign (2026-10-02):** installed; try on air -
