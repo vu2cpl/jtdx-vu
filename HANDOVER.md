@@ -240,6 +240,14 @@ symptom and is now 0 in Manoj's QO-100 profile).
   (the IF). Manoj: **"freq is stable now"** (20:1x).
 - Also reset by hand (app closed): the profile's saved DialFreq had the
   runaway 52333.54 and would have been sent at the next start.
+- **22:55, Manoj: "jtdx vu opens qo100 profile at freq 20950540. why?"**
+  Because something else had set SDR-Control's base to 10489.540 (readback
+  20950.540 = base + 10461) and JTDX-VU followed the readback at start
+  instead of sending its saved dial. Now, in a profile with a QO-100 rig
+  IF, a readback in NO amateur band while the last nominal was QO-100 is
+  not followed: the rig is put back on the IF (`handle_transceiver_update`,
+  `qo100_last_nominal_`); a real retune into a band is still followed.
+  The base was put back on 28.540 by hand (rigctl) meanwhile.
 - Lesson recorded: I moved the radio twice with `F` "tests" and built two
   fixes on readback numbers without seeing SDR-Control's display; the
   station owner's description of the chain settled it in one line.

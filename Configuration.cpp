@@ -633,6 +633,7 @@ private:
   double frequency_calibration_slope_ppm_;
   double rig_report_offset_mhz_;        // JTDX-VU: taken off every frequency the rig reports
   double qo100_rig_mhz_;                // JTDX-VU: QO-100 through a transverter - the IF the rig is really set to (0 = off)
+  Frequency qo100_last_nominal_ {0};   // JTDX-VU: the nominal last sent, to put a strayed rig back on the IF
   Frequency rig_side (Frequency f) const {   // what the rig is sent for a nominal frequency
     return qo100_rig_mhz_ > 0. && Radio::is_qo100 (f) ? Frequency (std::llround (qo100_rig_mhz_ * 1.e6)) : f;
   }
@@ -6191,6 +6192,7 @@ void Configuration::impl::transceiver_frequency (Frequency f)
   // JTDX-VU: QO-100 through a transverter - the rig itself sits on the IF
   // (SDR-Control: 28.540 for 10489.540 / 2400.040), so that is what it is sent
   auto const r = rig_side (f);
+  qo100_last_nominal_ = f;
   if (current_offset_ != stations_.offset (r) || cached_rig_state_.frequency() != apply_calibration (r + current_offset_) || mode_change)
   {
     current_offset_ = stations_.offset (r);
@@ -6452,6 +6454,22 @@ void Configuration::impl::handle_transceiver_update (TransceiverState const& sta
     cached_rig_state_.frequency (qo100_rig_mhz_ > 0. && Radio::is_qo100 (nominal)
                                  ? apply_calibration (rig_side (nominal) + current_offset_)
                                  : corrected (state.frequency ()));
+    // A QO-100 profile whose rig reports a frequency in NO amateur band (SDR-Control
+    // answers 20950.540 = 10489.540 + its offset once something else has set its
+    // base to the downlink) is not followed: the rig is put back on the IF instead.
+    // A real retune in SDR-Control lands in a band and is followed as usual.
+    if (qo100_rig_mhz_ > 0. && state.online () && Radio::is_qo100 (qo100_last_nominal_)
+        && !Radio::is_qo100 (nominal) && bands_.find (nominal).isEmpty ()
+        && sequence_number == transceiver_command_number_)
+      {
+        Frequency const want = apply_calibration (rig_side (qo100_last_nominal_) + current_offset_);
+        if (cached_rig_state_.frequency () != want)
+          {
+            cached_rig_state_.frequency (want);
+            Q_EMIT set_transceiver (cached_rig_state_, ++transceiver_command_number_);
+            return;
+          }
+      }
   }
   cached_rig_state_.split (state.split ());
 
