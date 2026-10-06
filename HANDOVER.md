@@ -227,11 +227,27 @@ marked valid. About 0.8 % of false JTTY decodes land there.
 - **Checked in a cloud session (Linux, gfortran `-fcheck=all`):** every
   n28 from 0 to 2^28-1, old against new. 5,725,452 values were rejected
   cleanly; every other value gave the same call and flag as before.
-- **Not yet done on the Mac:** a JTDX-VU build, JTTY wav replay, and
-  `ref_unpack` on `corpus/frames_unhandled_n28.txt` (1466 frames, should
-  all print "invalid") and `corpus/frames_fuzz_nohash.txt` (output should
-  match the old version). `ref_unpack` must be rebuilt from this
-  `packjt77sd.f90`, or it still crashes.
+- **Checked on the Mac 2026-10-07** (corpus and `ref_unpack.f90` from
+  MSHV-Mac `tools/jtty-port`; `packjt77sd.f90`, `jtty_source_codec.f90`
+  and `jtty_mod.f90` recompiled with `-fcheck=all` and linked ahead of
+  `libwsjt_fort.a`, so an out-of-bounds read aborts):
+  - **Build:** `make jtdx rjtty` clean.
+  - **Negative control:** the same checked build from the pre-fix
+    `packjt77sd.f90` aborts on the first unhandled frame at its line 308,
+    "lower bound (-26) of 'c2'" - so the harness does catch the bug.
+  - **`frames_unhandled_n28.txt`:** all 1466 frames come back invalid
+    (empty text, valid=F), exit 0, no runtime error.
+  - **`frames_fuzz_nohash.txt`:** 198,534 frames, output byte-identical
+    to the old version (checked build and the shipped old `ref_unpack`
+    binary alike); 103,299 valid, 95,235 invalid.
+  - **JTTY wav replay:** 70 recordings (s000-s039 plus 30 "sticky" ones)
+    through `rjtty`: shipped build, fixed checked build and pre-fix
+    checked build give byte-identical output (266 decode lines), no
+    runtime errors. The replay set does not reach the hash range, so it
+    shows the fix changes nothing on real decodes rather than exercising
+    it - the corpus checks above do that.
+  - Gotcha: `rjtty` keeps file names in `character*80`; give it relative
+    names from inside the wav directory or long paths are cut off.
 
 ### 2026-10-07 — FlexRadio VITA-49 rig type, ported from MSHV-Mac (for the next release)
 
