@@ -1,0 +1,17 @@
+  SNR | JTDX plain JTDX AP7 JTDX all | MSHV plain MSHV AP7 MSHV all | of 120   (reported SNR: JTDX / MSHV)
+  -14 |         93       13      106 |         97       10      107 |        (-13 / -16)
+  -15 |         33       14       47 |         33       28       61 |        (-12 / -17)
+  -16 |          6        2        8 |          6        5       11 |        (-12 / -17)
+
+per message, pairs = JTDX,MSHV (CQ, reply, report, R-report, RR73, 73): J/M = plain decode, 7 = via AP7, . = missed
+ -14.0: JM JM JM 77 JM JM | JM .M .. JM .. JM | JM JM J. JM JM JM | JM .M JM JM 7M JM | JM JM J. JM JM JM | .M JM JM JM 77 77 | .M JM JM JM JM JM | .M JM JM JM 7M JM | JM J. JM JM JM 7M | JM .. .. JM JM 77 | JM JM JM JM JM JM | JM JM J. JM JM JM | JM JM JM JM J7 JM | .M JM J. JM 7. JM | .7 .M .. JM JM JM | JM JM JM 77 JM JM | JM JM JM JM 77 JM | JM JM JM 7M 7M JM | JM JM J. JM JM 77 | J. JM .M JM J7 JM
+ -15.0: .M .M .. .M .. .7 | .. JM .. 77 .. J7 | .M .. .. .7 JM .7 | .M .. .. .7 JM .7 | J. JM JM J7 JM 77 | .. .. .. .. .. .. | JM .. JM .. J7 .. | J. .. .. JM J. 77 | J. .. .. 7. .. 7. | 7M .. .. JM .. 77 | J7 .. .. J7 JM J. | .M JM .. 77 .. 77 | .M .M J. .7 7. .7 | .7 .. .. .7 .. .M | .M .M .. .7 .. .7 | .M J. J. 77 JM 77 | .. .. JM .. .7 .. | JM .. .. .. JM .. | .M JM .. JM .. 77 | .M .. .. J7 J. 77
+ -16.0: .7 .. .. .7 .. .7 | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. J. .. 7. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. J. .. 7. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .M .. .. .. .. .. | .. .M .. .7 .. .7 | .. .. .. J. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .M .. .. .. .. .. | .. .. .. .. JM .. | .M .. J. .. JM .. | .. .. .. .. .. ..
+
+JTDX lines outside the plan or not a QSO message (3):
+  20261006_224722 -17 -0.1  796 : M5LQ42FZQ3KZ4             .
+  20261006_225300 -18  0.4 2975 : <...> <...> 551599 HC33NM
+  20261006_230837 -18 -0.2  165 : KD4IYG QU1RK/P QK85
+
+MSHV lines not matched (1):
+  06|RX 14074 FT2|230011|-20|-0.8|647|K1ABC W9XYZ +45|AP7|0.2|1506

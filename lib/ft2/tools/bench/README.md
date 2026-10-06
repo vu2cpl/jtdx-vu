@@ -38,3 +38,17 @@ A 20-QSO run on -14/-15/-16 only (`autotest/2026-10-07-sweep-20qso.txt`): level
 at -14 and -16, but at -15 MSHV 66/120 (33 via AP7) vs JTDX-VU 25/120 (2 via
 AP7) - the AP7 acceptance is where the remaining gap is.
 
+## AP7 (2026-10-07)
+
+- `a7bench.sh <ft2dec> <snr> [N]` - N QSOs (6 messages + 2 silent periods)
+  decoded back to back so the AP7 history carries over as live; per period
+  plain / AP7 / all, and every decode that was not sent. `A7SEPARATE=1`
+  restarts the decoder per QSO.
+- `a7false.sh <ft2dec> noise|other [N]` - false-decode stress: a pair is
+  heard, then silence, or a different station on the same frequency.
+- `A7DEBUG=1 ft2dec ...` traces every AP7 attempt; `A7QUAL=` sets the gate.
+- After the two fixes in HANDOVER: AP7 at -15 dB 9 -> 41 per 40 QSOs, no false
+  AP7 decode in 400 stress sequences; live against MSHV
+  (`autotest/2026-10-07-sweep-20qso-ap7fix.txt`) 106/107, 47/61, 8/11 at
+  -14/-15/-16 dB (was 102/99, 25/66, 3/3).
+

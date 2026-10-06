@@ -30,7 +30,7 @@ contains
 !    use timer_module, only: timer
     use packjt77
     use ft2_mod1, only : nFT2decd,nfafilt2,nfbfilt2,lfilter2,lhidetest2,lhidetelemetry2, &
-         A7MAX,na7dec,a7dt,a7f,a7msg,na7utc,na7lastutc,na7zerop
+         A7MAX,na7dec,a7dt,a7f,a7msg,na7utc,na7lastutc,na7zerop,a7qual
     use ft8_mod1, only : sumxdtt,avexdt,mycall,hiscall
     include 'ft2/ft2_params.f90'
     class(ft2_decoder), intent(inout) :: this
@@ -441,7 +441,11 @@ contains
           do i=1,ndecodes; if(decodes(i).eq.message) idupe=1; enddo
           if(idupe.eq.0) then
             ndecodes=min(ndecodes+1,100); decodes(ndecodes)=message
-            if(nint(f7).ge.nfa .and. nint(f7).le.nfb) then
+! MSHV's AP7 quality, 1-(nharderrors+dmin)/60, with dmin always 0 there: its
+! ft2_a7d never hands dmin back to the caller.  The port first used the real
+! dmin, which rejected most true AP7 decodes at -16 dB (2026-10-07: with the
+! pair supplied the true message ranked first 33/40 times, accepted 7/40).
+            if(nint(f7).ge.nfa .and. nint(f7).le.nfb .and. 1.0-real(nharderror)/60.0.ge.a7qual) then
               nsnr=nint(max(-21.0,xsnr7)); msg26=message(1:26); servis4='7'
               call this%callback(nsnr,xdt7,f7,msg26,servis4)
               nFT2decd=nFT2decd+1; sumxdtt(1)=sumxdtt(1)+xdt7
@@ -515,22 +519,29 @@ contains
     do i=1,iz
       a7dt(2,j,i)=a7dt(1,j,i); a7f(2,j,i)=a7f(1,j,i); a7msg(2,j,i)=a7msg(1,j,i)
     enddo
+! Staleness is measured from the previous PERIOD, decoded or not (MSHV's nutc0):
+! a gap of more than 11 s means the decoder was stopped, three empty periods
+! mean the pair is old news.  Measuring from the last period WITH decodes
+! threw away the first decode after any quiet spell - the normal state between
+! QSOs at the floor - so the retry two periods later never happened (2026-10-07,
+! 20-QSO run: MSHV 33 AP7 decodes at -15 dB, JTDX-VU 2).
     t1=mod(na7utc,100)+60*mod(na7utc/100,100)+3600*(na7utc/10000)
     t0=-1; if(na7lastutc.ge.0) t0=mod(na7lastutc,100)+60*mod(na7lastutc/100,100)+3600*(na7lastutc/10000)
-    if(t0.lt.0 .or. t1-t0.gt.11 .or. na7zerop.gt.2) then
+    if((t0.ge.0 .and. t1-t0.gt.11) .or. na7zerop.gt.2) then
       na7dec(2,0)=0; na7dec(2,1)=0; na7zerop=0
+      if(iz.gt.0) na7dec(2,j)=iz           ! this period's own pairs are fresh
     else
       if(iz.gt.0) na7dec(2,j)=iz
     endif
     na7dec(1,j)=0
-    if(iz.gt.0) na7lastutc=na7utc
+    na7lastutc=na7utc
   end subroutine a7_roll
 
   subroutine a7d(this,call_1,call_2,grid4,xdt,f0,nharderrors,message,xsnr)
 ! re-sync at f0 and test ~158 likely messages for the pair; accept the best if it
 ! stands clear of the second best (MSHV ft2_a7d, from WSJT-X ft8 a7)
     use packjt77
-    use ft2_mod1, only : ddf2
+    use ft2_mod1, only : ddf2,la7dbg,a7qual
     include 'ft2/ft2_params.f90'
     parameter (NSS=NSPS/NDOWN,NDMAX=NMAX/NDOWN,MAXMSG=158)
     class(ft2_decoder), intent(inout) :: this
@@ -597,6 +608,7 @@ contains
           enddo
         enddo
       enddo
+      if(la7dbg) write(0,'(a,2a10,i3,f8.3,i6,i4)') 'a7 sync ',trim(call_1),trim(call_2),iseg,smax,ibest,idfbest
       if(smax.lt.0.50) cycle
       if(iseg.gt.1 .and. smax.lt.smax1) cycle
       f1=f0+real(idfbest)
@@ -622,6 +634,7 @@ contains
       ns1=count(hbits(  1:  8).eq.(/0,0,0,1,1,0,1,1/)); ns2=count(hbits( 67: 74).eq.(/0,1,0,0,1,1,1,0/))
       ns3=count(hbits(133:140).eq.(/1,1,1,0,0,1,0,0/)); ns4=count(hbits(199:206).eq.(/1,0,1,1,0,0,0,1/))
       nsync_qual=ns1+ns2+ns3+ns4
+      if(la7dbg) write(0,'(a,i3,l2)') 'a7 nsync_qual ',nsync_qual,badsync
       if(nsync_qual.lt.10) cycle
       llra(1:58)=bitmetrics(9:66,1); llra(59:116)=bitmetrics(75:132,1); llra(117:174)=bitmetrics(141:198,1)
       llrb(1:58)=bitmetrics(9:66,2); llrb(59:116)=bitmetrics(75:132,2); llrb(117:174)=bitmetrics(141:198,2)
@@ -673,12 +686,14 @@ contains
       dmm(pos)=1.e30
       dmin2=1.d30; do z=1,count_msg; if(dmm(z).lt.dmin2) dmin2=dmm(z); enddo
       message=msgbest
+      if(la7dbg) write(0,'(a,a30,2f9.2,f7.2,i4)') 'a7 best ',msgbest(1:30),dmin,dmin2,dmin2/max(dmin,1.d-4),nharderrors
       if(dmin.eq.0.d0) dmin=0.0001d0
       if(dmin.gt.100.d0 .or. dmin2/dmin.lt.1.27d0) nharderrors=-1
       if(msgbest(1:3).eq.'CQ ' .and. std_2 .and. grid4.eq.'    ') nharderrors=-1
       if(msgbest(1:6).eq.'QU1RK ' .or. message.eq.'') nharderrors=-1
       if(nharderrors.gt.95) nharderrors=-1
-      if(nharderrors.ge.0 .and. 1.0-(real(nharderrors)+real(dmin))/60.0.lt.0.02) nharderrors=-1  ! MSHV's AP7 quality gate
+! The quality gate (1 - hard errors/60 >= a7qual) is applied by the caller, as
+! MSHV does: a decode that fails it is not shown but still goes into the history.
       if(nharderrors.ge.0) then
 ! SNR from the sync strength, on the same scale as the main decoder's candidates
         xsnr=max(-21.0,10.0*log10(max(1.e-3,smax))-11.3)

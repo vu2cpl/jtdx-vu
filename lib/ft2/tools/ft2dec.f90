@@ -35,7 +35,7 @@ program ft2dec
   use ft2dec_cb
   use ft2_mod1
   use ft8_mod1, only : sumxdtt,avexdt,mycall,hiscall,twopi
-  use ft2_mod1, only : na7utc
+  use ft2_mod1, only : na7utc,la7dbg,a7qual
   implicit none
   type(hdr) :: h
   type(printing_ft2_decoder) :: dec
@@ -53,6 +53,8 @@ program ft2dec
   mycall=' '; hiscall=' '; avexdt=0.0; sumxdtt=0.0; twopi=8.0*atan(1.0)   ! twkfreq1 reads ft8_mod1 twopi
   llagcc2=.false.; lfilter2=.false.; lhidetest2=.false.; lhidetelemetry2=.false.
   na7utc=0
+  call get_environment_variable('A7DEBUG',arg); la7dbg=len_trim(arg).gt.0
+  call get_environment_variable('A7QUAL',arg); if(len_trim(arg).gt.0) read(arg,*) a7qual
   do ifile=3,nargs
     call get_command_argument(ifile,fname)
     open(10,file=trim(fname),status='old',access='stream')

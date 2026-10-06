@@ -335,7 +335,10 @@ or Pi 5 is recommended.
   to both over TCI, 2026-10-07): JTDX-VU and MSHV decode FT2 to the same
   floor, everything at -12 dB, about half at -15, nothing at -17, with no
   false decodes. MSHV prints FT2 reports 2-3 dB lower than JTDX-VU for the
-  same signal, so compare counts, not numbers.
+  same signal, so compare counts, not numbers. Since the next release AP7
+  keeps a call pair across short quiet spells and accepts decodes by MSHV's
+  own rule; at -15 dB that roughly doubled the decodes (25 -> 47 of 120,
+  MSHV 61), with no false AP7 decodes.
 
 ## Build on other platforms
 

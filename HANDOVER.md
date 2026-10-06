@@ -209,6 +209,52 @@ Last updated: 2026-10-06
 
 ## What changed
 
+### 2026-10-07 — FT2 AP7: two porting bugs fixed, most of the gap to MSHV closed (for the next release)
+
+Manoj: "fix the ap7 gap". The reference is MSHV's `DecoderFt2` (`decoderft2.cpp`,
+`ft2_a7_save` / `ft2_a7d` / the roll at the top of the decode), not the FT4 one
+read first. The matcher, the sync search and the 1.27 / 100 / 95 gates were
+already the same. Two things were not:
+- **History thrown away after any quiet spell** (`a7_roll`). The 11 s staleness
+  test measured from the last period WITH decodes; MSHV measures from the
+  previous period, decoded or not. Two silent periods between QSOs plus one
+  missed decode wiped the pairs, so the first decode after a gap never got its
+  AP7 retry. Now as MSHV: reset only after an 11 s gap in the decoder clock or
+  three consecutive periods without a decode.
+- **Quality gate too strict.** MSHV's AP7 quality is `1-(nharderrors+dmin)/60`,
+  but `ft2_a7d` never hands `dmin` back to its caller (an unnamed `double &`
+  parameter), so in practice it is `1-nharderrors/60 >= 0.02`, i.e. at most 58
+  hard errors. The port used the real dmin (about 34 at -16 dB), which rejected
+  most true decodes: with the pair supplied, the true message ranked first 33/40
+  times at -16 dB and was accepted 7/40. The gate now uses hard errors only and
+  sits in the caller; a decode that fails it is not shown but still goes into
+  the history, as MSHV's `PrintMsg` does.
+- **Offline (40 QSOs decoded back to back, `lib/ft2/tools/bench/a7bench.sh`):**
+  AP7 decodes at -15 dB 9 -> 41, at -14 dB 20 -> 24; plain decodes unchanged.
+  `a7false.sh` (new): 200 sequences of silence after a pair, and 200 of a
+  different station answering K1ABC at -16 dB on the same frequency - no false
+  AP7 decode in either.
+- **Live, same audio as MSHV (`tools/ft2_autotest.sh`, 20 QSOs per level):**
+
+  | SNR | JTDX-VU before | JTDX-VU now (AP7) | MSHV (AP7) | of |
+  |---|---|---|---|---|
+  | -14 | 102 | 106 (13) | 107 (10) | 120 |
+  | -15 | 25 | 47 (14) | 61 (28) | 120 |
+  | -16 | 3 | 8 (2) | 11 (5) | 120 |
+
+  `lib/ft2/tools/bench/autotest/2026-10-07-sweep-20qso-ap7fix.txt`. No false
+  AP7 decode from JTDX-VU; MSHV made one (`K1ABC W9XYZ +45`). MSHV's own -15
+  dB total was 66, 43 and 61 in three runs of the same plan, so the rest of the
+  gap is within run-to-run variation plus which messages each plain decoder
+  happens to catch (that decides whether the history survives the gap between
+  QSOs). Note the sim uses the same two calls in every QSO, which flatters
+  history carried across QSOs for both decoders.
+- **Tools:** `ft2dec` honours `A7DEBUG=1` (every AP7 attempt: sync, sync
+  quality, best/second distance, hard errors, on stderr) and `A7QUAL=` (the
+  gate); `a7bench.sh` runs sequences back to back by default
+  (`A7SEPARATE=1` for the old one-at-a-time). The generated sets are
+  git-ignored.
+
 ### 2026-10-07 — JTTY: crash on some false decodes fixed (for the next release)
 
 Found while porting JTTY to MSHV-Mac (`tools/jtty-port` there, local
@@ -308,7 +354,7 @@ results in `lib/ft2/tools/bench/autotest/2026-10-07-sweep-20qso.txt`):
   | -15 | 23 / 2 / 25 | 33 / 33 / 66 | 120 |
   | -16 | 3 / 0 / 3 | 3 / 0 / 3 | 120 |
 
-- Level at -14 and -16. **At -15 MSHV gets 66 to JTDX-VU's 25, and 33 of
+- **Fixed the same day - see the AP7 entry above.** Level at -14 and -16. **At -15 MSHV gets 66 to JTDX-VU's 25, and 33 of
   MSHV's are AP7** - in nearly every QSO it pulls the R-report (period 4)
   and the 73 (period 6), the two messages whose pair was decoded two
   periods earlier, where JTDX-VU's AP7 fired twice in 120. The plain

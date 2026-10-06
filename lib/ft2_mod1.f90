@@ -20,6 +20,8 @@ module ft2_mod1
   integer na7utc                              ! this period's hhmmss (set by decoder.f90)
   integer na7lastutc                          ! last period that was decoded
   integer na7zerop                            ! consecutive periods with no decode
-  data na7dec/4*0/, na7utc/-1/, na7lastutc/-1/, na7zerop/0/
+  logical la7dbg                              ! trace every AP7 attempt on stderr (ft2dec: A7DEBUG=1)
+  real a7qual                                 ! AP7 quality gate 1-(nharderrors+dmin)/60 >= a7qual (ft2dec: A7QUAL=)
+  data na7dec/4*0/, na7utc/-1/, na7lastutc/-1/, na7zerop/0/, la7dbg/.false./, a7qual/0.02/
 
 end module ft2_mod1
