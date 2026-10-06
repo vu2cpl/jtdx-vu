@@ -631,6 +631,7 @@ private:
   int rig_resolution_;          // see Transceiver::resolution signal
   double frequency_calibration_intercept_;
   double frequency_calibration_slope_ppm_;
+  double rig_report_offset_mhz_;        // JTDX-VU: taken off every frequency the rig reports
   unsigned transceiver_command_number_;
 
   // configuration fields that we publish
@@ -2244,6 +2245,7 @@ Radio::convert_dark("#fafbfe",useDarkStyle_),Radio::convert_dark("#dcdef1",useDa
 
   ui_->calibration_intercept_spin_box->setValue (frequency_calibration_intercept_);
   ui_->calibration_slope_ppm_spin_box->setValue (frequency_calibration_slope_ppm_);
+  ui_->rig_report_offset_spin_box->setValue (rig_report_offset_mhz_);
 
   if (rig_params_.ptt_port.isEmpty ())
     {
@@ -2707,6 +2709,7 @@ void Configuration::impl::read_settings ()
   udpWindowRestore_ = settings_->value ("udpWindowRestore",false).toBool ();
   frequency_calibration_intercept_ = settings_->value ("CalibrationIntercept", 0.).toDouble ();
   frequency_calibration_slope_ppm_ = settings_->value ("CalibrationSlopePPM", 0.).toDouble ();
+  rig_report_offset_mhz_ = settings_->value ("RigReportOffsetMHz", 0.).toDouble ();
 
   if(settings_->value ("pwrBandTxMemory").toString()=="false" || settings_->value ("pwrBandTxMemory").toString()=="true")
     pwrBandTxMemory_ = settings_->value("pwrBandTxMemory").toBool ();
@@ -2973,6 +2976,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("udpWindowRestore", udpWindowRestore_);
   settings_->setValue ("CalibrationIntercept", frequency_calibration_intercept_);
   settings_->setValue ("CalibrationSlopePPM", frequency_calibration_slope_ppm_);
+  settings_->setValue ("RigReportOffsetMHz", rig_report_offset_mhz_);
   settings_->setValue ("pwrBandTxMemory", pwrBandTxMemory_);
   settings_->setValue ("pwrBandTuneMemory", pwrBandTuneMemory_);
   settings_->setValue ("Region", QVariant::fromValue (region_));  
@@ -3600,6 +3604,7 @@ void Configuration::impl::accept ()
   beepOnFirstMsg_ = ui_->beep_on_firstMsg_check_box->isChecked();
   frequency_calibration_intercept_ = ui_->calibration_intercept_spin_box->value ();
   frequency_calibration_slope_ppm_ = ui_->calibration_slope_ppm_spin_box->value ();
+  rig_report_offset_mhz_ = ui_->rig_report_offset_spin_box->value ();
   pwrBandTxMemory_ = ui_->checkBoxPwrBandTxMemory->isChecked ();
   pwrBandTuneMemory_ = ui_->checkBoxPwrBandTuneMemory->isChecked ();  
 
@@ -6402,9 +6407,15 @@ void Configuration::impl::handle_transceiver_update (TransceiverState const& sta
   qDebug () << "Configuration::handle_transceiver_update: Transceiver State #:" << sequence_number << state;
 #endif
 
+  // JTDX-VU: a CAT server whose readback carries an extra offset (SDR-Control on
+  // QO-100 reports 10489.540 as 12861.040, its transverter offset applied once more)
+  // - taken off reads only; what JTDX-VU sets is right as it is
+  Frequency const report_offset = std::llround (rig_report_offset_mhz_ * 1.e6);
+  auto const corrected = [report_offset] (Frequency f) {return f > report_offset ? f - report_offset : f;};
+
   // only follow rig on some information, ignore other stuff
   cached_rig_state_.online (state.online ());
-  cached_rig_state_.frequency (state.frequency ());
+  cached_rig_state_.frequency (corrected (state.frequency ()));
   cached_rig_state_.split (state.split ());
 
   if (state.online ())
@@ -6434,12 +6445,12 @@ void Configuration::impl::handle_transceiver_update (TransceiverState const& sta
     {
       TransceiverState reported_state {state};
       // take off calibration & offset
-      reported_state.frequency (remove_calibration (reported_state.frequency ()) - current_offset_);
+      reported_state.frequency (remove_calibration (corrected (reported_state.frequency ())) - current_offset_);
 
       if (reported_state.tx_frequency ())
         {
           // take off calibration & offset
-          reported_state.tx_frequency (remove_calibration (reported_state.tx_frequency ()) - current_tx_offset_);
+          reported_state.tx_frequency (remove_calibration (corrected (reported_state.tx_frequency ())) - current_tx_offset_);
         }
 
       Q_EMIT self_->transceiver_update (reported_state);

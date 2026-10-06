@@ -3200,6 +3200,43 @@ for assessing propagation and system performance.</string>
                  </property>
                 </widget>
                </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_rig_report_offset">
+                 <property name="text">
+                  <string>Reported high by:</string>
+                 </property>
+                 <property name="buddy">
+                  <cstring>rig_report_offset_spin_box</cstring>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QDoubleSpinBox" name="rig_report_offset_spin_box">
+                 <property name="toolTip">
+                  <string>JTDX-VU: subtracted from every frequency the rig REPORTS, never added to what JTDX-VU sets.
+For a CAT server whose readback carries an extra offset. Example: SDR-Control for Icom on QO-100 with a
+2371.5 MHz transverter offset reports 12861.040 MHz for 10489.540 - enter 2371.5 here.</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string> MHz</string>
+                 </property>
+                 <property name="decimals">
+                  <number>6</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-99999.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>99999.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>
@@ -7305,6 +7342,7 @@ soundcard changes</string>
   <tabstop>udpWindowRestore</tabstop>
   <tabstop>frequencies_table_view</tabstop>
   <tabstop>calibration_intercept_spin_box</tabstop>
+  <tabstop>rig_report_offset_spin_box</tabstop>
   <tabstop>calibration_slope_ppm_spin_box</tabstop>
   <tabstop>stations_table_view</tabstop>
   <tabstop>pbCQmsg</tabstop>

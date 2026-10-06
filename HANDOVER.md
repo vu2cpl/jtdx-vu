@@ -209,6 +209,30 @@ Last updated: 2026-10-06
 
 ## What changed
 
+### 2026-10-06 — Rig "Reported high by" correction for SDR-Control on QO-100 (for the next release)
+
+Manoj made a profile for QO-100 with SDR-Control for Icom (rig Hamlib NET
+rigctl 127.0.0.1:5001, audio CommonRadioAudio In 1 / Out 1) and JTDX-VU
+showed **12861.040 MHz**. Measured with rigctl against SDR-Control's server:
+`f` returns 12861040000 for a radio set to 10489.540 — SDR-Control's
+2371.5 MHz transverter offset (28 MHz IF → 2.4 GHz, set in it on 2026-09-19)
+is applied once more on readback; its SET takes the real frequency (`F
+12861040000` moved the radio to a readback of 15232.54; `F 10489540000`
+restored it, readback 12861.04). So reads are high by 2371.5 MHz, writes are
+right, and a Station-Information offset (added on writes too) cannot fix it.
+- **Settings > Radio > Frequency Calibration > "Reported high by" (MHz)**
+  (`[Configuration] RigReportOffsetMHz`, `rig_report_offset_mhz_`): taken off
+  every frequency the rig reports (`handle_transceiver_update`, both the
+  cached state and the update passed to the main window), never added to
+  what JTDX-VU sets. For this setup: **2371.5**. Per profile, like every
+  setting. The QO-100 button then sets 10489.540, SDR-Control reports
+  12861.040, JTDX-VU shows 10489.540 and logs 13cm/3cm as designed.
+- Not yet tried on air (Manoj's instance was running while this was built).
+- Profile naming note from the same session: the SDR-Control settings ended
+  up in a profile called "TCI FLEX HF" (the Default profile still holds the
+  Aether TCI setup). No rename in the menu yet: *New profile from current...*
+  as "QO-100" from that instance, then delete the misnamed one.
+
 ### 2026-10-06 — Profiles: one settings set per rig, from a Profile menu (for the next release)
 
 Manoj: "implement profiles in mshv and jtdx ... can run 1 profile with
