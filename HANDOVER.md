@@ -226,7 +226,8 @@ two bands could not even be ticked in View > Band & Mode Buttons.
   FT4 on 70cm tunes 432.174 unless the user adds a 70cm FT4 row.
 - `Bands.cpp` already knew 70cm (420-450) and 23cm (1240-1300).
 - Builds clean on the Mac (`make jtdx`); not tried on air (no UHF/SHF rig
-  here). Reply to Frank drafted in the session; not sent.
+  here). Manoj replied to Frank that it will be fixed; the release build
+  with the buttons is still to go out.
 
 ### 2026-10-06 — QO-100 with SDR-Control: "QO-100 rig IF" (for the next release)
 
