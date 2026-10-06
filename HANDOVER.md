@@ -239,14 +239,15 @@ slider being moved (echo server log: drive 52 -> 100) and audio dropping
 - Builds clean; bundle rebuilt so the loopback test instance has it. Not yet
   reproduced on purpose - the quit test (`tools/run_quit_test.sh`) covers the
   stop path only.
-- **Open:** why the rig went offline on every TX in the loopback setup. The
-  echo server log shows `trx:0,true/false` for the first ~20 overs, then no
-  more `trx` at all, only audio_stop/audio_start pairs (reconnects). Candidates:
-  `TCI failed to set ptt` (the echo server not echoing `trx` within 1 s),
-  the audio watchdog, or the modulator not Idle. `error_` in `TCITransceiver`
-  is never cleared once set, so after any of these every poll throws until
-  the reconnect makes a fresh object. Needs the status-bar reason or a
-  `JTDX_DEBUG_TO_FILE` build.
+- **Resolved (Manoj, 2026-10-07):** the status bar had said **"TCI failed to
+  set ptt"** (`do_ptt`: the `trx` echo not back within 1 s). With the test
+  instance's PTT method set to **CAT** the loop went away and a loopback QSO
+  completed, so the AP7 test is running. The echo server log matches: `trx`
+  lines for the first ~20 overs, then none, only audio_stop/audio_start
+  pairs (reconnects). Still worth noting: `error_` in `TCITransceiver` is
+  never cleared once set, so after one failed PTT every poll throws until
+  the reconnect makes a fresh object - one missed echo costs a 5 s
+  reconnect and the over.
 
 ### 2026-10-06 — 70cm and 23cm band buttons (for the next release)
 
