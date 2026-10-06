@@ -377,6 +377,15 @@ private slots:
   void update_watchdog_label ();
   void on_cbMenus_toggled(bool b);
   void on_cbShowWanted_toggled(bool b);
+  void profileMenuSetup ();            // JTDX-VU: profiles (one settings set per rig)
+  void profileMenuFill ();
+  void profileSwitch (QString const& name);
+  void profileNew ();
+  void profileDelete (QString const& name);
+  QString profileName () const;
+  QString profileIni (QString const& name) const;
+  QString profileData (QString const& name) const;
+  QStringList profileNames () const;
   void on_cbShowSpot_toggled(bool b);
   void dynamicButtonsInit();
   void on_actionWSPR_2_triggered();
@@ -690,6 +699,7 @@ private:
   QSlider * m_rxGainSlider {nullptr};   // JTDX-VU: RX gain
   int m_wantedShow {15};                // JTDX-VU: which wanted filters show (call 1, prefix 2, grid 4, country 8)
   QList<QAction *> m_wantedShowActions;
+  QMenu *m_profileMenu {nullptr};       // JTDX-VU: profiles
   bool m_stopAfterQso {false};  // JTDX-VU: 1 QSO pressed during Auto CQ - stop after this QSO
   bool m_cqRunQso {false}; // JTDX-VU: this QSO answers our CQ - only then does Non-stop continue
   JttyPanel *m_jttyPanel {nullptr};   // JTDX-VU JTTY

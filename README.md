@@ -287,6 +287,13 @@ or Pi 5 is recommended.
 
   JTTY is by Joe Taylor K1JT, Steve Franke K9AN, Rob G4KLA and the
   WSJT-X team.
+- **Profiles** (Profile menu): one complete settings set per rig —
+  VITA-49, TCI, DAX, a QO-100 setup with its own CAT and audio — each with
+  its own log and data directory. *New profile from current...* copies the
+  current settings, switching restarts the program, and a plain launch
+  opens the profile last used. Under the hood these are JTDX's `-r <name>`
+  instances (`JTDX-VU - <name>.ini`), so `-r` on the command line still
+  works.
 - **FT2** (new in v0.3.0): FT4's protocol at twice
   the speed — 3.75 s periods, 41.67 baud — as introduced in MSHV. The
   mode was created by Martino IU8LMC (ARI Caserta); MSHV's C++

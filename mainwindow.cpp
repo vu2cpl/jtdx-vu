@@ -12,6 +12,9 @@
 #include <QProcessEnvironment>
 #include <QLineEdit>
 #include <QRegularExpression>
+#include <QInputDialog>
+#include <QFileInfo>
+#include <QSettings>
 #include <QRegularExpressionValidator>
 #include <QDesktopServices>
 #include <QNetworkAccessManager>
@@ -1199,6 +1202,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     // JTDX-VU: choose which wanted filters show (they take room above the Rx
     // pane) - View > Wanted filters, or right-click a filter's label.  A
     // hidden filter with text in it still applies.
+    profileMenuSetup ();
     m_wantedShow = m_settings->value ("JTDXVU/WantedShow", 15).toInt () & 15;
     auto * menu = ui->menuView->addMenu (tr ("Wanted filters"));
     QStringList const names {tr ("Callsign"), tr ("Prefix"), tr ("Grid"), tr ("Country")};
@@ -8791,4 +8795,152 @@ void MainWindow::updateCnsButton ()
           "halts after that QSO, as with 1 QSO. Off in Hound mode. The Tx watchdog still stops Tx: "
           "while this is on it is the Auto CQ\n"
           "time limit in Settings > JTTY (5 min by default)."));
+}
+
+// JTDX-VU: profiles.  A profile is one complete settings set - rig (TCI,
+// VITA-49, DAX, CAT), audio devices, frequencies, colours - with its own data
+// directory, built on JTDX's "-r <name>" multi-instance support: the profile
+// "<name>" is the settings file "JTDX-VU - <name>.ini" and the data directory
+// "JTDX-VU - <name>" beside the default ones.  Switching restarts the program
+// (the rig and audio devices are held open) and records the choice, so a
+// plain launch from the Dock opens the profile last used.
+void MainWindow::profileMenuSetup ()
+{
+  m_profileMenu = new QMenu (tr ("Profile"), this);
+  ui->menuBar->insertMenu (ui->menuView->menuAction (), m_profileMenu);
+  connect (m_profileMenu, &QMenu::aboutToShow, this, &MainWindow::profileMenuFill);
+  profileMenuFill ();           // macOS hides an empty menu from the native menu bar
+  if (!profileName ().isEmpty ()) ui->menuBar->setToolTip (tr ("Profile: %1").arg (profileName ()));
+}
+
+QString MainWindow::profileName () const
+{
+  auto name = QApplication::applicationName ();
+  auto i = name.indexOf (" - ");
+  return i < 0 ? QString {} : name.mid (i + 3);
+}
+
+QString MainWindow::profileIni (QString const& name) const
+{
+  return QFileInfo {m_settings->fileName ()}.dir ().absoluteFilePath (name.isEmpty () ? "JTDX-VU.ini" : "JTDX-VU - " + name + ".ini");
+}
+
+QString MainWindow::profileData (QString const& name) const
+{
+  return QDir {m_dataDir.absoluteFilePath ("..")}.absoluteFilePath (name.isEmpty () ? "JTDX-VU" : "JTDX-VU - " + name);
+}
+
+QStringList MainWindow::profileNames () const
+{
+  QStringList names;
+  for (auto const& f : QFileInfo {m_settings->fileName ()}.dir ().entryList ({"JTDX-VU - *.ini"}, QDir::Files, QDir::Name))
+    {
+      auto n = f.mid (10); n.chop (4);
+      if (n != "test") names << n;
+    }
+  return names;
+}
+
+void MainWindow::profileMenuFill ()
+{
+  m_profileMenu->clear ();
+  auto current = profileName ();
+  QStringList names {QString {}};
+  names << profileNames ();
+  for (auto const& n : names)
+    {
+      auto * a = m_profileMenu->addAction (n.isEmpty () ? tr ("Default") : n);
+      a->setCheckable (true);
+      a->setChecked (n == current);
+      a->setEnabled (n != current);
+      connect (a, &QAction::triggered, this, [this, n] {profileSwitch (n);});
+    }
+  m_profileMenu->addSeparator ();
+  auto * create = m_profileMenu->addAction (tr ("New profile from current..."));
+  connect (create, &QAction::triggered, this, &MainWindow::profileNew);
+  auto * del = m_profileMenu->addMenu (tr ("Delete profile"));
+  for (auto const& n : profileNames ())
+    {
+      if (n == current) continue;
+      connect (del->addAction (n), &QAction::triggered, this, [this, n] {profileDelete (n);});
+    }
+  del->setEnabled (!del->isEmpty ());
+  m_profileMenu->addSeparator ();
+  m_profileMenu->addAction (tr ("Current: %1").arg (current.isEmpty () ? tr ("Default") : current))->setEnabled (false);
+}
+
+void MainWindow::profileSwitch (QString const& name)
+{
+  if (name == profileName ()) return;
+  // remember the choice in the default settings file, which a plain launch reads
+  if (profileName ().isEmpty ()) m_settings->setValue ("Profiles/Last", name);
+  else
+    {
+      QSettings last {profileIni ({}), QSettings::IniFormat};
+      last.setValue ("Profiles/Last", name);
+      last.sync ();
+    }
+  // start the new instance only once this one has let go of the rig and audio devices
+  QStringList args;
+  if (!name.isEmpty ()) args << "-r" << name;
+  auto program = QApplication::applicationFilePath ();
+  connect (qApp, &QCoreApplication::aboutToQuit, qApp, [program, args] {QProcess::startDetached (program, args);});
+  close ();
+}
+
+void MainWindow::profileNew ()
+{
+  bool ok {false};
+  auto name = QInputDialog::getText (this, tr ("New profile"), tr ("Name of the new profile (a copy of the current settings and data):"),
+                                     QLineEdit::Normal, QString {}, &ok).trimmed ();
+  if (!ok || name.isEmpty ()) return;
+  if (name.contains (QRegularExpression {R"([\\/,])"}) || name == "test" || name == "Default")
+    {
+      JTDXMessageBox::warning_message (this, tr ("New profile"), tr ("\\, / and , are not allowed in a profile name."));
+      return;
+    }
+  if (QFile::exists (profileIni (name)))
+    {
+      JTDXMessageBox::warning_message (this, tr ("New profile"), tr ("A profile called \"%1\" already exists.").arg (name));
+      return;
+    }
+  m_settings->sync ();
+  // the settings file holds absolute paths into the data directory - point them at the copy
+  QFile in {m_settings->fileName ()};
+  QFile out {profileIni (name)};
+  if (!in.open (QIODevice::ReadOnly) || !out.open (QIODevice::WriteOnly))
+    {
+      JTDXMessageBox::warning_message (this, tr ("New profile"), tr ("Could not write the settings file for \"%1\".").arg (name));
+      return;
+    }
+  auto text = QString::fromUtf8 (in.readAll ());
+  text.replace (QDir::cleanPath (m_dataDir.absolutePath ()) + '/', QDir::cleanPath (profileData (name)) + '/');
+  text.remove (QRegularExpression {"^Last=.*\n", QRegularExpression::MultilineOption}); // Profiles/Last belongs to the default file only
+  out.write (text.toUtf8 ());
+  out.close ();
+  std::function<void (QString const&, QString const&)> copy_tree = [&copy_tree] (QString const& from, QString const& to) {
+    QDir {}.mkpath (to);
+    for (auto const& e : QDir {from}.entryInfoList (QDir::AllEntries | QDir::Hidden | QDir::NoDotAndDotDot))
+      {
+        auto target = QDir {to}.absoluteFilePath (e.fileName ());
+        if (e.isDir ()) copy_tree (e.absoluteFilePath (), target);
+        else if (!QFile::exists (target)) QFile::copy (e.absoluteFilePath (), target);
+      }
+  };
+  copy_tree (m_dataDir.absolutePath (), profileData (name));
+  if (JTDXMessageBox::Yes == JTDXMessageBox::query_message (this, tr ("New profile"),
+        tr ("Profile \"%1\" created from the current settings and log. Switch to it now?").arg (name)))
+    profileSwitch (name);
+}
+
+void MainWindow::profileDelete (QString const& name)
+{
+  if (name.isEmpty () || name == profileName ()) return;
+  if (JTDXMessageBox::Yes != JTDXMessageBox::query_message (this, tr ("Delete profile"),
+        tr ("Delete the profile \"%1\" with its settings and data directory (log, ALL.TXT, saved files)?").arg (name),
+        QDir::toNativeSeparators (profileData (name)), {}, JTDXMessageBox::Yes | JTDXMessageBox::No, JTDXMessageBox::No)) return;
+  QFile::remove (profileIni (name));
+  QDir {profileData (name)}.removeRecursively ();
+  QSettings last {profileIni ({}), QSettings::IniFormat};
+  if (last.value ("Profiles/Last").toString () == name) last.setValue ("Profiles/Last", QString {});
 }

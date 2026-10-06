@@ -209,6 +209,46 @@ Last updated: 2026-10-06
 
 ## What changed
 
+### 2026-10-06 — Profiles: one settings set per rig, from a Profile menu (for the next release)
+
+Manoj: "implement profiles in mshv and jtdx ... can run 1 profile with
+vita49, 1 with tci, 1 with dax etc." (and a QO-100 one: SDR-Control CAT and
+audio). A plain launch opens the last used profile; MSHV's copy is a private
+feature (its HANDOVER has the details).
+- **What a profile is:** JTDX's existing `-r <name>` instance - the settings
+  file `JTDX-VU - <name>.ini` and the data directory `JTDX-VU - <name>`
+  (log, ALL.TXT, saved files) beside the default ones. Nothing new on disk;
+  the Default profile is the plain `JTDX-VU.ini` as before.
+- **Profile menu** (`MainWindow::profileMenuSetup/Fill/Switch/New/Delete`,
+  inserted before View): every profile found in the settings directory,
+  the current one ticked; *New profile from current...* copies the current
+  settings file (data-directory paths rewritten, as the JTDX -> JTDX-VU
+  migration does) and the data directory, then offers to switch;
+  *Delete profile* removes a non-current one after confirmation. A switch
+  records `Profiles/Last` in the default settings file, closes, and starts
+  the same binary with `-r <name>` from `aboutToQuit` (after the rig and
+  audio devices are released). The window title carries the name, as `-r`
+  always did.
+- **main.cpp:** without `-r` (and not `--test-mode`) the launch reads
+  `Profiles/Last` from `JTDX-VU.ini` and opens that profile; `-r <name>`
+  still picks one explicitly, so scripts and the `-r tcitest` instances work
+  unchanged. Switching to Default writes an empty `Last`.
+- **Gotcha:** macOS hides a menu that is empty when the native menu bar is
+  built, so the menu is filled once at creation and refilled on
+  `aboutToShow`.
+- **Tested** (trial bundle, test profiles later removed): menu lists
+  Default / proftest; New profile "alpha" created the .ini and data copy
+  and the switch restarted as "JTDX-VU - alpha" with jtdxjt9 running;
+  `Last=alpha` recorded; Delete removed proftest. Not yet tried with a real
+  rig per profile.
+- **Found on the way - bundle bug:** `macos-bundle.sh` relied on the CMake
+  fixup_bundle stage to copy `libgomp.1.dylib` before that stage errors on
+  `@rpath/libsharpyuv`; today it stopped earlier and the bundle shipped
+  without it - jtdxjt9 died at launch ("Library missing") and the app
+  showed "Subprocess Error". The script now copies libgomp itself and
+  fails if any `@loader_path/@executable_path ../Frameworks` dylib is
+  missing. The v0.6.0 release zips and the 10:20 trial zip do have libgomp.
+
 ### 2026-10-06 — FT2: AP7 ported from MSHV (for the next release)
 
 The last piece of the FT2 sensitivity work (see the open item below): MSHV's

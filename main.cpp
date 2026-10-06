@@ -214,10 +214,21 @@ int main(int argc, char *argv[])
 
       QStandardPaths::setTestModeEnabled (parser.isSet (test_option));
 
-      // support for multiple instances running from a single installation
-      if (parser.isSet (rig_option) || parser.isSet (test_option))
+      // JTDX-VU: profiles.  A plain launch (no -r) opens the profile last
+      // chosen from the Profile menu, recorded as Profiles/Last in the
+      // default settings file; "-r <name>" still picks one explicitly.
+      auto profile_name = parser.value (rig_option);
+      if (!parser.isSet (rig_option) && !parser.isSet (test_option))
         {
-          auto temp_name = parser.value (rig_option);
+          QSettings last {QDir {QStandardPaths::writableLocation (QStandardPaths::ConfigLocation)}
+                           .absoluteFilePath (a.applicationName () + ".ini"), QSettings::IniFormat};
+          profile_name = last.value ("Profiles/Last").toString ();
+        }
+
+      // support for multiple instances running from a single installation
+      if (!profile_name.isEmpty () || parser.isSet (test_option))
+        {
+          auto temp_name = profile_name;
           if (!temp_name.isEmpty ())
             {
               if (temp_name.contains (QRegularExpression {R"([\\/,])"}))

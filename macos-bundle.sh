@@ -38,6 +38,10 @@ done
 
 # macdeployqt misses libraries only reachable through @rpath
 cp -L "$BREW/opt/gcc/lib/gcc/current/libgcc_s.1.1.dylib" "$FW/"
+# jtdxjt9 (OpenMP) wants libgomp through @loader_path; the CMake fixup_bundle
+# stage only sometimes copied it before it errored (2026-10-06: a bundle shipped
+# without it and jtdxjt9 died at launch, "Library missing")
+cp -L "$BREW/opt/gcc/lib/gcc/current/libgomp.1.dylib" "$FW/"
 cp -L "$BREW/opt/webp/lib/libsharpyuv.0.dylib" "$FW/"
 chmod u+w "$FW"/*.dylib
 for f in "$FW"/libwebp*.dylib; do
@@ -53,6 +57,13 @@ while IFS= read -r f; do
     install_name_tool -change "$l" "@executable_path/../Frameworks/$b" "$f" 2>/dev/null
   done
 done < <(find "$APP/Contents/MacOS" -type f)
+
+# check: every @loader_path / @executable_path ../Frameworks dylib is present
+missing="$(find "$APP/Contents/MacOS" -type f | while IFS= read -r f; do
+             file -b "$f" | grep -q Mach-O || continue
+             otool -L "$f" | grep -o '@[a-z_]*/\.\./Frameworks/[^ ]*\.dylib' | sed 's#.*/##'
+           done | sort -u | while read -r l; do [ -f "$FW/$l" ] || echo "$l"; done)"
+[ -z "$missing" ] || { echo "libraries missing from the bundle:" >&2; echo "$missing" >&2; exit 1; }
 
 # check: no Homebrew dependency lines left
 left="$(find "$APP" -type f | while IFS= read -r f; do
