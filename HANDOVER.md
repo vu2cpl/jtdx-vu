@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-06
+Last updated: 2026-10-07
 
 ## Current state
 
@@ -126,16 +126,19 @@ Last updated: 2026-10-06
     install -s` clean, 8 s headless start OK, uploaded by hand.
   - Website updated the same evening (card + page, downloads table on
     v0.4.0), pushed after all assets answered.
-- **Unreleased on `jtdx-vu` after v0.4.0:** the JTTY screen redesign
-  (2026-10-02 entry): FT-only controls hidden in JTTY, S / R / Name
-  fields, calls heard, 24 macros in 3 banks, set picker, type-ahead.
-  Built and tested in a throwaway instance; **installed 2026-10-02
-  11:40, re-installed 11:45 (tidied layout) and 11:55 (no CW ID)** (bundle of `6ae5e051`'s code). Previous v0.4.0 app and the
-  pre-migration .ini (`JTDX-VU.ini.before-redesign`) are in
-  `~/Desktop/jdxvu/prev-install/`.
-- **Installed app:** `/Applications/JTDX-VU.app` is v0.5.3 (`bcad6f8c`),
-  installed 2026-10-03. It was built locally, so
-  it runs on macOS 26+ only. Settings are in
+- **Unreleased on `jtdx-vu` after v0.6.0** (each has its own "What changed"
+  entry, all marked "for the next release"): QO-100 support and the SDR-Control
+  "QO-100 rig IF" / "Reported high by"; profiles (Profile menu = `-r`
+  instances); 70cm and 23cm band buttons (promised to Frank PH2M); FT2 AP7 port
+  plus the 2026-10-07 history / quality-gate fixes; the TCI reconnect-loop crash
+  fix; the JTTY `unpack28` crash fix (checked on the Mac); the FlexRadio VITA-49
+  rig type (fake radio only, **not yet on the FLEX-6600**); the FT2 test
+  harnesses (`tools/ft2_autotest.sh`, `lib/ft2/tools/bench/`). Version is still
+  0.6.0 in `Versions.cmake`; a release needs the bump, notes and the usual
+  four builds.
+- **Installed app:** `/Applications/JTDX-VU.app` is a **local build bundled
+  2026-10-06 23:01** that reports 0.6.0 (not the release zip, and older than
+  the 2026-10-07 work). Local builds run on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
 - **Release v0.3.0: COMPLETE 2026-09-29** — all four builds attached — JTTY + FT2 + separate
@@ -2324,6 +2327,13 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
+- [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07, tested
+      only against `tools/fake_flex.py`). Check: `client gui` with SmartSDR
+      also connected (per-client slice letters), the RF level from full-scale
+      DAX audio, that `xmit 0` drops the carrier at once, and a QSO.
+- [ ] **Next release** - everything under "Unreleased on `jtdx-vu` after
+      v0.6.0" above; Frank PH2M is waiting for the 70cm/23cm buttons.
+
 - [ ] **FT2 weak-signal gap vs MSHV** (2026-10-05 screen recording from
       LZ2HV, KN23, 14.084 FT2, JTDX-VU 0.6.0 beside MSHV 2.76.7, 15
       periods 18:37:52-18:38:45). MSHV 41 decodes, JTDX-VU 34. Everything
@@ -2411,6 +2421,11 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       in a seeded QSO decode where the normal path stops at about -16,
       0 false decodes on noise. What is left is the on-air comparison
       against MSHV with real FT2 recordings.
+      **2026-10-07: same-audio comparison automated and run** (`tools/ft2_autotest.sh`):
+      the plain decoders have the same floor; two AP7 porting bugs fixed;
+      live 20-QSO result 106/107, 47/61, 8/11 at -14/-15/-16 dB (JTDX-VU /
+      MSHV). Remaining: the on-air check with real recordings, and the -15 dB
+      AP7 difference, which may be run-to-run variation (MSHV alone 43-66).
 - [ ] **Decision pending (Manoj thinking it over, 2026-10-04): simplify to
       MSHV's DXCC model.** MSHV-Mac private build: one checkbox "DXCC: show
       new entity / band / mode only" above the decodes; one Club Log status
