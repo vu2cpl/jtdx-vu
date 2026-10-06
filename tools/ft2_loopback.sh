@@ -1,4 +1,9 @@
 #!/bin/bash
+# NOTE 2026-10-07: tools/ft2_autotest.sh does this with nothing to click (its
+# own TCI server plays noise + a scripted QSO to an MSHV head and a JTDX-VU
+# test instance, and scores both from their logs).  This script is the manual
+# version, kept for a live two-heads session.
+#
 # JTDX-VU: FT2 loopback sensitivity test against MSHV (LZ2HV's suggestion,
 # 2026-10-06: "use HV TCI server, one head of MSHV to TX, slow down TX level
 # and test sensitivity").  No radio: Christo's TCI_HV echo server mixes every

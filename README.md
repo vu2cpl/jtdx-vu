@@ -319,7 +319,11 @@ or Pi 5 is recommended.
   "AP7": once a call pair has been decoded, the station's expected reply
   two periods later is matched against the likely messages for that pair,
   so reports a few dB below the normal floor still decode (shown with a
-  trailing `7`).
+  trailing `7`). Measured on identical audio (a scripted QSO plus noise played
+  to both over TCI, 2026-10-07): JTDX-VU and MSHV decode FT2 to the same
+  floor, everything at -12 dB, about half at -15, nothing at -17, with no
+  false decodes. MSHV prints FT2 reports 2-3 dB lower than JTDX-VU for the
+  same signal, so compare counts, not numbers.
 
 ## Build on other platforms
 

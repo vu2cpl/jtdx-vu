@@ -209,6 +209,64 @@ Last updated: 2026-10-06
 
 ## What changed
 
+### 2026-10-07 — FT2: automated same-audio comparison, JTDX-VU = MSHV (for the next release)
+
+Manoj ("automate the tests... i am not going to sit and do this anymore",
+then "do it on your own. good night"). Built and run overnight, nothing to
+click:
+- **`tools/ft2_tci_sim.py`** - a TCI server that *is* the band: Gaussian noise
+  (RMS 0.05) plus a scripted FT2 QSO (CQ K1ABC FN42, K1ABC W9XYZ EN37,
+  W9XYZ K1ABC -10, K1ABC W9XYZ R-12, W9XYZ K1ABC RR73, K1ABC W9XYZ 73; one per
+  3.75 s period from a 15 s UTC boundary, then two silent periods; `ft2sim`
+  at snr 99 = clean full scale, resampled 12 -> 48 kHz with a windowed sinc),
+  streamed at an exact 48 kHz on the wall clock (worst lateness 0 ms over 16
+  min) as float32 stereo 2048-sample frames to every client that sends
+  `audio_start`. Built on `tools/fake_tci.py` (handshake, start-up burst,
+  state echo); says `protocol:ExpertSDR3,1.9`, which both clients accept.
+  SNR in 2500 Hz: amplitude g = sigma * 10^((snr - 6.8)/20); JTDX-VU reports
+  it back within 1 dB (6 -> 6, -14 -> -14), so the calibration holds.
+- **`tools/ft2_autotest.sh --snr ... --repeats N [--nomshv]`** - starts the
+  sim, an MSHV head (the LZ2HV-tree test head, VU2BBB, FT2, TCI Client RX1,
+  RX only, with an `AllTxtMonthly/` dir so it logs decodes), a JTDX-VU
+  `-r tcitest` (CAT PTT, UDP moved off RUMlog), waits for the plan, quits
+  JTDX-VU through its menu, keeps both logs + schedule in a results dir and
+  scores them with **`tools/ft2_score.py`** (per SNR: plain / AP7 / all for
+  each decoder, reported-SNR means, a per-message map; lists stray lines =
+  false decodes). Refuses to start while the live MSHV runs. Makes the six
+  periods itself if `/tmp/ft2_autotest-sig` is missing.
+- **Result (`lib/ft2/tools/bench/autotest/2026-10-07-sweep.txt`, 8 SNRs x 4
+  QSOs = 192 periods, 20:24-20:40 UTC):**
+
+  | SNR | JTDX-VU plain / AP7 / all | MSHV plain / AP7 / all | of |
+  |---|---|---|---|
+  | -12 | 24 / 0 / 24 | 24 / 0 / 24 | 24 |
+  | -14 | 19 / 1 / 20 | 21 / 1 / 22 | 24 |
+  | -15 | 10 / 0 / 10 | 7 / 3 / 10 | 24 |
+  | -16 | 2 / 0 / 2 | 1 / 0 / 1 | 24 |
+  | -17..-20 | 0 | 0 | 24 each |
+
+  **Same floor.** No false decodes on either side (every logged line was a
+  planned message in its period). Reported SNR for the same signal: JTDX-VU
+  -12/-13/-14/-16, MSHV -14/-16/-17/-17 - MSHV prints 2-3 dB lower (FT4's
+  -14.8 constant kept for FT2 vs JTDX-VU's -11.3), which is the whole of
+  Manoj's "MSHV goes down to -21, JTDX stops at -15" from the manual test.
+  MSHV's AP7 fires a little more often at -15 (3 vs 0 here), JTDX-VU's once
+  at -14; with 4 QSOs per level that is within noise - worth a 20-repeat
+  run on -14/-15/-16 only if the AP7 rate itself matters.
+- **What did not work, so nobody tries it again:** feeding Christo's TCI_HV
+  echo server from a Python TCI client (`tools/tci_player.py`, kept). TCI_HV
+  paces its stream on a Qt timer that ran at 47-87 % of real time here
+  (varied run to run), so audio played into it came out time-compressed
+  (bursts of 1.25 s instead of 2.47) and nothing decoded; with the player
+  alone it happened to be fast enough once. Also learned: the server's
+  frame `length` counts floats (both channels), JTDX-VU never sends the
+  `audio_stream_*` set-up (an MSHV head does), and a websocket frame with a
+  non-minimal length encoding makes Qt drop the link at once.
+- The harness needs the MSHV test head at
+  `MSHV-Mac/sent-to-LZ2HV/2026-09-16-tci-echoserver-received/heads/mshv-noblock`
+  and the scrubbed rc029 settings next to it; `JTDX=` and `SIG=` override
+  the binary and the signal dir.
+
 ### 2026-10-07 — FT2 loopback test run: AP7 seen on air, MSHV still decodes deeper
 
 Manoj ran the loopback test (`tools/ft2_loopback.sh`, Noice slider up step
@@ -237,10 +295,9 @@ to the save-the-wavs step) - results as far as they go:
   build-widenoise/`, one constant changed in `NSlidChanged`); the script
   prefers it when present. The MSHV head's Tx level slider stops
   transmitting near zero, so it is no use as the attenuator.
-- **Open:** a same-audio comparison (JTDX-VU Save > Save all at high noise,
-  then `build/ft2dec` vs MSHV File > Open WAV on the same files) is the way
-  to put a number on the remaining gap; not done. The SNR estimate floor
-  could be looked at too (MSHV's AP7 path uses `pbest/xbase - 42`).
+- **Done the same night** (see the next entry): the same-audio comparison
+  ran hands-off with `tools/ft2_autotest.sh`; the two decoders have the same
+  floor.
 
 ### 2026-10-07 — Crash in the TCI reconnect loop (for the next release)
 
