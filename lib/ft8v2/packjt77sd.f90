@@ -290,9 +290,19 @@ subroutine unpack28(n28_0,c13,success)
         c13='CQ_'//c13(1:10)
         go to 900
      endif
+! JTDX-VU: unused token space; reject instead of indexing with negative n
+     c13='QU1RK'
+     success=.false.
+     return
   endif
   n28=n28-NTOKENS
-  
+  if(n28.lt.MAX22) then
+! JTDX-VU: 22-bit hash; no hash table here (pack28 never emits these), reject
+     c13='QU1RK'
+     success=.false.
+     return
+  endif
+
 ! Standard callsign
   n=n28 - MAX22
   i1=n/(36*10*27*27*27)
