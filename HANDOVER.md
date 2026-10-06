@@ -209,6 +209,79 @@ Last updated: 2026-10-06
 
 ## What changed
 
+### 2026-10-07 — FlexRadio VITA-49 rig type, ported from MSHV-Mac (for the next release)
+
+Manoj: "Next vita49 to jtdx Vu ... Use MSHV repo ... For reference". The
+MSHV-Mac native Flex backend (`MSHV/src/HvRigControl/HvRigCat/network/
+network.cpp`, "flex native vita-49", his own code in LZ2HV's layout) is the
+reference; this is the same thing in JTDX-VU's Transceiver shape.
+- **`FlexTransceiver.{hpp,cpp}`** - a `PollingTransceiver` like TCI:
+  SmartSDR control on TCP (host[:port], default 4992, from the TCI port
+  field) and DAX audio over VITA-49 UDP, one API session. Start-up as
+  measured on the 6600 in MSHV-Mac: V/H greeting, `client gui`, subs,
+  `client udpport <bound port>`, `info`, 1.2 s slice-status drain, slice =
+  ours-by-letter / ours / the global index / `slice create mode=digu
+  freq=<last>`, `dax audio set <ch> slice=<n>`, `stream create type=dax_rx
+  dax_channel=<ch>` (id from the reply body or the status line), and with the
+  audio tick `stream create type=dax_tx` + `transmit set dax=1` + `dax audio
+  set ... tx=1`. DAX channel = slice letter + 1. Tune `slice tune n MHz
+  autopan=1`, mode `slice set n mode=`, PTT `dax audio set ch tx=1` /
+  `slice set n tx=1` / `xmit 1`, audio keyed just before and stopped on
+  unkey. Tear-down removes only what it created. Nested waits with the same
+  `in_nested_wait` / `abort_waits` hooks as TCI, so the deferral fixes apply.
+- **Audio:** RX packets (class 0x534C03E3, 24 kHz stereo float32 BE, L==R)
+  -> mono -> each sample doubled into 48 kHz stereo frames -> the TCI
+  `writeAudioData` / `fil4_` decimation (its low-pass removes the doubling
+  images) -> `dec_data`, `tciframeswritten`. TX: a 4 ms precise timer sends
+  whole 128-frame packets against the clock (type 1, class 0x534C0123, 284
+  bytes, mono int16 BE) from the TCI modulator copy, taking L of every
+  second 48 kHz frame; the TX slider is a gain on that audio (0 dB at the
+  top), RF power is left to the radio. 10 s audio watchdog -> failure ->
+  the main window's reconnect loop (`is_tci()` is true for a Flex too).
+- **Integration:** `TransceiverFactory` ids `FlexFirstId..FlexLastId`
+  (slices A..H), `Capabilities::tci` so the host:port field and CAT PTT
+  apply; `Configuration` treats "FlexRadio VITA" like "TCI Cli" (audio
+  tick, PTT via CAT only); the tick is now labelled "Use TCI / VITA-49
+  Audio". The modulator and RX decimation are copied from TCITransceiver,
+  not shared - a refactor there right before a release was not worth it.
+- **Not supported:** split (a Flex has one VFO per slice; `do_tx_frequency`
+  reports split off - use Fake It or None), S-meter / power / SWR meters,
+  the Flex panel extras (antenna, ATU, front speaker) MSHV has.
+- **Tested against `tools/fake_flex.py`** (a stand-in radio: the line
+  protocol above, DAX RX from the same noise + scripted QSO as the TCI sim,
+  DAX TX packets kept as 12 kHz wavs) with `tools/flex_selftest.sh`: the
+  command sequence came out exactly as MSHV's, all six QSO messages decoded
+  at DT 0.0, and a CQ triggered over UDP was transmitted as DAX packets that
+  `ft2dec` decoded back ("CQ VU2CPL MK83", DT -0.03). **Not yet on the
+  FLEX-6600** - first live things to check: `client gui` with SmartSDR also
+  running (per-client slice letters), the RF level the radio makes from
+  full-scale DAX audio, and that `xmit 0` drops the carrier at once.
+
+### 2026-10-07 — FT2: 20-QSO run - the floor is the same, MSHV's AP7 is better at it
+
+`tools/ft2_autotest.sh --snr -14,-15,-16 --repeats 20` (360 periods, 20:54-21:24 UTC,
+results in `lib/ft2/tools/bench/autotest/2026-10-07-sweep-20qso.txt`):
+
+  | SNR | JTDX-VU plain / AP7 / all | MSHV plain / AP7 / all | of |
+  |---|---|---|---|
+  | -14 | 95 / 7 / 102 | 87 / 12 / 99 | 120 |
+  | -15 | 23 / 2 / 25 | 33 / 33 / 66 | 120 |
+  | -16 | 3 / 0 / 3 | 3 / 0 / 3 | 120 |
+
+- Level at -14 and -16. **At -15 MSHV gets 66 to JTDX-VU's 25, and 33 of
+  MSHV's are AP7** - in nearly every QSO it pulls the R-report (period 4)
+  and the 73 (period 6), the two messages whose pair was decoded two
+  periods earlier, where JTDX-VU's AP7 fired twice in 120. The plain
+  decoders are within noise of each other (23 vs 33); the gap is the AP7
+  acceptance. JTDX-VU's port keeps MSHV's gates (best within 100, 1.27x
+  clear of the second best, <=95 hard errors, quality >= 0.02) but
+  something upstream of them - the re-sync at the pair's frequency, the
+  LLR sets, or the message list - is evidently stricter here. Next decoder
+  item: instrument `a7d` on this run's conditions (the sim can replay the
+  -15 dB QSO indefinitely) and compare the candidate distances with MSHV's.
+- MSHV made **one false AP7 decode** in 360 periods (`W9XYZ K1ABC +32` at
+  -21, a message never sent); JTDX-VU none.
+
 ### 2026-10-07 — FT2: automated same-audio comparison, JTDX-VU = MSHV (for the next release)
 
 Manoj ("automate the tests... i am not going to sit and do this anymore",

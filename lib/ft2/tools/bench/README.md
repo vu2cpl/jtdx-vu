@@ -34,4 +34,7 @@ constant for FT2).  Results in `autotest/`: the 2026-10-07 sweep had both
 decoders at 24/24 at -12 dB, 20 (JTDX-VU) vs 22 (MSHV) at -14, 10 vs 10 at
 -15, 2 vs 1 at -16 and nothing from -17 down; no false decodes in 192
 periods.  AP7 fired on both (1 of JTDX-VU's 20 at -14; 3 of MSHV's 10 at -15).
+A 20-QSO run on -14/-15/-16 only (`autotest/2026-10-07-sweep-20qso.txt`): level
+at -14 and -16, but at -15 MSHV 66/120 (33 via AP7) vs JTDX-VU 25/120 (2 via
+AP7) - the AP7 acceptance is where the remaining gap is.
 

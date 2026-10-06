@@ -196,6 +196,7 @@ set (wsjt_qt_CXXSRCS
   PollingTransceiver.cpp
   HamlibTransceiver.cpp
   TCITransceiver.cpp
+  FlexTransceiver.cpp
   HRDTransceiver.cpp
   DXLabSuiteCommanderTransceiver.cpp
   NetworkMessage.cpp

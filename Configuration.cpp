@@ -2603,7 +2603,7 @@ void Configuration::impl::read_settings ()
   distance_in_comments_ = settings_->value("distanceToComments", false).toBool ();
   rig_params_.rig_name = settings_->value ("Rig", TransceiverFactory::basic_transceiver_name_).toString ();
   rig_is_dummy_ = TransceiverFactory::basic_transceiver_name_ == rig_params_.rig_name;
-  is_tci_ = rig_params_.rig_name.startsWith("TCI Cli");
+  is_tci_ = rig_params_.rig_name.startsWith("TCI Cli") || rig_params_.rig_name.startsWith("FlexRadio VITA");   // JTDX-VU: Flex = network rig with its own audio
   rig_params_.tci_port = settings_->value ("CATTCIPort").toString ();
   rig_params_.network_port = settings_->value ("CATNetworkPort").toString ();
   rig_params_.usb_port = settings_->value ("CATUSBPort").toString ();
@@ -3001,7 +3001,7 @@ void Configuration::impl::set_rig_invariants ()
   auto asynchronous_CAT = transceiver_factory_.has_asynchronous_CAT (rig);
   auto is_hw_handshake = ui_->CAT_handshake_group_box->isEnabled ()
     && TransceiverFactory::handshake_hardware == static_cast<TransceiverFactory::Handshake> (ui_->CAT_handshake_button_group->checkedId ());
-  is_tci_ = ui_->rig_combo_box->currentText().startsWith("TCI Cli");
+  is_tci_ = ui_->rig_combo_box->currentText().startsWith("TCI Cli") || ui_->rig_combo_box->currentText().startsWith("FlexRadio VITA");
   ui_->tci_audio_check_box->setVisible(is_tci_);
   ui_->test_CAT_push_button->setStyleSheet ({});
 
@@ -3095,7 +3095,8 @@ void Configuration::impl::set_rig_invariants ()
               ui_->CAT_port_combo_box->clear ();
               ui_->CAT_port_combo_box->setCurrentText (rig_params_.tci_port);
               ui_->CAT_port_label->setText (tr ("TCI Server:"));
-              ui_->CAT_port_combo_box->setToolTip (tr ("Optional hostname and port of TCI service.\n"
+              ui_->CAT_port_combo_box->setToolTip (tr ("Optional hostname and port of TCI service,\n"
+                                                       "or of the FlexRadio (port 4992) for a VITA-49 rig.\n"
                                                        "Leave blank for a sensible default on this machine.\n"
                                                        "Formats:\n"
                                                        "\thostname:port\n"
@@ -3393,7 +3394,7 @@ void Configuration::impl::accept ()
   rig_params_ = temp_rig_params; // now we can go live with the rig
                                  // related configuration parameters
   rig_is_dummy_ = TransceiverFactory::basic_transceiver_name_ == rig_params_.rig_name;
-  is_tci_ = rig_params_.rig_name.startsWith("TCI Cli");
+  is_tci_ = rig_params_.rig_name.startsWith("TCI Cli") || rig_params_.rig_name.startsWith("FlexRadio VITA");   // JTDX-VU: Flex = network rig with its own audio
   // Check to see whether SoundInThread must be restarted,
   // and save user parameters.
   {

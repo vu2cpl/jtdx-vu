@@ -4,6 +4,7 @@
 
 #include "HamlibTransceiver.hpp"
 #include "TCITransceiver.hpp"
+#include "FlexTransceiver.hpp"
 #include "DXLabSuiteCommanderTransceiver.hpp"
 #include "HRDTransceiver.hpp"
 #include "EmulateSplitTransceiver.hpp"
@@ -31,6 +32,8 @@ namespace
       , HRDId
       , OmniRigOneId
       , OmniRigTwoId
+      , FlexFirstId                 // JTDX-VU: FlexRadio VITA-49 slices A..H follow
+      , FlexLastId = FlexFirstId + 7
     };
 }
 
@@ -38,6 +41,7 @@ TransceiverFactory::TransceiverFactory ()
 {
   HamlibTransceiver::register_transceivers (&transceivers_);
   TCITransceiver::register_transceivers (&transceivers_, TCI1Id, TCI2Id);
+  FlexTransceiver::register_transceivers (&transceivers_, FlexFirstId);   // JTDX-VU
   DXLabSuiteCommanderTransceiver::register_transceivers (&transceivers_, CommanderId);
   HRDTransceiver::register_transceivers (&transceivers_, HRDId);
   
@@ -112,6 +116,16 @@ std::unique_ptr<Transceiver> TransceiverFactory::create (ParameterPack const& pa
           {
             result->moveToThread (target_thread);
           }
+      }
+      break;
+
+    case FlexFirstId: case FlexFirstId + 1: case FlexFirstId + 2: case FlexFirstId + 3:
+    case FlexFirstId + 4: case FlexFirstId + 5: case FlexFirstId + 6: case FlexLastId:
+      {
+        // JTDX-VU: native FlexRadio - SmartSDR control and DAX audio over VITA-49
+        int const slice = int (supported_transceivers ()[params.rig_name].model_number_) - FlexFirstId;
+        result.reset (new FlexTransceiver {slice, params.tci_port, PTT_method_CAT == params.ptt_type, params.poll_interval});
+        if (target_thread) result->moveToThread (target_thread);
       }
       break;
 

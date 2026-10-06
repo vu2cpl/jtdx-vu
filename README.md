@@ -219,6 +219,18 @@ or Pi 5 is recommended.
   or rig restart arriving while the TCI link was still connecting could
   crash JTDX-VU (same fault as the quit crash fixed in v0.4.0, now closed for every
   path).
+- **FlexRadio over VITA-49, no SmartSDR needed** (next release, not yet
+  tried on a radio). Rig *FlexRadio VITA-49 Slice A..H* with the radio's
+  address (port 4992) in the CAT port field talks SmartSDR straight to a
+  FLEX-6000/8000: it takes or creates a slice, tunes it, sets DIGU and keys
+  it, and with *Use TCI / VITA-49 Audio* ticked the receive audio comes in
+  as a DAX stream over VITA-49 and the transmit audio goes out the same way,
+  so no DAX driver, virtual sound card or TCI bridge sits in the path. One
+  API session, so the radio's relays click once per over. Ported from the
+  MSHV-Mac backend. No split: use Fake It or None. The TX slider attenuates
+  the audio sent; RF power stays the radio's own setting. Verified so far
+  against a software stand-in (`tools/flex_selftest.sh`): start-up, receive
+  decodes and a transmitted CQ decoded back from the DAX packets.
 - **TCI reconnects on its own** (since v0.5.2). If the SDR program
   (AetherSDR, ExpertSDR, Thetis, ...) is closed or restarted, Tx halts
   and the status bar says "TCI: ... reconnecting every 5 s" instead of

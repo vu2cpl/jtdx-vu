@@ -1,0 +1,12 @@
+  SNR | JTDX plain JTDX AP7 JTDX all | MSHV plain MSHV AP7 MSHV all | of 120   (reported SNR: JTDX / MSHV)
+  -14 |         95        7      102 |         87       12       99 |        (-13 / -16)
+  -15 |         23        2       25 |         33       33       66 |        (-14 / -17)
+  -16 |          3        0        3 |          3        0        3 |        (-16 / -19)
+
+per message, pairs = JTDX,MSHV (CQ, reply, report, R-report, RR73, 73): J/M = plain decode, 7 = via AP7, . = missed
+ -14.0: JM J. JM JM JM JM | .M J. JM JM JM JM | JM J. .. JM JM 77 | JM JM JM JM J7 JM | JM .. J. JM .. JM | .M JM JM JM .M JM | JM JM JM JM JM JM | JM .. .. .7 J. JM | JM JM .. JM .. JM | JM JM .M 77 JM JM | .. .. JM JM JM JM | JM JM J. J7 JM 77 | JM JM J. 7M JM 7M | JM JM JM J7 J7 77 | JM .. .. JM J. JM | JM JM J. JM JM JM | JM JM JM JM 77 JM | JM JM JM JM JM JM | JM JM JM J7 JM JM | .M JM JM .M J. J7
+ -15.0: .M JM .. .7 .. .7 | .M .. .. JM .. J7 | JM .. JM JM 77 .7 | .M .. JM .M JM .. | JM .. .. .. .. .. | .. .. .. .. JM .. | .. .. JM .. .7 .. | .. .M .. .7 .. .M | JM .. .. .7 .. .7 | .7 .. .. .7 .. .7 | .M .. .. .7 .. .7 | .7 .. .. .7 .. JM | .7 JM .. .7 JM .7 | JM JM .M 77 .7 .7 | .M .. .. .7 .. .7 | .7 .. JM .7 .M .7 | .M .. .. .7 .. .7 | JM .. J. .7 .. J7 | .7 .M .. JM .. .7 | .M .. .. .. JM ..
+ -16.0: .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .M .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .. .. .. .. .. .. | .M .. .. .. .. .. | .. J. .. .. .. .. | .. .. .. .. .. .. | .. .. J. .. JM ..
+
+MSHV lines not matched (1):
+  06|RX 14074 FT2|210322|-21|-0.9|655|W9XYZ K1ABC +32|AP7|0.3|1514

@@ -1865,10 +1865,10 @@ both here.</string>
              </sizepolicy>
             </property>
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use TCI Audio when available.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Take the audio from the rig itself over the network: TCI audio from the SDR program, or DAX audio over VITA-49 straight from a FlexRadio.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>Use TCI Audio</string>
+             <string>Use TCI / VITA-49 Audio</string>
             </property>
            </widget>
           </item>
