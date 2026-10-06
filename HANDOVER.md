@@ -209,6 +209,30 @@ Last updated: 2026-10-06
 
 ## What changed
 
+### 2026-10-07 — JTTY: crash on some false decodes fixed (for the next release)
+
+Found while porting JTTY to MSHV-Mac (`tools/jtty-port` there, local
+only). `unpack_jtty_atom` (`lib/jtty/jtty_source_codec.f90`) reads
+callsigns with the old `unpack28` in `lib/ft8v2/packjt77sd.f90`, which
+has no hash table. For n28 in 532444..6257895 (unused tokens and 22-bit
+hashes) it went on to the standard-call branch with a negative n and
+read outside its c1..c4 strings. A `-fcheck` build aborts ("Substring
+out of bounds: lower bound (-26)"); a normal build returns a junk call
+marked valid. About 0.8 % of false JTTY decodes land there.
+- **Fix (`face6cf`):** `unpack28` in packjt77sd now returns `QU1RK` with
+  `success=.false.` for both ranges, and JTTY's existing success check
+  drops them. The vendored JTTY files are unchanged. This module's
+  `pack28` never makes those values, so FT8 self-decode (`genft8sd`, the
+  only other user) is unaffected.
+- **Checked in a cloud session (Linux, gfortran `-fcheck=all`):** every
+  n28 from 0 to 2^28-1, old against new. 5,725,452 values were rejected
+  cleanly; every other value gave the same call and flag as before.
+- **Not yet done on the Mac:** a JTDX-VU build, JTTY wav replay, and
+  `ref_unpack` on `corpus/frames_unhandled_n28.txt` (1466 frames, should
+  all print "invalid") and `corpus/frames_fuzz_nohash.txt` (output should
+  match the old version). `ref_unpack` must be rebuilt from this
+  `packjt77sd.f90`, or it still crashes.
+
 ### 2026-10-07 — FlexRadio VITA-49 rig type, ported from MSHV-Mac (for the next release)
 
 Manoj: "Next vita49 to jtdx Vu ... Use MSHV repo ... For reference". The
