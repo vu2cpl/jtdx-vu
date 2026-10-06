@@ -1909,6 +1909,19 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       MSHV pieces still missing - channel estimation / MMSE equalisation
       (built for fading, where the demapper gain showed) and AP7 - are
       what to measure next, not more LLR variants.
+      **Channel estimation / MMSE equalisation (MSHV) - measured neutral on
+      three channels.** Flat: -14 26 (lse 26), -16 2; slow fade 0.5 Hz/1 ms:
+      -14 28, -15 24, -16 12 (vs 29/25/12 without); fast fade 2 Hz/2 ms:
+      -13 27, -14 24, -15 15 (vs 27/23/16 without). Its 6 dB fading gate
+      opens on 30/30 files INCLUDING the flat channel (12-18 dB "depth" at
+      -14 dB is noise scatter in the 16-symbol per-symbol SNR estimate), so
+      it was active throughout and still changed nothing: a 16-pilot
+      estimate at these SNRs carries too little to equalise with. Kept as
+      a faithful port (harmless, 0/10 false, 6/6 exact under 1 Hz/2 ms),
+      not claimed. Fast-fade bench shows the demapper+passes work IS a
+      real gain there: baseline -13 24, -14 22, -15 12 -> 27/23/16.
+      Sensitivity work on simulation is now done; the remaining on-air
+      difference is AP7 (4 of LZ2HV's 7 misses), being ported next.
 - [ ] **Decision pending (Manoj thinking it over, 2026-10-04): simplify to
       MSHV's DXCC model.** MSHV-Mac private build: one checkbox "DXCC: show
       new entity / band / mode only" above the decodes; one Club Log status
