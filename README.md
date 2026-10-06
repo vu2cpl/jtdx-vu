@@ -184,6 +184,11 @@ or Pi 5 is recommended.
   UDP server (Settings > Reporting) used to pop up a "Network Error" box on
   every send; now the status bar says "UDP host:port: ... - check Settings >
   Reporting", and a failed name lookup is retried every 30 s.
+- **70cm and 23cm band buttons** (next release, asked for by Frank PH2M
+  for the European UHF/SHF FT8/FT4 activity). Tick them in View > Band &
+  Mode Buttons... as for 4m and 2m. A 23cm FT8 working frequency
+  (1296.174 MHz, as in WSJT-X) is in the default frequency list for new
+  or reset lists; 70cm already had 432.174.
 - **QO-100** (next release). A **QO-100** band button tunes FT8 on the
   satellite (10489.540 MHz downlink / 2400.040 MHz uplink). QSOs made on the
   transponder log as a satellite QSO, as LoTW wants: FREQ / BAND = uplink

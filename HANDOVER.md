@@ -209,6 +209,25 @@ Last updated: 2026-10-06
 
 ## What changed
 
+### 2026-10-06 — 70cm and 23cm band buttons (for the next release)
+
+Frank PH2M (JO22hc), by email after installing v0.6.0 on his laptop: the
+European UHF/SHF FT8/FT4 crowd wants band buttons for 70cm and 23cm. The
+switcher's band list (`BandModeSwitcher::all_bands`) ended at 2m, so the
+two bands could not even be ticked in View > Band & Mode Buttons.
+
+- `all_bands` now has "70cm" and "23cm" between 2m and QO-100. They are
+  opt-in like 4m / 2m (not added to anyone's row automatically, unlike
+  QO-100 - most users have no gear there).
+- Default frequency list gains 1296.174 FT8 (WSJT-X's entry; stock JTDX
+  only had 1296.065 JT65 and 1296.500 WSPR). New / reset lists only.
+  70cm already had 432.174 FT8. No FT4 defaults on either band (none in
+  WSJT-X either); `switch_to_band` falls back to any row on the band, so
+  FT4 on 70cm tunes 432.174 unless the user adds a 70cm FT4 row.
+- `Bands.cpp` already knew 70cm (420-450) and 23cm (1240-1300).
+- Builds clean on the Mac (`make jtdx`); not tried on air (no UHF/SHF rig
+  here). Reply to Frank drafted in the session; not sent.
+
 ### 2026-10-06 — QO-100 with SDR-Control: "QO-100 rig IF" (for the next release)
 
 The afternoon's real story, replacing the "Reported high by" analysis below

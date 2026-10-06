@@ -157,6 +157,7 @@ namespace
       {902065000, Modes::JT65, IARURegions::R2,true},
       
       {1296065000, Modes::JT65, IARURegions::ALL,true},
+      {1296174000, Modes::FT8, IARURegions::ALL,true},   // JTDX-VU: as WSJT-X
       {1296500000, Modes::WSPR, IARURegions::ALL,true},
       
       {2301065000, Modes::JT65, IARURegions::ALL,true},
