@@ -247,8 +247,22 @@ LZ2HV's recording came from.
   margin. FT2 uses FT4's `rvec` (`lib/ft4/genft4.f90`,
   `lib/ft4_decode.f90`); anything that builds FT2/FT4 codewords must copy
   that one, not `ft8_decode`'s.
-- Not yet compared against MSHV on air; Christo's / Manoj's FT2 recordings
-  (asked for on 2026-10-05) are the next test.
+- **Christo's recordings (FT2.zip, 2026-10-06):** five single 3.75 s periods
+  (two duplicated under `16_`/`17_` prefixes, presumably MSHV's SNR). JTDX-VU
+  decodes all five - LZ2HV +24/+19, SP9HWY R-12 (-12), SP9HZZ (-13), and
+  8 stations in 260304_124133 - and the pre-demapper baseline gets the same
+  counts, so these files don't separate the builds; being single periods
+  they can't exercise AP7 either. MSHV's own count for the 8-decode file is
+  still unknown (needs the MSHV GUI, File > Open WAV).
+- **Loopback sensitivity test (Christo's method):** `tools/ft2_loopback.sh
+  start|stop` runs his TCI_HV echo server (adds Gaussian noise, "Noice"
+  slider) on 127.0.0.1:50002, two isolated MSHV heads (VU2AAA / VU2BBB, FT2,
+  TCI Client RX1) and a JTDX-VU `-r tcitest` instance (VU2CPL, TCI audio,
+  UDP moved to 2299 so RUMlog never sees it). Brought up and verified
+  connected on 2026-10-06; the manual part - start a CQ in the VU2AAA head
+  and lower its Tx level step by step, score who still decodes - is
+  pending (Manoj: "will do later"). Control of the MSHV / TCI_HV windows
+  via computer-use was declined, so that step is by hand.
 
 ### 2026-10-05 — QO-100 support (for the next release)
 
