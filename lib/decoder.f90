@@ -16,7 +16,7 @@ subroutine multimode_decoder(params)
                        lmultinst,dd8,nft8cycles,nft8swlcycles,lskiptx1,ncandallthr,nincallthr,incall,msgincall,xdtincall, &
                        maskincallthr,ltxing
   use ft4_mod1, only : llagcc,nFT4decd,nfafilt,nfbfilt,lfilter,lhidetest,lhidetelemetry,dd4
-  use ft2_mod1, only : llagcc2,nFT2decd,nfafilt2,nfbfilt2,lfilter2,lhidetest2,lhidetelemetry2,ddf2
+  use ft2_mod1, only : llagcc2,nFT2decd,nfafilt2,nfbfilt2,lfilter2,lhidetest2,lhidetelemetry2,ddf2,na7utc
   use packjt77, only : lcommonft8b,ihash22,calls12,calls22
 
   include 'jt9com.f90'
@@ -2374,6 +2374,7 @@ endif
     endif
     llagcc2=params%nagcc; lhidetest2=params%lhidetest; lhidetelemetry2=params%lhidetelemetry
     nFT2decd=0; sumxdtt(1)=0.0
+    na7utc=params%nutc   ! JTDX-VU: AP7 history needs the period time
     call fillhash(1,.false.)
     call my_ft2%decode(ft2_decoded,params%nQSOProgress,nfqso,nfa,nfb,params%nft4depth, &
          params%nstophint,params%nswl)

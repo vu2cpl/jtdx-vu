@@ -35,12 +35,13 @@ program ft2dec
   use ft2dec_cb
   use ft2_mod1
   use ft8_mod1, only : sumxdtt,avexdt,mycall,hiscall,twopi
+  use ft2_mod1, only : na7utc
   implicit none
   type(hdr) :: h
   type(printing_ft2_decoder) :: dec
   character(len=200) :: fname
   character(len=16) :: arg
-  integer :: nargs,ifile,nfqso,ndepth,nread
+  integer :: nargs,ifile,nfqso,ndepth,nread,nsec
   integer(2) :: iwave(41472)
   nargs=command_argument_count()
   if(nargs.lt.3) then
@@ -51,6 +52,7 @@ program ft2dec
   call get_command_argument(2,arg); read(arg,*) ndepth
   mycall=' '; hiscall=' '; avexdt=0.0; sumxdtt=0.0; twopi=8.0*atan(1.0)   ! twkfreq1 reads ft8_mod1 twopi
   llagcc2=.false.; lfilter2=.false.; lhidetest2=.false.; lhidetelemetry2=.false.
+  na7utc=0
   do ifile=3,nargs
     call get_command_argument(ifile,fname)
     open(10,file=trim(fname),status='old',access='stream')
@@ -61,6 +63,12 @@ program ft2dec
     close(10)
     ddf2=iwave
     nFT2decd=0
+! JTDX-VU: files are consecutive 3.75 s periods - advance the period clock so
+! the AP7 history (call pairs retried two periods later) works as it does live
+    if(ifile.gt.3) then
+      nsec=nint(3.75*(ifile-3))        ! period k starts at k*3.75 s
+      na7utc=10000*(nsec/3600)+100*(mod(nsec,3600)/60)+mod(nsec,60)
+    endif
     write(*,'(a)') trim(fname)
     call dec%decode(ft2_print,0,nfqso,200,4900,ndepth,.false._1,.false._1)
     write(*,'(a,i3)') '  decodes:',dec%n

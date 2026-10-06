@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-03
+Last updated: 2026-10-06
 
 ## Current state
 
@@ -208,6 +208,47 @@ Last updated: 2026-10-03
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-06 — FT2: AP7 ported from MSHV (for the next release)
+
+The last piece of the FT2 sensitivity work (see the open item below): MSHV's
+"AP7" a-priori decode, which is where 4 of the 7 decodes JTDX-VU missed in
+LZ2HV's recording came from.
+- **What it does** (`lib/ft2_decode.f90`, `a7_save` / `a7_roll` / `a7d` /
+  `a7_msg`; state in `lib/ft2_mod1.f90`): every decoded call pair is kept
+  per even/odd period slot (MSHV `ft2_even_odd`: 15 s clock, 3.75 s
+  periods). Two periods later, when the same station is due to answer, the
+  decoder re-syncs at that pair's frequency (3 DT segments x 2 sync passes,
+  gates smax>=0.5, nsync_qual>=10), demaps once, and tests the ~158 likely
+  follow-on messages for the pair (`a7_msg` = MSHV `SetAp7Msg`: reports
+  -30..+30, R-reports, RRR/RR73/73, CQ variants, grid) by weighted
+  hard-decision distance against each message's codeword on LLR sets A-D.
+  Accepted if the best is within 100, stands 1.27x clear of the second
+  best, has <=95 hard errors and passes MSHV's quality gate
+  `1-(nharderrors+dmin)/60 >= 0.02`. Decodes are flagged `7` (the trailing
+  character, where FT4 prints `1`), deduped against the normal decodes and
+  fed back into the history. Runs at depth >= 2. `decoder.f90` passes the
+  period time (`na7utc`); `tools/ft2dec` advances a 3.75 s clock per file
+  so sequences can be tested offline.
+- **Bench** (ft2sim, mild fading 0.5 Hz / 1 ms, QSO K1ABC-W9XYZ at 1500 Hz):
+  four -10 dB openers seed the history, then four reports at **-18 dB** (the
+  normal decoder's floor is about -16), then two noise-only periods. Result:
+  the -18 dB `K1ABC W9XYZ RR73` decodes via AP7 (35 hard errors, distance
+  23 vs 59); one more report matched the true message but failed the 1.27x
+  margin, one was sync-limited, one passed the margin but not the quality
+  gate; **0 false decodes** on the noise periods. On a -10 dB sequence the
+  matcher picks the true message at distance 1.7 vs 58 (ratio 34). The
+  flat / mild-fade / fast-fade regression benches are unchanged (29 26 7 2
+  0 0; 30 30 27 28 24 12; 30 30 27 24 15), as AP7 only adds decodes.
+- **Gotcha that cost a session:** the AP7 port was first written with the
+  **FT8 `rvec`** (77-bit scrambling vector) instead of FT4's. Both start
+  the same and diverge at bit 38, so every candidate codeword was wrong
+  from the second callsign on and the matcher picked junk with a 1.17
+  margin. FT2 uses FT4's `rvec` (`lib/ft4/genft4.f90`,
+  `lib/ft4_decode.f90`); anything that builds FT2/FT4 codewords must copy
+  that one, not `ft8_decode`'s.
+- Not yet compared against MSHV on air; Christo's / Manoj's FT2 recordings
+  (asked for on 2026-10-05) are the next test.
 
 ### 2026-10-05 — QO-100 support (for the next release)
 
@@ -1920,8 +1961,11 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       a faithful port (harmless, 0/10 false, 6/6 exact under 1 Hz/2 ms),
       not claimed. Fast-fade bench shows the demapper+passes work IS a
       real gain there: baseline -13 24, -14 22, -15 12 -> 27/23/16.
-      Sensitivity work on simulation is now done; the remaining on-air
-      difference is AP7 (4 of LZ2HV's 7 misses), being ported next.
+      Sensitivity work on simulation is now done.
+      **AP7 ported 2026-10-06** (see "What changed"): the -18 dB reports
+      in a seeded QSO decode where the normal path stops at about -16,
+      0 false decodes on noise. What is left is the on-air comparison
+      against MSHV with real FT2 recordings.
 - [ ] **Decision pending (Manoj thinking it over, 2026-10-04): simplify to
       MSHV's DXCC model.** MSHV-Mac private build: one checkbox "DXCC: show
       new entity / band / mode only" above the decodes; one Club Log status

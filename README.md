@@ -294,6 +294,11 @@ or Pi 5 is recommended.
   with a scaled copy of JTDX's own FT4 chain. Default dial frequencies
   follow MSHV (14.084, 7.052, 21.144 MHz …). Add the FT2 button in
   View > Band & Mode Buttons... if you want it on the switcher.
+  Since v0.6.0 the decoder also has MSHV's log-sum-exp demapper and
+  "AP7": once a call pair has been decoded, the station's expected reply
+  two periods later is matched against the likely messages for that pair,
+  so reports a few dB below the normal floor still decode (shown with a
+  trailing `7`).
 
 ## Build on other platforms
 
