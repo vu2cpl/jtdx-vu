@@ -2075,8 +2075,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       noise, 10/10 message types exact at -8 dB faded. Next, in order:
       (1) LLR sets D (max-|LLR| of A/B/C) and E (mean) + 5 non-AP passes;
       (2) MSHV's channel estimation / MMSE equalisation blend (fading>6 dB);
-      (3) AP7. All measurable on the fading bench. Bench scripts live in
-      the session scratchpad; regenerate with the FIXED ft2sim.
+      (3) AP7. All measurable on the fading bench. Bench scripts and the
+      AP7 unit tools now live in `lib/ft2/tools/bench/` (README there);
+      regenerate the file sets with the FIXED ft2sim.
       **LLR sets D/E + 5 non-AP passes (MSHV) - measured neutral.** Fading:
       -14 29 (same), -15 25 (was 24), -16 12 (same); flat: -14 27, -16 2 (one
       file back each). Within the noise of 30 files, 0/10 false decodes,
