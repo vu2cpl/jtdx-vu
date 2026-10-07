@@ -672,6 +672,7 @@ private:
   QLabel * mode_label;
   QLabel * last_tx_label;
   void update_rig_mode_indicator (Transceiver::TransceiverState const&);   // JTDX-VU
+  void set_rig_status_style (char const * colour);                          // JTDX-VU
   QLabel * txwatchdog_label;
   QProgressBar* progressBar;
   QLabel * date_label;

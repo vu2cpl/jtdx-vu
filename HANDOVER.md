@@ -212,20 +212,24 @@ Last updated: 2026-10-07
 
 ## What changed
 
-### 2026-10-07 — Rig mode shown in the rig-status button (for the next release)
+### 2026-10-07 — Rig mode shown beside the frequency (for the next release)
 
 Manoj: "what about a mode indicator?" ... "you can reuse the round green
 indicator left of frequency?". JTDX-VU never showed the rig's mode, for any
-rig. The round `readFreq` button (green = rig OK, orange = connecting, red =
-failure, "S" = split) is now a pill (46 px, `mainwindow.ui`; same stylesheet
-length, so the `styleSheet().left(230)` recolouring still cuts in the same
-place) showing the mode the rig reports - DIGU, USB, LSB, CW, ... - with "/S"
-for split. Green when it is the mode Settings > Radio asks for (Data/Pkt =
-DIGU, USB = USB) or Settings leaves the mode alone; **yellow** (distinct from
-the orange "connecting") when the rig is in another mode. `MainWindow::
-update_rig_mode_indicator`; new `Configuration::data_mode()`. A status-bar
-label was tried first and dropped for this. Checked on the fake Flex: green
-DIGU beside 7.074; the yellow case is by logic only.
+rig. After a too-small pill and two bigger ones he disliked ("no bold",
+"looks bad"), five mock-ups were shown and he picked **option A**: the
+round `readFreq` button is now a grey box like the dial frequency next to it
+(same `MS Shell Dlg 2` 18 pt declaration - macOS draws both in the system
+font - normal weight, 72 x 36 px) showing the mode the rig reports (DIGU, USB,
+LSB, CW, RTTY...; RTTY is the widest it needs to fit), with the status in the
+text colour: **green** = rig OK and in the mode Settings > Radio asks for
+(Data/Pkt = DIGU, USB = USB, or any when Settings leaves the mode alone),
+**amber** = rig OK in another mode, orange dots = connecting, red **ERR** =
+failure (still click to reset). Split is in the tooltip ("S" only when the rig
+reports no mode). One helper, `MainWindow::set_rig_status_style`, replaces the
+old `styleSheet().left(230)` cut in all three places; `update_rig_mode_indicator`
+picks the text and colour; new `Configuration::data_mode()`. Checked on the
+fake Flex (green DIGU beside 7.074); amber / orange / red by logic only.
 
 ### 2026-10-07 — FlexRadio panel, TX slider = RF power, start on the last frequency (for the next release)
 
