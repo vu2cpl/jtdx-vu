@@ -158,13 +158,25 @@ FlexTransceiver::~FlexTransceiver ()
 // lands inside one is deferred by TransceiverBase through in_nested_wait().
 void FlexTransceiver::wait_ms (int ms)
 {
+  // A fresh event loop for every wait: a command that arrives while another
+  // is waiting (a band change sends frequency, mode and more back to back)
+  // nests a second wait, and Qt will not exec() a loop that is already running.
   if (stop_aborting ()) return;
-  if (!wait_loop_) return;
-  wait_timer_->start (ms);
+  QEventLoop loop;
+  QTimer timer;
+  timer.setSingleShot (true);
+  connect (&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+  loops_.append (&loop);
   ++nested_waits_;
-  wait_loop_->exec ();
+  timer.start (ms);
+  loop.exec ();
   --nested_waits_;
-  if (wait_timer_->isActive ()) wait_timer_->stop ();
+  loops_.removeOne (&loop);
+}
+
+void FlexTransceiver::wake ()
+{
+  for (auto * l : loops_) l->quit ();
 }
 
 bool FlexTransceiver::wait_reply (int seq, int ms)
@@ -181,8 +193,16 @@ bool FlexTransceiver::wait_reply (int seq, int ms)
 
 void FlexTransceiver::abort_waits ()
 {
-  if (wait_timer_ && wait_timer_->isActive ()) wait_timer_->stop ();
-  if (wait_loop_ && wait_loop_->isRunning ()) wait_loop_->quit ();
+  wake ();
+}
+
+void FlexTransceiver::trace (QString const& what)
+{
+  if (!trace_) return;
+  if (ftell (trace_) > 16 * 1024 * 1024) return;           // cap
+  fprintf (trace_, "%s %8lld %s\n", QDateTime::currentDateTimeUtc ().toString ("hh:mm:ss.zzz").toLatin1 ().constData (),
+           trace_clock_.isValid () ? trace_clock_.elapsed () : 0LL, what.toLatin1 ().constData ());
+  fflush (trace_);
 }
 
 // ---------------------------------------------------------------- session
@@ -191,6 +211,7 @@ int FlexTransceiver::send (QString const& cmd)
   if (!socket_ || !connected_) return -1;
   if (seq_ > 999999) seq_ = 1;
   int const seq = seq_++;
+  trace (QString ("> C%1|%2").arg (seq).arg (cmd));
   socket_->write (QString ("C%1|%2\n").arg (seq).arg (cmd).toLatin1 ());
   socket_->flush ();
   return seq;
@@ -210,13 +231,13 @@ void FlexTransceiver::on_disconnected ()
 {
   connected_ = false;
   if (ready_ && error_.isEmpty ()) error_ = tr ("Flex connection lost");
-  if (wait_loop_ && wait_loop_->isRunning ()) wait_loop_->quit ();
+  wake ();
 }
 
 void FlexTransceiver::on_error ()
 {
   if (socket_) error_ = tr ("Flex: %1").arg (socket_->errorString ());
-  if (wait_loop_ && wait_loop_->isRunning ()) wait_loop_->quit ();
+  wake ();
 }
 
 void FlexTransceiver::on_ready_read ()
@@ -234,13 +255,14 @@ void FlexTransceiver::on_ready_read ()
 void FlexTransceiver::handle_line (QString const& line)
 {
   if (line.isEmpty ()) return;
+  trace ("< " + line.left (300));
   QChar const tag = line.at (0);
   if (tag == 'H')
     {
       bool ok = false;
       quint32 const h = line.mid (1).toUInt (&ok, 16);
       if (ok) handle_ = h;
-      if (wait_loop_ && wait_loop_->isRunning ()) wait_loop_->quit ();
+      wake ();
       return;
     }
   if (tag == 'R')
@@ -258,7 +280,7 @@ void FlexTransceiver::handle_line (QString const& line)
       quint32 const code = rest.left (bar2 < 0 ? rest.size () : bar2).toUInt (nullptr, 16);
       replies_[seq] = qMakePair (code, bar2 < 0 ? QString () : rest.mid (bar2 + 1));
       if (replies_.size () > 200) replies_.remove (replies_.firstKey ());
-      if (wait_loop_ && wait_loop_->isRunning ()) wait_loop_->quit ();
+      wake ();
       return;
     }
   if (tag != 'S') return;
@@ -288,8 +310,17 @@ void FlexTransceiver::parse_slice_line (int, QString const& line)
     {
       auto const m = it.next ();
       QString const k = m.captured (1), v = m.captured (2);
-      if (k == "RF_frequency") frequency_ = Frequency (std::llround (v.toDouble () * 1e6));
-      else if (k == "mode") {mode_str_ = v.toUpper (); mode_ = unmap_mode (mode_str_);}
+      if (k == "RF_frequency")
+        {
+          Frequency const nf = Frequency (std::llround (v.toDouble () * 1e6));
+          if (nf != frequency_) trace (QString ("radio says slice frequency %1").arg (nf));
+          frequency_ = nf;
+        }
+      else if (k == "mode")
+        {
+          if (v.toUpper () != mode_str_) trace ("radio says slice mode " + v.toUpper ());
+          mode_str_ = v.toUpper (); mode_ = unmap_mode (mode_str_);
+        }
     }
   last_slice_line_ = line;
 }
@@ -491,6 +522,14 @@ int FlexTransceiver::do_start (JTDXDateTime * jtdxtime)
 {
   if (tci_audio_) QThread::currentThread ()->setPriority (QThread::HighPriority);
   m_jtdxtime = jtdxtime;
+  if (trace_) {fclose (trace_); trace_ = nullptr;}
+  {
+    auto const dir = QStandardPaths::writableLocation (QStandardPaths::DataLocation);
+    QDir {}.mkpath (dir);
+    trace_ = fopen (QDir {dir}.absoluteFilePath ("flex_trace.txt").toLocal8Bit ().constData (), "a");
+    trace_clock_.start ();
+    trace (QString ("======== start: %1:%2 slice letter %3 audio %4 (asked for %5)").arg (host_).arg (port_).arg (slice_letter_).arg (tci_audio_).arg (last_set_frequency_));
+  }
   error_.clear ();
   ready_ = false;
   handle_ = 0;
@@ -503,14 +542,6 @@ int FlexTransceiver::do_start (JTDXDateTime * jtdxtime)
   busy_ = false;
   last_rx_audio_ms_ = 0;
   m_bufferPos = 0;
-  if (!wait_loop_)
-    {
-      wait_loop_ = new QEventLoop {this};
-      wait_timer_ = new QTimer {this};
-      wait_timer_->setSingleShot (true);
-      connect (wait_timer_, &QTimer::timeout, wait_loop_, &QEventLoop::quit);
-      connect (this, &FlexTransceiver::flex_done, wait_loop_, &QEventLoop::quit);
-    }
   if (!tx_timer_)
     {
       tx_timer_ = new QTimer {this};
@@ -531,6 +562,7 @@ int FlexTransceiver::do_start (JTDXDateTime * jtdxtime)
     }
   if (!start_session ())
     {
+      trace ("start failed: " + error_);
       release (true);
       if (socket_) socket_->abort ();
       connected_ = false;
@@ -538,12 +570,24 @@ int FlexTransceiver::do_start (JTDXDateTime * jtdxtime)
     }
   ready_ = true;
   last_rx_audio_ms_ = QDateTime::currentMSecsSinceEpoch ();
+  // what JTDX-VU asked for while the session was coming up (the startup
+  // frequency, a band change during a reconnect) - a fresh GUI client's slice
+  // sits at the radio's default (14.100 USB), and JTDX-VU would otherwise
+  // follow it there
+  if (pending_frequency_ || last_set_frequency_)
+    {
+      Frequency const f = pending_frequency_ ? pending_frequency_ : last_set_frequency_;
+      trace (QString ("applying after start: %1 mode %2").arg (f).arg (pending_mode_));
+      do_frequency (f, pending_mode_, true);
+    }
+  else if (pending_mode_ != UNK) do_mode (pending_mode_);
   do_poll ();
   return 0;
 }
 
 void FlexTransceiver::do_stop ()
 {
+  trace ("do_stop");
   ready_ = false;
   release (true);
   if (socket_)
@@ -555,27 +599,62 @@ void FlexTransceiver::do_stop ()
   connected_ = false;
   if (audio_) {delete audio_; audio_ = nullptr;}
   if (tx_timer_) {tx_timer_->stop (); delete tx_timer_; tx_timer_ = nullptr;}
-  if (wait_timer_) {wait_timer_->stop (); delete wait_timer_; wait_timer_ = nullptr;}
-  if (wait_loop_) {wait_loop_->quit (); delete wait_loop_; wait_loop_ = nullptr;}
+  wake ();
   m_state = Idle;
 }
 
+// A tune or mode change counts as done when the radio answers it OK - as MSHV
+// does.  Waiting to see it in the slice status was the 2026-10-07 on-air
+// failure: on the FLEX-6600 the band changed (R|0, the TX interlock moved to
+// 15m) but no slice line with the new RF_frequency reached us within 2 s, the
+// "failure" took the rig offline, and every reconnect got a fresh slice back at
+// 14.100 USB.  The status stream still updates frequency_ / mode_ whenever the
+// radio does report them (a retune in SmartSDR is followed).
 void FlexTransceiver::do_frequency (Frequency f, MODE m, bool /*no_ignore*/)
 {
+  trace (QString ("do_frequency %1 mode %2 (now %3, busy %4, depth %5)").arg (f).arg (m).arg (frequency_).arg (busy_).arg (nested_waits_));
   last_set_frequency_ = f;
-  if (!ready_ || slice_ < 0) {update_rx_frequency (f); update_mode (m); return;}
-  if (busy_) return;
-  busy_ = true;
-  if (frequency_ != f)
+  if (m != UNK) pending_mode_ = m;
+  if (!ready_ || slice_ < 0 || busy_)
     {
-      send (QString ("slice tune %1 %2 autopan=1").arg (slice_).arg (double (f) / 1e6, 0, 'f', 6));
-      QElapsedTimer t; t.start ();
-      while (frequency_ != f && connected_ && t.elapsed () < 2000) wait_ms (50);
-      if (frequency_ != f) error_ = tr ("Flex: failed to set frequency");
+      // connecting, or another command is in progress: remember it, do it after
+      pending_frequency_ = f;
+      update_rx_frequency (f);
+      if (m != UNK) update_mode (m);
+      return;
     }
-  update_rx_frequency (frequency_ ? frequency_ : f);
+  busy_ = true;
+  pending_frequency_ = f;
+  while (pending_frequency_ && ready_ && connected_)
+    {
+      Frequency const want = pending_frequency_;
+      pending_frequency_ = 0;
+      if (frequency_ != want)
+        {
+          int const seq = send (QString ("slice tune %1 %2 autopan=1").arg (slice_).arg (double (want) / 1e6, 0, 'f', 6));
+          if (wait_reply (seq, 1500) && replies_[seq].first == 0) frequency_ = want;
+          else trace (QString ("!! tune to %1 not confirmed (code 0x%2)").arg (want).arg (replies_.value (seq).first, 0, 16));
+        }
+      update_rx_frequency (frequency_ ? frequency_ : want);
+      if (pending_mode_ != UNK) apply_mode (pending_mode_);
+    }
   busy_ = false;
-  if (m != UNK) do_mode (m);
+}
+
+bool FlexTransceiver::apply_mode (MODE m)
+{
+  auto const want = map_mode (m);
+  if (want.isEmpty ()) return false;
+  bool ok = true;
+  if (mode_str_ != want)
+    {
+      int const seq = send (QString ("slice set %1 mode=%2").arg (slice_).arg (want));
+      ok = wait_reply (seq, 1500) && replies_[seq].first == 0;
+      if (ok) {mode_str_ = want; mode_ = m;}
+      else trace (QString ("!! mode %1 not confirmed (code 0x%2)").arg (want).arg (replies_.value (seq).first, 0, 16));
+    }
+  update_mode (mode_ != UNK ? mode_ : m);
+  return ok;
 }
 
 // A Flex has no second VFO: split is Fake It on the JTDX-VU side only
@@ -588,21 +667,18 @@ void FlexTransceiver::do_tx_frequency (Frequency tx, MODE, bool)
 
 void FlexTransceiver::do_mode (MODE m)
 {
-  auto const want = map_mode (m);
-  if (want.isEmpty ()) return;
-  if (!ready_ || slice_ < 0) {update_mode (m); return;}
-  if (mode_str_ != want)
-    {
-      send (QString ("slice set %1 mode=%2").arg (slice_).arg (want));
-      QElapsedTimer t; t.start ();
-      while (mode_str_ != want && connected_ && t.elapsed () < 2000) wait_ms (50);
-      if (mode_str_ != want) error_ = tr ("Flex: failed to set mode");
-    }
-  update_mode (mode_);
+  trace (QString ("do_mode %1 (now %2, busy %3, depth %4)").arg (m).arg (mode_str_).arg (busy_).arg (nested_waits_));
+  if (map_mode (m).isEmpty ()) return;
+  pending_mode_ = m;
+  if (!ready_ || slice_ < 0 || busy_) {update_mode (m); return;}   // applied after
+  busy_ = true;
+  apply_mode (m);
+  busy_ = false;
 }
 
 void FlexTransceiver::do_ptt (bool on)
 {
+  trace (QString ("do_ptt %1 (now %2, depth %3)").arg (on).arg (PTT_).arg (nested_waits_));
   if (!use_for_ptt_) throw error {tr ("Flex: PTT must be via CAT")};
   if (!ready_ || slice_ < 0) {update_PTT (on); return;}
   if (on == PTT_) {update_PTT (on); return;}
@@ -639,7 +715,7 @@ void FlexTransceiver::do_poll ()
       if (PTT_ || !last_rx_audio_ms_) last_rx_audio_ms_ = now;
       else if (now - last_rx_audio_ms_ > 10000) error_ = tr ("no audio from the radio - check DAX channel %1").arg (dax_ch_);
     }
-  if (!error_.isEmpty ()) {ready_ = false; throw error {error_};}
+  if (!error_.isEmpty ()) {trace ("poll -> error: " + error_); ready_ = false; throw error {error_};}
   if (!ready_) throw error {tr ("Flex: not started")};
   if (frequency_) update_rx_frequency (frequency_);
   update_split (false);

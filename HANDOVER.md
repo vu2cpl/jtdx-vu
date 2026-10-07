@@ -212,6 +212,46 @@ Last updated: 2026-10-07
 
 ## What changed
 
+### 2026-10-07 — FlexRadio VITA-49: first on-air run on the FLEX-6600, band change fixed
+
+Manoj tried the VITA-49 rig on the 6600 ("changing bands, crashing" ->
+"its hanging actually" -> "bands not switching"). Connect, receive and the
+DAX streams worked first time. A band change did not.
+- **What happened** (trace + 1 s stack samples): `slice tune 0 21.074000`
+  was answered `R|0` and the radio did change band (its TX interlock moved to
+  15m), but no slice status line with the new `RF_frequency` reached
+  JTDX-VU. `do_frequency` waited 2 s for one, gave up with "failed to set
+  frequency", the next poll took the rig offline, and the TCI-style
+  reconnect began. Each reconnect is a new GUI client, which the 6600 hands a
+  fresh slice at its default **14.100 USB**; the frequency JTDX-VU asked for
+  during the reconnect was only noted (the session was not ready) and never
+  sent, so JTDX-VU followed the radio back to 14.100. Hence "hang" and
+  "bands not switching". Same at the very first start: the remembered 10.136
+  was never sent.
+- **Fix (`FlexTransceiver.cpp`):** a tune or mode change counts as done when
+  the radio answers it OK, as MSHV does (MSHV never waits for the status);
+  a refusal is traced, not fatal. The slice status still updates the
+  frequency / mode whenever the radio reports them, so a retune in SmartSDR
+  is followed. Anything asked for while connecting, or while another command
+  is in progress, is kept and sent as soon as possible (the startup frequency
+  included). Every wait now runs its own event loop - the shared one could
+  not nest, and a band change sends frequency, mode and more back to back.
+- **Trace:** every connection appends to `flex_trace.txt` in the profile's
+  data folder (`~/Library/Application Support/JTDX-VU - <profile>/`):
+  each command, reply, status line (first 300 chars), what the radio says
+  the slice frequency / mode is, and any unconfirmed command. Capped at 16 MB.
+- **Fake radio:** `tools/fake_flex.py` gains `FAKE_GUI_SLICE=1` (a new GUI
+  client gets a 14.100 USB slice, as the 6600 does), `FAKE_NO_ECHO=1` (tune /
+  mode answered OK but never reported), `FAKE_TUNE_DELAY`, `FAKE_BAND_MODE`.
+  With `FAKE_NO_ECHO` the previous build reconnected after a 15m change, as
+  on the radio; the fixed one stays on one session through 40/20/15/10/20m,
+  the GUI never stalls, and receive / transmit self-tests still pass.
+- Gotcha: Manoj's Flex profile was copied from the QO-100 one and kept
+  *QO-100 rig IF = 28.54*; on an HF Flex that maps 10m readbacks to QO-100.
+  Set it to 0 in any non-QO-100 profile.
+- **Still to do on the radio:** band changes with this build, then the TX
+  checks in the open item (RF level, unkey, a QSO).
+
 ### 2026-10-07 — FT2 AP7: two porting bugs fixed, most of the gap to MSHV closed (for the next release)
 
 Manoj: "fix the ap7 gap". The reference is MSHV's `DecoderFt2` (`decoderft2.cpp`,
@@ -2327,8 +2367,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07, tested
-      only against `tools/fake_flex.py`). Check: `client gui` with SmartSDR
+- [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07: connect,
+      receive and DAX streams work on the radio; the band-change failure found
+      there is fixed but not yet re-tried on the radio). Check: `client gui` with SmartSDR
       also connected (per-client slice letters), the RF level from full-scale
       DAX audio, that `xmit 0` drops the carrier at once, and a QSO.
 - [ ] **Next release** - everything under "Unreleased on `jtdx-vu` after

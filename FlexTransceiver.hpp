@@ -19,6 +19,7 @@
 #include <QString>
 #include <QStringList>
 #include <QHash>
+#include <QList>
 #include <QMap>
 #include <QByteArray>
 #include <QElapsedTimer>
@@ -121,9 +122,16 @@ private:
   QTcpSocket * socket_;
   QUdpSocket * audio_;
   QTimer * tx_timer_;
-  QTimer * wait_timer_;
+  QTimer * wait_timer_;               // unused since 2026-10-07 (one loop per wait now)
   QEventLoop * wait_loop_;
+  QList<QEventLoop *> loops_;         // every wait in progress, innermost last
+  void wake ();                       // end every wait so it re-checks its condition
   int nested_waits_ {0};
+  // what JTDX-VU asked for that is not on the radio yet: set while connecting
+  // or while another command is in progress, applied as soon as possible
+  Frequency pending_frequency_ {0};
+  MODE pending_mode_ {UNK};
+  bool apply_mode (MODE m);           // send "slice set n mode=", true if the radio took it
   bool stop_aborting_wait_ {false};
 
   QByteArray rx_buf_;
@@ -190,6 +198,11 @@ private:
   float tx_gain_;
   QByteArray tx_scratch_;
   std::string debug_file_;
+  // trace of every command, reply, status line and wait (flex_trace.txt in the
+  // profile's data folder, restarted at each connect) - for on-air debugging
+  void trace (QString const& what);
+  FILE * trace_ {nullptr};
+  QElapsedTimer trace_clock_;
 };
 
 #endif

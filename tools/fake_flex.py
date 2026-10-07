@@ -12,6 +12,11 @@ DAX TX packets (type 1, class 0x534C0123, 128 mono int16 BE) arriving on UDP
 4991 are counted and kept as 12 kHz wavs, one per transmission, so ft2dec can
 check what JTDX-VU sent.
 
+FAKE_GUI_SLICE=1 hands a new GUI client a slice at 14.100 USB, as the 6600 does.
+FAKE_NO_ECHO=1 answers "slice tune" / "slice set" OK but never reports the
+change in the slice status (seen on the FLEX-6600, 2026-10-07).
+FAKE_TUNE_DELAY=0.8 delays the status echo of "slice tune", as a real radio
+does on a band change (the 2026-10-07 hang needed it).
 usage: fake_flex.py --sig DIR --snr -10,-14 [--repeats 2] [--port 4992] [--log fake_flex.txt]
                     [--wait 25] [--noise 0.05] [--txdir DIR] [--freq 14074000]
 """
@@ -58,7 +63,12 @@ def serve(c, a):
                 body, extra = "", []
                 p = cmd.split()
                 with lock:
-                    if p[0] == "client" and p[1] == "udpport": state["udpport"] = int(p[2])
+                    if p[0] == "client" and p[1] == "gui" and os.environ.get("FAKE_GUI_SLICE"):
+                        # like the 6600: a new GUI client is handed a slice at the radio's default
+                        n = state["next_slice"]; state["next_slice"] += 1
+                        state["slices"][n] = {"freq": 14100000, "mode": "USB", "dax": 0, "tx": 1}
+                        extra.append(slice_line(n))
+                    elif p[0] == "client" and p[1] == "udpport": state["udpport"] = int(p[2])
                     elif p[0] == "sub" and p[1] == "slice":
                         for n in state["slices"]: extra.append(slice_line(n))
                     elif p[0] == "info": body = 'model="FLEX-6600",chassis_serial="FAKE",software_ver=3.8.19,atu_present=1'
@@ -70,14 +80,25 @@ def serve(c, a):
                         state["slices"][n] = {"freq": f, "mode": "DIGU", "dax": 0, "tx": 1}
                         body = str(n); extra.append(slice_line(n))
                     elif p[0] == "slice" and p[1] == "tune":
-                        n = int(p[2]); state["slices"][n]["freq"] = int(round(float(p[3]) * 1e6)); extra.append(slice_line(n))
+                        n = int(p[2]); f_new = int(round(float(p[3]) * 1e6))
+                        # FAKE_BAND_MODE=1: like a real Flex, a band change brings back that
+                        # band's last mode - LSB below 10 MHz, USB above (a fresh radio)
+                        if os.environ.get("FAKE_BAND_MODE") and (f_new < 10e6) != (state["slices"][n]["freq"] < 10e6):
+                            state["slices"][n]["mode"] = "LSB" if f_new < 10e6 else "USB"
+                        state["slices"][n]["freq"] = f_new
+                        d = float(os.environ.get("FAKE_TUNE_DELAY", "0"))   # a real radio confirms a band change late
+                        if os.environ.get("FAKE_NO_ECHO"): pass              # accept, never report it (what the 6600 seemed to do)
+                        elif d > 0:
+                            line_ = slice_line(n)
+                            threading.Timer(d, lambda c=c, l=line_: status(c, l)).start()
+                        else: extra.append(slice_line(n))
                     elif p[0] == "slice" and p[1] in ("set", "s"):
                         n = int(p[2])
                         for kv in p[3:]:
                             k, _, v = kv.partition("=")
                             if k == "mode": state["slices"][n]["mode"] = v.upper()
                             elif k == "tx": state["slices"][n]["tx"] = int(v)
-                        extra.append(slice_line(n))
+                        if not os.environ.get("FAKE_NO_ECHO"): extra.append(slice_line(n))
                     elif p[0] == "slice" and p[1] == "remove":
                         n = int(p[2]); state["slices"].pop(n, None); extra.append("slice %d in_use=0" % n)
                     elif p[0] == "dax" and p[1] == "audio" and p[2] == "set":

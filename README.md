@@ -228,9 +228,11 @@ or Pi 5 is recommended.
   so no DAX driver, virtual sound card or TCI bridge sits in the path. One
   API session, so the radio's relays click once per over. Ported from the
   MSHV-Mac backend. No split: use Fake It or None. The TX slider attenuates
-  the audio sent; RF power stays the radio's own setting. Verified so far
-  against a software stand-in (`tools/flex_selftest.sh`): start-up, receive
-  decodes and a transmitted CQ decoded back from the DAX packets.
+  the audio sent; RF power stays the radio's own setting. Connecting and
+  receiving work on a FLEX-6600; transmit is so far verified only against a
+  software stand-in (`tools/flex_selftest.sh`). Each connection appends a
+  trace to `flex_trace.txt` in the profile's data folder. If you copy a
+  QO-100 profile for the Flex, set its *QO-100 rig IF* back to 0.
 - **TCI reconnects on its own** (since v0.5.2). If the SDR program
   (AetherSDR, ExpertSDR, Thetis, ...) is closed or restarted, Tx halts
   and the status bar says "TCI: ... reconnecting every 5 s" instead of
