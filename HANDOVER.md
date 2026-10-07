@@ -130,12 +130,33 @@ Last updated: 2026-10-07
     install -s` clean, 8 s headless start OK, uploaded by hand.
   - Website updated the same evening (card + page, downloads table on
     v0.4.0), pushed after all assets answered.
-- **Release v0.7.0: IN PROGRESS 2026-10-07** (Manoj: "looks good for a
-  release", then "Publish v0.7.0 now" with FlexRadio transmit marked as
-  tested on a simulated radio only). Everything listed as "for the next
-  release" in "What changed" since v0.6.0 is in it. Notes drafted from the
-  v0.6.0 layout. Steps: tag `v0.7.0` -> CI (macOS arm64 / Intel, Windows),
-  Pi `.deb` on meridianpi5, checksums, website, reply to Frank PH2M.
+- **Release v0.7.0: COMPLETE 2026-10-07** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.0,
+  tag `v0.7.0` on **`29d8cab0`**: the FlexRadio VITA-49 rig type and panel,
+  QO-100, profiles, the rig mode beside the frequency, FT2 level with MSHV
+  (demapper, AP7 and its two fixes), 70cm / 23cm buttons, TCI-reconnect and
+  JTTY false-decode crash fixes. Manoj: "looks good for a release", then
+  "Publish v0.7.0 now" with Flex transmit marked as tested on a simulated
+  radio only (the notes say so and advise low power).
+  - **Re-cut once, with Manoj's OK:** the tag first went on `658f0902`, whose
+    `lib/ft2/get_ft2_bitmetrics.f90` had two lines over Fortran's 132-column
+    limit. GCC 16 (the Mac) accepts them; GCC 12 (Pi) rejects them, and
+    MSYS2's would have too. Fixed in `29d8cab0` (same statements, one per
+    line; AP7 bench identical), the two CI runs on the old commit cancelled
+    before uploading anything, the tag force-moved. **Gotcha: the Mac's
+    compiler will not catch this - check `awk 'length > 132' lib/**/*.f90`
+    before tagging.**
+  - CI run 37558235427 (macOS) and 37558235504 (Windows), green. All eight
+    files downloaded anonymously (200), every checksum OK, arm64 app reports
+    0.7.0 and its signature verifies; copies in `~/Desktop/jdxvu/v0.7.0/`.
+  - Pi `.deb` on meridianpi5 (prefix /usr/local, rsync of `git ls-files`,
+    `nice make -j3`, `cpack -G DEB`): Version 0.7.0, Conflicts: jtdx,
+    `apt-get install -s` clean, uploaded by hand with its `.sha256`.
+  - Website: paragraph "FlexRadio without SmartSDR, QO-100, profiles and the
+    rig mode at a glance (v0.7.0)", table / release link / apt command on
+    v0.7.0, "Tested so far" and card updated; pushed (`e477301`) after all
+    eight URLs answered 200.
+  - Reply to Frank PH2M drafted in `~/Downloads/jtdx-vu-v0.7.0-reply-to-PH2M.txt`,
+    NOT sent (Manoj's).
 - **Installed app:** `/Applications/JTDX-VU.app` is a **local build bundled
   2026-10-06 23:01** that reports 0.6.0 (not the release zip, and older than
   the 2026-10-07 work). Local builds run on macOS 26+ only. Settings are in
@@ -2453,8 +2474,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       there is fixed but not yet re-tried on the radio). Check: `client gui` with SmartSDR
       also connected (per-client slice letters), the RF level from full-scale
       DAX audio, that `xmit 0` drops the carrier at once, and a QSO.
-- [ ] **Next release** - everything under "Unreleased on `jtdx-vu` after
-      v0.6.0" above; Frank PH2M is waiting for the 70cm/23cm buttons.
+- [ ] **Tell Frank PH2M v0.7.0 is out** (draft in
+      `~/Downloads/jtdx-vu-v0.7.0-reply-to-PH2M.txt`).
 
 - [ ] **FT2 weak-signal gap vs MSHV** (2026-10-05 screen recording from
       LZ2HV, KN23, 14.084 FT2, JTDX-VU 0.6.0 beside MSHV 2.76.7, 15
