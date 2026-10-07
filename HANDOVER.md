@@ -217,19 +217,25 @@ Last updated: 2026-10-07
 Manoj: "what about a mode indicator?" ... "you can reuse the round green
 indicator left of frequency?". JTDX-VU never showed the rig's mode, for any
 rig. After a too-small pill and two bigger ones he disliked ("no bold",
-"looks bad"), five mock-ups were shown and he picked **option A**: the
-round `readFreq` button is now a grey box like the dial frequency next to it
-(same `MS Shell Dlg 2` 18 pt declaration - macOS draws both in the system
-font - normal weight, 72 x 36 px) showing the mode the rig reports (DIGU, USB,
-LSB, CW, RTTY...; RTTY is the widest it needs to fit), with the status in the
-text colour: **green** = rig OK and in the mode Settings > Radio asks for
-(Data/Pkt = DIGU, USB = USB, or any when Settings leaves the mode alone),
-**amber** = rig OK in another mode, orange dots = connecting, red **ERR** =
-failure (still click to reset). Split is in the tooltip ("S" only when the rig
-reports no mode). One helper, `MainWindow::set_rig_status_style`, replaces the
-old `styleSheet().left(230)` cut in all three places; `update_rig_mode_indicator`
-picks the text and colour; new `Configuration::data_mode()`. Checked on the
-fake Flex (green DIGU beside 7.074); amber / orange / red by logic only.
+"looks bad"), five mock-ups were shown. He picked option A (grey box, status
+in the text colour), but in dark mode `Radio::convert_dark` darkens every
+colour by 0x60 per channel, which made the green text nearly black on the dark
+box ("cant see in dark mode"), and he switched to **option C**: the round
+`readFreq` button is now a box (72 x 36 px, 1 px grey border, 3 px corners)
+with the status in the **background** - the round light's colours: green =
+rig OK and in the mode Settings > Radio asks for (Data/Pkt = DIGU, USB = USB,
+or any when Settings leaves the mode alone), **yellow** = rig OK in another
+mode, orange = connecting (dots), red = failure (ERR, still click to reset) -
+and the mode the rig reports (DIGU, USB, LSB, CW, RTTY...; RTTY is the widest
+it needs to fit) in the dial frequency's font declaration (`MS Shell Dlg 2`
+18 pt; macOS draws both in the system font), normal weight. Background and
+text both go through `convert_dark`, as the round light always did, so dark
+mode shows light text on darkened green. Split is in the tooltip ("S" only
+when no mode is reported). One helper, `MainWindow::set_rig_status_style`,
+replaces the old `styleSheet().left(230)` cut in all three places;
+`update_rig_mode_indicator` picks text and colour; new
+`Configuration::data_mode()`. Checked on the fake Flex in light and dark style
+(DIGU on green beside 7.074); yellow / orange / red by logic only.
 
 ### 2026-10-07 — FlexRadio panel, TX slider = RF power, start on the last frequency (for the next release)
 

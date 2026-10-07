@@ -397,7 +397,7 @@
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Rig status and the mode the rig reports. Green: rig OK, in the mode set in Settings &amp;gt; Radio. Yellow: rig OK but in a different mode. Orange or red: a rig control failure - click to reset and read the dial frequency. /S: split is on.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">QPushButton {font-family: MS Shell Dlg 2; font-size: 18pt; font-weight: normal; border: none; border-radius: 0px; padding: 0px; background: #e1e1e1; color: black;}</string>
+                     <string notr="true">QPushButton {font-family: MS Shell Dlg 2; font-size: 18pt; font-weight: normal; border: 1px solid gray; border-radius: 3px; padding: 0px; background: white; color: black;}</string>
                     </property>
                     <property name="text">
                      <string>?</string>

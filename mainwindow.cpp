@@ -7579,7 +7579,7 @@ void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
 
 void MainWindow::rigOpen ()
 {
-  set_rig_status_style ("#e07000");   // connecting
+  set_rig_status_style ("#ffa500");   // connecting
   m_rigOk=false;
   ui->readFreq->setText (QString::fromUtf8 ("\u00b7\u00b7\u00b7"));
   ui->readFreq->setEnabled (true);
@@ -7903,7 +7903,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
 
 void MainWindow::handle_transceiver_failure (QString const& reason)
 {
-  set_rig_status_style ("#e00000");   // rig control failure
+  set_rig_status_style ("#ff0000");   // rig control failure
   ui->readFreq->setText ("ERR");
   m_rigOk=false;
   ui->readFreq->setEnabled (true);
@@ -9002,24 +9002,25 @@ void MainWindow::update_rig_mode_indicator (Transceiver::TransceiverState const&
   else if (m_config.data_mode () == Configuration::data_mode_USB) want = Transceiver::USB;
   bool const wrong = want != Transceiver::UNK && s.mode () != Transceiver::UNK && s.mode () != want;
   if (text.isEmpty () && s.split ()) text = "S";   // no mode reported: the old split marker
-  set_rig_status_style (wrong ? "#c06000" : "#1a8a1a");
+  set_rig_status_style (wrong ? "#ffff40" : "#00ff00");
   ui->readFreq->setText (text);
   ui->readFreq->setToolTip (tr ("Rig status and the mode the rig reports.\n"
                                 "Green: rig OK, in the mode set in Settings > Radio.\n"
-                                "Amber: rig OK but in a different mode.\n"
-                                "Orange dots: connecting.  Red ERR: rig control failure - click to reset.")
+                                "Yellow: rig OK but in a different mode.\n"
+                                "Orange: connecting.  Red ERR: rig control failure - click to reset.")
                             + (s.split () ? tr ("\nSplit is on.") : QString {}));
 }
 
-// JTDX-VU: the rig-status / mode box (Manoj picked option A of five mock-ups,
-// 2026-10-07): a grey box like the dial frequency beside it - same font
-// declaration and size, normal weight - with the status in the TEXT colour:
-// green = rig OK in the set mode, amber = another mode, orange = connecting,
-// red = failure.  Replaces the old styleSheet().left(230) cut.
+// JTDX-VU: the rig-status / mode box (Manoj picked option C of five mock-ups,
+// 2026-10-07, after A was unreadable in dark mode): the status in the
+// BACKGROUND - green = rig OK in the set mode, yellow = another mode, orange =
+// connecting, red = failure, the round light's colours - with the mode in the
+// dial frequency's font and size, normal weight.  Background and text both go
+// through convert_dark, as the round light always did, so dark mode gets a
+// darkened colour with light text.  Replaces the old styleSheet().left(230) cut.
 void MainWindow::set_rig_status_style (char const * colour)
 {
-  QString const c = Radio::convert_dark (colour, m_useDarkStyle);
   ui->readFreq->setStyleSheet (QString ("QPushButton, QPushButton:disabled {font-family: MS Shell Dlg 2; font-size: 18pt; font-weight: normal;"
-                                        " border: none; border-radius: 0px; padding: 0px; background: %1; color: %2;}")
-                               .arg (Radio::convert_dark ("#e1e1e1", m_useDarkStyle), c));
+                                        " border: 1px solid gray; border-radius: 3px; padding: 0px; background: %1; color: %2;}")
+                               .arg (Radio::convert_dark (colour, m_useDarkStyle), Radio::convert_dark ("#000000", m_useDarkStyle)));
 }

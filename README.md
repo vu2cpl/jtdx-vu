@@ -219,12 +219,12 @@ or Pi 5 is recommended.
   or rig restart arriving while the TCI link was still connecting could
   crash JTDX-VU (same fault as the quit crash fixed in v0.4.0, now closed for every
   path).
-- **Rig mode shown** (next release). Left of the frequency, in a grey box
-  like the frequency itself, JTDX-VU now shows the mode the rig reports
-  (DIGU, USB, LSB...): green when it is the mode set in Settings > Radio,
-  amber when not - a radio left in LSB after a band change stands out.
-  Orange dots while connecting, red ERR on a rig control failure (click it to
-  reset, as before).
+- **Rig mode shown** (next release). The round rig-status light left of the
+  frequency is now a box showing the mode the rig reports (DIGU, USB,
+  LSB...), in the frequency's font: green when it is the mode set in
+  Settings > Radio, yellow when not - a radio left in LSB after a band change
+  stands out. Orange while connecting, red ERR on a rig control failure
+  (click it to reset, as before). Works in light and dark style.
 - **FlexRadio over VITA-49, no SmartSDR needed** (next release, not yet
   tried on a radio). Rig *FlexRadio VITA-49 Slice A..H* with the radio's
   address (port 4992) in the CAT port field talks SmartSDR straight to a
