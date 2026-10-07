@@ -227,8 +227,13 @@ or Pi 5 is recommended.
   as a DAX stream over VITA-49 and the transmit audio goes out the same way,
   so no DAX driver, virtual sound card or TCI bridge sits in the path. One
   API session, so the radio's relays click once per over. Ported from the
-  MSHV-Mac backend. No split: use Fake It or None. The TX slider attenuates
-  the audio sent; RF power stays the radio's own setting. Connecting and
+  MSHV-Mac backend. No split: use Fake It or None. The TX slider is the
+  radio's RF power (it follows the radio, which keeps power per band; while
+  tuning it is the tune power). **View > FlexRadio Panel...** shows the
+  radio's meters and the slice's antennas and mode, and sets transmit power,
+  the antenna tuner and the M-series front speaker, as MSHV's Flex panel
+  does; antennas are remembered per band for transverter users. Each
+  connection puts the slice back on your last frequency in your data mode. Connecting and
   receiving work on a FLEX-6600; transmit is so far verified only against a
   software stand-in (`tools/flex_selftest.sh`). Each connection appends a
   trace to `flex_trace.txt` in the profile's data folder. If you copy a

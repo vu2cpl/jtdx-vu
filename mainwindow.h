@@ -64,6 +64,7 @@ class EQSL;
 class ClubLog;
 class BandModeSwitcher;
 class JttyPanel;
+class FlexPanel;
 class JttyHeardList;
 class QListWidget;
 class QSlider;
@@ -703,6 +704,7 @@ private:
   bool m_stopAfterQso {false};  // JTDX-VU: 1 QSO pressed during Auto CQ - stop after this QSO
   bool m_cqRunQso {false}; // JTDX-VU: this QSO answers our CQ - only then does Non-stop continue
   JttyPanel *m_jttyPanel {nullptr};   // JTDX-VU JTTY
+  FlexPanel *m_flexPanel {nullptr};   // JTDX-VU FlexRadio VITA-49 panel
   QAction *m_actionJTTY {nullptr};
   QAction *m_actionFT2 {nullptr};
   QVector<JttyDecodeLine> m_jttyAllFreqLines;

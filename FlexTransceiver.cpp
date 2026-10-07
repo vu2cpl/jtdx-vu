@@ -17,6 +17,7 @@
 #endif
 #include "commons.h"
 #include "JTDXDateTime.h"
+#include "flexshared.h"
 
 #include "moc_FlexTransceiver.cpp"
 
@@ -99,6 +100,7 @@ FlexTransceiver::FlexTransceiver (int slice, QString const& address, bool use_fo
   , slice_letter_ {slice}
   , use_for_ptt_ {use_for_ptt}
   , do_snr_ {(poll_interval & do__snr) == do__snr}
+  , do_pwr_ {(poll_interval & do__pwr) == do__pwr}
   , tci_audio_ {(poll_interval & tci__audio) == tci__audio}
   , socket_ {nullptr}
   , audio_ {nullptr}
@@ -269,7 +271,18 @@ void FlexTransceiver::handle_line (QString const& line)
     {
       QRegularExpression const mo {"model=\"([^\"]+)\""};
       auto const mm = mo.match (line);
-      if (mm.hasMatch ()) model_ = mm.captured (1);
+      if (mm.hasMatch ())
+        {
+          model_ = mm.captured (1);
+          // "M" on the end of the model is the only sign of a front speaker
+          FlexShared::instance ().update ([this] (FlexStatus & st) {
+              st.model = model_;
+              st.spkr_supported = model_.trimmed ().toUpper ().endsWith ("M");
+            });
+        }
+      QRegularExpression const ap {"\\batu_present=([01])\\b"};
+      auto const am = ap.match (line);
+      if (am.hasMatch ()) FlexShared::instance ().update ([am] (FlexStatus & st) {st.atu_present = am.captured (1).toInt ();});
       int const bar = line.indexOf ('|');
       if (bar < 0) return;
       bool ok = false;
@@ -279,11 +292,13 @@ void FlexTransceiver::handle_line (QString const& line)
       int const bar2 = rest.indexOf ('|');
       quint32 const code = rest.left (bar2 < 0 ? rest.size () : bar2).toUInt (nullptr, 16);
       replies_[seq] = qMakePair (code, bar2 < 0 ? QString () : rest.mid (bar2 + 1));
+      if (on_reply_.contains (seq)) on_reply_.take (seq) (code);
       if (replies_.size () > 200) replies_.remove (replies_.firstKey ());
       wake ();
       return;
     }
   if (tag != 'S') return;
+  parse_panel_status (line);
   status_log_.append (line);
   if (status_log_.size () > 400) status_log_.removeFirst ();
   // our slice: frequency, mode, tx
@@ -424,6 +439,8 @@ bool FlexTransceiver::start_session ()
   send ("sub slice all");
   send ("sub tx all");
   send ("sub radio all");
+  send ("sub meter all");          // the panel's meters and the main window's S / PWR / SWR
+  send ("sub atu all");            // read-only; a radio without a tuner never reports
   if (!audio_)
     {
       audio_ = new QUdpSocket {this};
@@ -456,8 +473,10 @@ bool FlexTransceiver::start_session ()
       if (slice_ < 0) {error_ = tr ("Flex: slice create not answered"); return false;}
       slice_created_ = true;
     }
+  // the slice's full status came with "client gui", before we knew which slice
+  // was ours: read it now (frequency, mode, and the panel's antenna / mode lists)
   for (auto const& l : status_log_)
-    if (l.contains (QString ("|slice %1 ").arg (slice_))) parse_slice_line (slice_, l);
+    if (l.contains (QString ("|slice %1 ").arg (slice_))) {parse_slice_line (slice_, l); parse_panel_status (l);}
 
   if (tci_audio_)
     {
@@ -570,6 +589,13 @@ int FlexTransceiver::do_start (JTDXDateTime * jtdxtime)
     }
   ready_ = true;
   last_rx_audio_ms_ = QDateTime::currentMSecsSinceEpoch ();
+  if (!cmd_timer_)
+    {
+      cmd_timer_ = new QTimer {this};
+      connect (cmd_timer_, &QTimer::timeout, this, &FlexTransceiver::on_panel_commands);
+    }
+  cmd_timer_->start (100);
+  publish_status ();
   // what JTDX-VU asked for while the session was coming up (the startup
   // frequency, a band change during a reconnect) - a fresh GUI client's slice
   // sits at the radio's default (14.100 USB), and JTDX-VU would otherwise
@@ -589,6 +615,9 @@ void FlexTransceiver::do_stop ()
 {
   trace ("do_stop");
   ready_ = false;
+  if (cmd_timer_) {cmd_timer_->stop (); delete cmd_timer_; cmd_timer_ = nullptr;}
+  FlexShared::instance ().reset ();
+  on_reply_.clear ();
   release (true);
   if (socket_)
     {
@@ -650,7 +679,11 @@ bool FlexTransceiver::apply_mode (MODE m)
     {
       int const seq = send (QString ("slice set %1 mode=%2").arg (slice_).arg (want));
       ok = wait_reply (seq, 1500) && replies_[seq].first == 0;
-      if (ok) {mode_str_ = want; mode_ = m;}
+      if (ok)
+        {
+          mode_str_ = want; mode_ = m;
+          FlexShared::instance ().update ([want] (FlexStatus & st) {st.mode = want;});
+        }
       else trace (QString ("!! mode %1 not confirmed (code 0x%2)").arg (want).arg (replies_.value (seq).first, 0, 16));
     }
   update_mode (mode_ != UNK ? mode_ : m);
@@ -721,6 +754,12 @@ void FlexTransceiver::do_poll ()
   update_split (false);
   update_mode (mode_);
   update_PTT (PTT_);
+  // JTDX-VU's own S-meter / TX power / SWR labels (Settings > Radio ticks),
+  // on TCI's scale: level = dBm + 73 (S9 = 0), power in mW, SWR x 100
+  if (do_snr_ && !PTT_ && level_dbm_ > -199.) update_level (int (std::lround (level_dbm_)) + 73);
+  if (do_pwr_ && PTT_) {update_power (unsigned (std::lround (fwd_w_ * 1000.))); update_swr (unsigned (std::lround (swr_ * 100.)));}
+  if (!m_tuning && radio_rfpower_ >= 0) update_drive (radio_rfpower_);   // the TX slider follows the radio
+  publish_status ();
 }
 
 void FlexTransceiver::do_audio (bool on)
@@ -734,16 +773,223 @@ void FlexTransceiver::do_blocksize (qint32 blocksize) {m_samplesPerFFT = blocksi
 
 // The TX slider: with DAX the radio's RF power is its own business; the
 // slider attenuates the audio we send, 0 dB at the top
+// The TX slider is the radio's RF power, as it is the SDR program's drive with
+// TCI (same scale: drive = 100 - volume x 2.2222, slider = 4.5 x drive): the
+// slider follows the radio (update_drive in do_poll; a Flex keeps RF power per
+// band), and only a slider move sends a new value - nothing at start-up, and
+// nothing before the radio has said what it is set to.  While tuning it is the
+// radio's tune power instead.  The DAX audio itself always goes at full scale.
 void FlexTransceiver::do_txvolume (qreal volume)
 {
-  tx_gain_ = float (qPow (10.0, -volume / 20.0));
-  if (tx_gain_ > 1.0f) tx_gain_ = 1.0f;
+  tx_gain_ = 1.0f;
+  int const drive = qBound (0, int (std::lround (100. - volume * 2.2222222)), 100);
+  int & radio = m_tuning ? radio_tunepower_ : radio_rfpower_;
+  char const * key = m_tuning ? "tunepower" : "rfpower";
+  if (!ready_ || radio < 0 || drive == radio) return;
+  trace (QString ("TX slider -> transmit set %1=%2 (was %3)").arg (key).arg (drive).arg (radio));
+  send (QString ("transmit set %1=%2").arg (key).arg (drive));
+  radio = drive;
+  FlexShared::instance ().update ([this] (FlexStatus & st) {st.rfpower = radio_rfpower_; st.tunepower = radio_tunepower_;});
 }
 
 void FlexTransceiver::do_tune (bool newState)
 {
   m_tuning = newState;
   if (!m_tuning) do_modulator_stop (true);
+}
+
+// ---------------------------------------------------------------- Flex panel
+// What the panel shows, from the status stream; port of MSHV-Mac's VitaLine()
+// (network.cpp) with the same parsing rules.
+void FlexTransceiver::parse_panel_status (QString const& line)
+{
+  auto & sh = FlexShared::instance ();
+  if (slice_ >= 0 && line.contains (QString ("|slice %1 ").arg (slice_)))
+    {
+      QRegularExpression const kv {"\\b(rxant|txant|mode|ant_list|tx_ant_list|mode_list)=([^\\s]+)"};
+      auto it = kv.globalMatch (line);
+      sh.update ([&it] (FlexStatus & st) {
+          while (it.hasNext ())
+            {
+              auto const m = it.next ();
+              QString const k = m.captured (1), v = m.captured (2);
+              if (k == "rxant") st.rxant = v;
+              else if (k == "txant") st.txant = v;
+              else if (k == "mode") st.mode = v.toUpper ();
+              else if (k == "ant_list") st.ant_list = v.split (',', Qt::SkipEmptyParts);
+              else if (k == "tx_ant_list") st.tx_ant_list = v.split (',', Qt::SkipEmptyParts);
+              else if (k == "mode_list") st.mode_list = v.split (',', Qt::SkipEmptyParts);
+            }
+        });
+    }
+  // radio-global transmit settings - NOT slice properties
+  if (line.contains ("|transmit "))
+    {
+      QRegularExpression const kv {"\\b(rfpower|tunepower|max_power_level|hwalc_enabled)=(\\d+)"};
+      {
+        auto i2 = kv.globalMatch (line);
+        while (i2.hasNext ())
+          {
+            auto const m = i2.next ();
+            if (m.captured (1) == "rfpower") radio_rfpower_ = m.captured (2).toInt ();
+            else if (m.captured (1) == "tunepower") radio_tunepower_ = m.captured (2).toInt ();
+          }
+      }
+      auto it = kv.globalMatch (line);
+      sh.update ([&it] (FlexStatus & st) {
+          while (it.hasNext ())
+            {
+              auto const m = it.next ();
+              int const v = m.captured (2).toInt ();
+              if (m.captured (1) == "rfpower") st.rfpower = v;
+              else if (m.captured (1) == "tunepower") st.tunepower = v;
+              else if (m.captured (1) == "max_power_level") st.maxpower = v;
+              else st.hwalc = v != 0;
+            }
+        });
+    }
+  // "atu status=TUNE_MANUAL_BYPASS atu_enabled=1 memories_enabled=0 using_mem=0"
+  if (line.contains ("|atu "))
+    {
+      QRegularExpression const kv {"\\b(status|atu_enabled|memories_enabled|using_mem)=([^\\s]+)"};
+      auto it = kv.globalMatch (line);
+      sh.update ([&it] (FlexStatus & st) {
+          while (it.hasNext ())
+            {
+              auto const m = it.next ();
+              QString const k = m.captured (1), v = m.captured (2);
+              if (k == "status")
+                {
+                  // the radio repeats a status; only a CHANGE says where it came from
+                  if (v != st.atu_status) {st.atu_after_cycle = st.atu_status == "TUNE_IN_PROGRESS"; st.atu_status = v;}
+                  st.atu_refused.clear ();
+                }
+              else if (k == "atu_enabled") st.atu_enabled = v == "1";
+              else if (k == "memories_enabled") st.atu_memories = v == "1";
+              else if (k == "using_mem") st.atu_using_mem = v == "1";
+            }
+        });
+    }
+  if (line.contains ("|radio slices="))
+    {
+      QRegularExpression const fs {"\\bfront_speaker_mute=([01])\\b"};
+      auto const m = fs.match (line);
+      if (m.hasMatch ()) sh.update ([m] (FlexStatus & st) {st.spkr_mute = m.captured (1) == "1"; st.spkr_supported = true;});
+    }
+  // meter definitions: "meter 7.src=TX-#7.num=1#7.nam=FWDPWR#7.unit=dBm#..."
+  if (line.contains ("|meter "))
+    {
+      QRegularExpression const f {"(\\d+)\\.(src|num|nam|unit)=([^#\\s]+)"};
+      auto it = f.globalMatch (line);
+      while (it.hasNext ())
+        {
+          auto const m = it.next ();
+          int const id = m.captured (1).toInt ();
+          auto & d = meter_defs_[id];
+          QString const k = m.captured (2), v = m.captured (3);
+          if (k == "src") d.src = v;
+          else if (k == "num") d.num = v.toInt ();
+          else if (k == "unit") d.unit = v;
+          else
+            {
+              d.nam = v.toUpper ();
+              if (d.nam == "FWDPWR" && meter_fwd_ < 0) meter_fwd_ = id;
+              else if (d.nam == "REFPWR" && meter_ref_ < 0) meter_ref_ = id;
+              else if (d.nam == "SWR" && meter_swr_ < 0) meter_swr_ = id;
+            }
+        }
+    }
+}
+
+// Meter packets (class 0x534C8002): pairs of (id, value) int16 big-endian.
+// The scale depends on the unit, verified on the 6600 in MSHV-Mac: dBm / dBFS /
+// SWR /128, Volts / Amps /256, degC /64, RPM /1.
+void FlexTransceiver::parse_meters (char const * buf, int len)
+{
+  int off = 0, bytes = 0;
+  if (!parse_vita (buf, len, &off, &bytes)) return;
+  QHash<QString, double> named;
+  bool power = false;
+  double fwd = fwd_w_, ref = 0., swr = swr_;
+  for (int i = off; i + 4 <= off + bytes; i += 4)
+    {
+      int const id = (quint8 (buf[i]) << 8) | quint8 (buf[i + 1]);
+      qint16 const raw = qint16 ((quint8 (buf[i + 2]) << 8) | quint8 (buf[i + 3]));
+      auto const d = meter_defs_.value (id);
+      double div = 128.;
+      if (d.unit == "Volts" || d.unit == "Amps") div = 256.;
+      else if (d.unit == "degC") div = 64.;
+      else if (d.unit == "RPM") div = 1.;
+      double const v = raw / div;
+      if (id == meter_fwd_) {fwd = v > 0. ? std::pow (10., (v - 30.) / 10.) : 0.; power = true;}
+      else if (id == meter_ref_) ref = v > 0. ? std::pow (10., (v - 30.) / 10.) : 0.;
+      else if (id == meter_swr_) swr = v;
+      // the S-meter: this slice's LEVEL meter, dBm
+      if (d.nam == "LEVEL" && d.src.startsWith ("SLC") && d.num == slice_) level_dbm_ = v;
+      if (!d.nam.isEmpty ()) named[d.nam] = v;
+    }
+  fwd_w_ = fwd; swr_ = swr;
+  FlexShared::instance ().update ([&] (FlexStatus & st) {
+      if (power) {st.meters_ok = true; st.fwd_w = fwd; st.ref_w = ref; st.swr = swr;}
+      for (auto it = named.cbegin (); it != named.cend (); ++it) st.meter[it.key ()] = it.value ();
+    });
+}
+
+void FlexTransceiver::publish_status ()
+{
+  QString const line = QString ("Slice %1, DAX channel %2%3").arg (QChar ('A' + slice_letter_)).arg (dax_ch_)
+    .arg (tx_dax_ ? tr (", transmit") : tr (", receive only"));
+  FlexShared::instance ().update ([&] (FlexStatus & st) {
+      st.up = ready_ && connected_;
+      st.status = line;
+      st.slice = slice_;
+      st.dax_channel = dax_ch_;
+      st.tx = tx_dax_;
+      st.frequency = qint64 (frequency_);
+      if (!model_.isEmpty ()) st.model = model_;
+    });
+}
+
+// Run what the panel asked for.  The radio reports most changes back on the
+// status stream, but the 6600 was seen not to echo every slice change, so a
+// change it answers OK is also shown at once.
+void FlexTransceiver::on_panel_commands ()
+{
+  if (!ready_ || !connected_ || slice_ < 0) return;
+  for (QString c : FlexShared::instance ().take ())
+    {
+      c.replace ("{slice}", QString::number (slice_));
+      int const seq = send (c);
+      if (seq < 0) continue;
+      QRegularExpression const sk {"^slice s \\d+ (rxant|txant|mode)=(\\S+)$"};
+      auto const m = sk.match (c);
+      if (m.hasMatch ())
+        {
+          QString const k = m.captured (1), v = m.captured (2);
+          on_reply_[seq] = [this, k, v] (quint32 code) {
+            if (code) {trace (QString ("!! panel %1=%2 refused 0x%3").arg (k).arg (v).arg (code, 0, 16)); return;}
+            if (k == "mode") {mode_str_ = v.toUpper (); mode_ = unmap_mode (mode_str_);}
+            FlexShared::instance ().update ([k, v] (FlexStatus & st) {
+                if (k == "rxant") st.rxant = v; else if (k == "txant") st.txant = v; else st.mode = v.toUpper ();
+              });
+          };
+        }
+      else if (c.startsWith ("mixer front_speaker mute "))
+        {
+          bool const on = c.endsWith (" on");
+          // a radio without a front panel answers 0x500000B7: grey the control
+          on_reply_[seq] = [on] (quint32 code) {
+            FlexShared::instance ().update ([on, code] (FlexStatus & st) {st.spkr_supported = code == 0; if (!code) st.spkr_mute = on;});
+          };
+        }
+      else if (c.startsWith ("atu "))
+        {
+          FlexShared::instance ().update ([] (FlexStatus & st) {st.atu_refused.clear ();});
+          on_reply_[seq] = [] (quint32 code) {
+            if (code) FlexShared::instance ().update ([code] (FlexStatus & st) {st.atu_refused = QString::number (code, 16).toUpper ();});
+          };
+        }
+    }
 }
 
 // ---------------------------------------------------------------- RX audio
@@ -758,7 +1004,7 @@ void FlexTransceiver::on_audio ()
     {
       qint64 const n = audio_->readDatagram (buf, sizeof buf);
       if (n < 16) continue;
-      if (be32 (buf + 12) == flex_meter_class) continue;     // meters share the socket
+      if (be32 (buf + 12) == flex_meter_class) {parse_meters (buf, int (n)); continue;}   // meters share the socket
       if (!rx_stream_ || be32 (buf + 4) != rx_stream_) continue;
       int off = 0, bytes = 0;
       if (!parse_vita (buf, int (n), &off, &bytes)) continue;

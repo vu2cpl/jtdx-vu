@@ -212,6 +212,57 @@ Last updated: 2026-10-07
 
 ## What changed
 
+### 2026-10-07 — FlexRadio panel, TX slider = RF power, start on the last frequency (for the next release)
+
+Manoj after the band-change fix: "jtdx doesnt show mode - its needed. flex
+panel is missing?" and "we can reuse the pwr slider which is already there?
+can have panel setting also".
+- **View > FlexRadio Panel...** (`flexpanel.{h,cpp}`), port of MSHV-Mac's
+  Flex panel: radio meters (forward / reflected power, SWR coloured under
+  load, ALC, PA temperature, supply), the slice's RX / TX antenna and **mode**
+  (the radio's own lists), transmit power (RF, tune, max, hardware ALC; sent
+  only when the operator edits a box), the antenna tuner (status, Tune,
+  Bypass, Memories; hidden on a radio without one; public in MSHV since
+  2026-10-05) and the M-series front-speaker mute (greyed otherwise). Per-band
+  antenna memory for transverter bands as in MSHV (MM0CEZ), by JTDX-VU band
+  name, saved as `[FlexPanel] BandAntennas` in the profile. Made at start-up
+  and kept, so the memory works with the window closed; reopened at start if
+  it was open at quit (`FlexPanel/Visible`).
+- **Plumbing:** `flexshared.h` - one mutex-guarded status struct + command
+  queue between the rig thread and the panel. `FlexTransceiver` adds `sub
+  meter all` / `sub atu all`, parses the slice / transmit / atu / radio /
+  meter-definition lines and the UDP meter packets (MSHV's unit scaling),
+  drains the panel's commands every 100 ms, and shows a change the radio
+  answers OK at once (the 6600 does not echo every slice change). The slice's
+  full status, which arrives with `client gui` before the slice is chosen, is
+  replayed once it is - the panel's lists were empty without that.
+- **JTDX-VU's own meters:** with Settings > Radio "S meter" / "Output power"
+  ticked, the slice's LEVEL meter drives the S-meter (dBm + 73) and FWDPWR /
+  SWR the TX power / SWR labels, as with TCI.
+- **TX slider = the radio's RF power**, as it is the SDR program's drive with
+  TCI: the slider follows `rfpower` (per band on a Flex), only a slider move
+  sends `transmit set rfpower=`, nothing at start-up or before the radio has
+  reported; while tuning it is `tunepower`. DAX audio now always goes at full
+  scale (it was attenuated by the slider before).
+- **Start on the last frequency** (`MainWindow::handle_transceiver_update`):
+  every Flex connection is handed the radio's default slice (14.100 USB) and
+  JTDX-VU followed it; on each offline -> online transition with a Flex rig
+  it now `force_rig_mode`s the last monitored frequency, which also sets the
+  data mode (MSHV's "start on the last frequency").
+- **Found while testing: Return pressed the tuner's Tune button.** In a
+  QDialog the first push button is the default, so Enter in a power box - which
+  the tooltip says commits the value - started `atu start`, i.e. transmitted.
+  Tune / Bypass are now never default buttons. **MSHV-Mac's panel is built the
+  same way and very likely has the same hazard** - check it there.
+- **Tested against `tools/fake_flex.py`** (now with transmit / atu / meter
+  status, a meter stream and the 6600's refusal of `mixer front_speaker`):
+  panel shows meters, ANT1 / ANT1 / DIGU, 50 / 10 / 100 %, tuner Bypass,
+  FLEX-6600, mute greyed; a panel antenna change reaches the radio; start-up
+  from a 40m profile tunes the 14.100 slice to 7.074 DIGU. **Not verified
+  (UI automation could not drive them):** the RF power box and the TX slider
+  sending `rfpower`, and the slider following a panel change - to check on
+  the radio.
+
 ### 2026-10-07 — FlexRadio VITA-49: first on-air run on the FLEX-6600, band change fixed
 
 Manoj tried the VITA-49 rig on the 6600 ("changing bands, crashing" ->

@@ -23,6 +23,7 @@
 #include <QMap>
 #include <QByteArray>
 #include <QElapsedTimer>
+#include <functional>
 #include "TransceiverFactory.hpp"
 #include "PollingTransceiver.hpp"
 #include "AudioDevice.hpp"   // vu_rx_sample
@@ -53,6 +54,7 @@ private slots:
   void on_ready_read ();
   void on_audio ();
   void on_tx_tick ();
+  void on_panel_commands ();          // the Flex panel's commands, from FlexShared
 
 signals:
   void flex_done ();
@@ -116,7 +118,9 @@ private:
   quint16 port_;
   bool use_for_ptt_;
   bool do_snr_;
-  bool tci_audio_;                   // JTDX-VU's "TCI audio" tick: we are the sound card
+  bool do_pwr_;
+  bool tci_audio_;
+  int radio_rfpower_ {-1}, radio_tunepower_ {-1};   // as the radio reports them, -1 = not yet                   // JTDX-VU's "TCI audio" tick: we are the sound card
   QString error_;
 
   QTcpSocket * socket_;
@@ -198,6 +202,16 @@ private:
   float tx_gain_;
   QByteArray tx_scratch_;
   std::string debug_file_;
+  // ---- Flex panel / meters (MSHV's panel, fed through FlexShared)
+  struct MeterDef {QString src, nam, unit; int num {-1};};
+  QHash<int, MeterDef> meter_defs_;
+  int meter_fwd_ {-1}, meter_ref_ {-1}, meter_swr_ {-1};
+  double level_dbm_ {-200}, fwd_w_ {0}, swr_ {0};
+  QHash<int, std::function<void (quint32)>> on_reply_;   // seq -> what to do with its code
+  QTimer * cmd_timer_ {nullptr};
+  void parse_panel_status (QString const& line);
+  void parse_meters (char const * buf, int len);
+  void publish_status ();
   // trace of every command, reply, status line and wait (flex_trace.txt in the
   // profile's data folder, restarted at each connect) - for on-air debugging
   void trace (QString const& what);

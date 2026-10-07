@@ -31,7 +31,15 @@ OUI = 0x00001C2D
 RX_CLASS, TX_CLASS = 0x534C03E3, 0x534C0123
 log = None
 lock = threading.Lock()
-state = {"udpport": 0, "slices": {}, "rx_stream": 0, "tx_stream": 0, "next_slice": 0, "xmit": 0, "peer": None}
+state = {"udpport": 0, "slices": {}, "rx_stream": 0, "tx_stream": 0, "next_slice": 0, "xmit": 0, "peer": None,
+         "tx": {"rfpower": 50, "tunepower": 10, "max_power_level": 100, "hwalc_enabled": 0},
+         "atu": {"status": "TUNE_BYPASS", "atu_enabled": 1, "memories_enabled": 0, "using_mem": 0}}
+# meters: id -> (src, num, name, unit) - what the panel and the S-meter read
+METERS = {1: ("TX-", 1, "FWDPWR", "dBm"), 2: ("TX-", 2, "REFPWR", "dBm"), 3: ("TX-", 3, "SWR", "SWR"),
+          4: ("SLC", 0, "LEVEL", "dBm"), 5: ("TX-", 4, "ALC", "dBFS"), 6: ("RAD", 1, "PATEMP", "degC"),
+          7: ("RAD", 2, "+13.8A", "Volts")}
+def tx_line(): return "transmit " + " ".join("%s=%s" % kv for kv in state["tx"].items())
+def atu_line(): return "atu " + " ".join("%s=%s" % kv for kv in state["atu"].items())
 
 def logw(s):
     log.write("%.3f %s\n" % (time.time(), s)); log.flush()
@@ -41,9 +49,10 @@ def status(sock, text):
 
 def slice_line(n):
     s = state["slices"][n]
-    return ("slice %d in_use=1 sample_rate=24000 RF_frequency=%.6f client_handle=0x%08X index_letter=%s rxant=ANT1 "
-            "mode=%s wide=0 txant=ANT1 dax=%d tx=%d active=1 ant_list=ANT1,ANT2 mode_list=LSB,USB,DIGU,DIGL,CW"
-            % (n, s["freq"] / 1e6, HANDLE, chr(ord('A') + n), s["mode"], s["dax"], s["tx"]))
+    return ("slice %d in_use=1 sample_rate=24000 RF_frequency=%.6f client_handle=0x%08X index_letter=%s rxant=%s "
+            "mode=%s wide=0 txant=%s dax=%d tx=%d active=1 ant_list=ANT1,ANT2,RX_A,XVTA mode_list=LSB,USB,DIGU,DIGL,CW "
+            "tx_ant_list=ANT1,ANT2,XVTA"
+            % (n, s["freq"] / 1e6, HANDLE, chr(ord('A') + n), s.get("rxant", "ANT1"), s["mode"], s.get("txant", "ANT1"), s["dax"], s["tx"]))
 
 def serve(c, a):
     state["peer"] = c.getpeername()[0]
@@ -71,6 +80,29 @@ def serve(c, a):
                     elif p[0] == "client" and p[1] == "udpport": state["udpport"] = int(p[2])
                     elif p[0] == "sub" and p[1] == "slice":
                         for n in state["slices"]: extra.append(slice_line(n))
+                    elif p[0] == "sub" and p[1] == "tx": extra.append(tx_line())
+                    elif p[0] == "sub" and p[1] == "atu": extra.append(atu_line())
+                    elif p[0] == "sub" and p[1] == "meter":
+                        extra.append("meter " + "#".join("%d.src=%s#%d.num=%d#%d.nam=%s#%d.unit=%s" % (i, m[0], i, m[1], i, m[2], i, m[3]) for i, m in METERS.items()))
+                    elif p[0] == "transmit" and p[1] == "set":
+                        for kv in p[2:]:
+                            k, _, v = kv.partition("=")
+                            if k in state["tx"]: state["tx"][k] = int(v)
+                        extra.append(tx_line())
+                    elif p[0] == "atu":
+                        if p[1] == "start":
+                            state["atu"]["status"] = "TUNE_IN_PROGRESS"; extra.append(atu_line())
+                            def done(c=c):
+                                state["atu"]["status"] = "TUNE_SUCCESSFUL"; status(c, atu_line())
+                            threading.Timer(1.0, done).start()
+                        elif p[1] == "bypass": state["atu"]["status"] = "TUNE_MANUAL_BYPASS"; extra.append(atu_line())
+                        elif p[1] == "set":
+                            for kv in p[2:]:
+                                k, _, v = kv.partition("=")
+                                if k in state["atu"]: state["atu"][k] = int(v)
+                            extra.append(atu_line())
+                    elif p[0] == "mixer":
+                        logw("< %s" % cmd); c.sendall(("R%s|500000B7|\n" % seq).encode()); continue   # a 6600 has no front speaker
                     elif p[0] == "info": body = 'model="FLEX-6600",chassis_serial="FAKE",software_ver=3.8.19,atu_present=1'
                     elif p[0] == "slice" and p[1] == "create":
                         n = state["next_slice"]; state["next_slice"] += 1
@@ -98,6 +130,7 @@ def serve(c, a):
                             k, _, v = kv.partition("=")
                             if k == "mode": state["slices"][n]["mode"] = v.upper()
                             elif k == "tx": state["slices"][n]["tx"] = int(v)
+                            elif k in ("rxant", "txant"): state["slices"][n][k] = v
                         if not os.environ.get("FAKE_NO_ECHO"): extra.append(slice_line(n))
                     elif p[0] == "slice" and p[1] == "remove":
                         n = int(p[2]); state["slices"].pop(n, None); extra.append("slice %d in_use=0" % n)
@@ -213,6 +246,15 @@ def main():
             hdr = struct.pack(">IIIIII", 0x38500107 | ((count & 0x0f) << 16), sid, OUI, RX_CLASS, int(bt), 0) + struct.pack(">I", 0)
             udp.sendto(hdr + st.tobytes(), (peer, port))
             count += 1; sent += 1
+            if n % 19 == 0:                                       # meters, about 10 a second
+                with lock: keyed = state["xmit"]; rf = state["tx"]["rfpower"]
+                watts = 100.0 * rf / 100.0 if keyed else 0.0
+                fwd_dbm = 10 * math.log10(watts * 1000) if watts > 0 else -150
+                vals = {1: fwd_dbm, 2: (fwd_dbm - 20 if watts > 0 else -150), 3: 1.2, 4: -85.0, 5: -10.0, 6: 35.5, 7: 13.8}
+                div = {"dBm": 128, "SWR": 128, "dBFS": 128, "degC": 64, "Volts": 256}
+                pl = b"".join(struct.pack(">hh", i, max(-32768, min(32767, int(round(v * div[METERS[i][3]]))))) for i, v in vals.items())
+                mh = struct.pack(">IIIII", 0x38500000 | ((7 + len(pl) // 4) & 0xffff), 0x00000700, OUI, 0x534C8002, 0) + struct.pack(">II", 0, 0)
+                udp.sendto(mh + pl, (peer, port))
         n += 1
     print(f"done: {sent} RX packets", flush=True)
 

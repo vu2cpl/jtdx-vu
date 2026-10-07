@@ -63,6 +63,7 @@
 #include "clublog.h"
 #include "bandmodeswitcher.h"
 #include "jttypanel.h"
+#include "flexpanel.h"
 #include "jttysettings.h"
 #include <QSignalBlocker>
 #include <QVBoxLayout>
@@ -1199,6 +1200,15 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     ui->menuView->addSeparator ();
     ui->menuView->addAction (action);
     connect (action, &QAction::triggered, this, [this] {m_switcher->settings_dialog (this);});
+    // JTDX-VU: FlexRadio panel (VITA-49 rig) - made now and kept, so its
+    // per-band antenna memory works with the window closed; reopened at start
+    // if it was open at quit
+    m_flexPanel = new FlexPanel {m_settings, [this] (qint64 f) {return f > 0 ? m_config.bands ()->find (Frequency (f)) : QString {};}, this};
+    auto flexAction = new QAction {tr ("FlexRadio Panel..."), this};
+    flexAction->setMenuRole (QAction::NoRole);
+    ui->menuView->addAction (flexAction);
+    connect (flexAction, &QAction::triggered, this, [this] {m_flexPanel->show (); m_flexPanel->raise (); m_flexPanel->activateWindow ();});
+    if (m_settings->value ("FlexPanel/Visible", false).toBool ()) QTimer::singleShot (0, m_flexPanel, &QWidget::show);
     // JTDX-VU: choose which wanted filters show (they take room above the Rx
     // pane) - View > Wanted filters, or right-click a filter's label.  A
     // hidden filter with text in it still applies.
@@ -3054,6 +3064,7 @@ void MainWindow::subProcessError (QProcess * process, QProcess::ProcessError)
 void MainWindow::closeEvent(QCloseEvent * e)
 {
   m_valid = false;              // suppresses subprocess errors
+  if (m_flexPanel) m_settings->setValue ("FlexPanel/Visible", m_flexPanel->isVisible ());
   if(m_config.clear_DX_exit())
     {
       clearDX ("");
@@ -7796,6 +7807,17 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
         ui->SWRlabel->setText("");
     }
   }    
+  // JTDX-VU: FlexRadio VITA-49 - every connection is handed the radio's default
+  // slice (14.100 USB on the 6600) and JTDX-VU would follow it there; put the
+  // slice back on the frequency we were on, in our data mode, as MSHV does
+  // ("start on the last frequency").  Deferred a tick: this runs inside the
+  // rig's own update.
+  if (!old_state.online () && s.online () && m_config.rig_name ().startsWith ("FlexRadio VITA")) {
+    Frequency const want = m_lastMonitoredFrequency;
+    if (want) QTimer::singleShot (0, this, [this, want] {
+        if (m_config.transceiver_online ()) m_config.force_rig_mode (want);
+      });
+  }
   m_rigState = s;
   auto old_freqNominal = m_freqNominal;
   m_freqNominal = s.frequency ();
