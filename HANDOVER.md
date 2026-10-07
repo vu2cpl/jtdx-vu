@@ -348,6 +348,14 @@ DAX streams worked first time. A band change did not.
   With `FAKE_NO_ECHO` the previous build reconnected after a 15m change, as
   on the radio; the fixed one stays on one session through 40/20/15/10/20m,
   the GUI never stalls, and receive / transmit self-tests still pass.
+- **GUI harnesses (committed with the clear-session sweep):**
+  `tools/flex_bandtest.sh` clicks band buttons on a `-r flextest` instance
+  against the fake radio (via accessibility, addressed by that instance's
+  PID so a running JTDX-VU is untouched) and times the replies;
+  `tools/flex_paneltest.sh` screenshots the FlexRadio panel and the mode
+  indicator in RX/TX; `tools/macos-window-list.swift <pid>` lists a PID's
+  window IDs for `screencapture -l`. Both scripts need the FT2 periods in
+  `/tmp/ft2_autotest-sig` (from `ft2_autotest.sh`).
 - Gotcha: Manoj's Flex profile was copied from the QO-100 one and kept
   *QO-100 rig IF = 28.54*; on an HF Flex that maps 10m readbacks to QO-100.
   Set it to 0 in any non-QO-100 profile.
