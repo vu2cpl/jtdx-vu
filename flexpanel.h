@@ -24,6 +24,8 @@ public:
   // band_of: the band name of a frequency in Hz, empty outside the bands
   FlexPanel (QSettings * settings, std::function<QString (qint64)> band_of, QWidget * parent = nullptr);
 
+protected:
+  void hideEvent (QHideEvent *) override;
 private:
   void refresh ();
   void fill_combo (QComboBox * box, QStringList const& items, QString const& current);

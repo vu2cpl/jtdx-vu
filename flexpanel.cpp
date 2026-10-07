@@ -13,6 +13,7 @@
 #include <QSpinBox>
 #include <QTimer>
 #include <QVBoxLayout>
+#include <QFont>
 
 namespace
 {
@@ -21,7 +22,7 @@ namespace
     auto l = new QLabel {"--"};
     l->setFrameStyle (QFrame::Panel | QFrame::Sunken);
     l->setAlignment (Qt::AlignCenter);
-    l->setMinimumWidth (84);
+    l->setMinimumWidth (58);
     return l;
   }
   void cmd (QString const& c) {FlexShared::instance ().command (c);}
@@ -36,15 +37,24 @@ FlexPanel::FlexPanel (QSettings * settings, std::function<QString (qint64)> band
   setWindowFlags (windowFlags () & ~Qt::WindowContextHelpButtonHint);
   setModal (false);                  // non-modal: keep working with it open
 
+  // MSHV's single column, but compact: it sits beside JTDX-VU's main window
+  // and must not be taller than it (Manoj, 2026-10-07: "make it smaller like
+  // mshv") - a point smaller than the application font, tight spacing
+  {
+    QFont f {font ()};
+    f.setPointSizeF (qMax (8., f.pointSizeF () - 2.));
+    setFont (f);
+  }
   auto V = new QVBoxLayout {this};
-  V->setContentsMargins (8, 8, 8, 8);
-  V->setSpacing (6);
+  V->setContentsMargins (4, 4, 4, 4);
+  V->setSpacing (2);
   l_conn_ = new QLabel;
   l_conn_->setAlignment (Qt::AlignCenter);
   V->addWidget (l_conn_);
 
   auto gb_m = new QGroupBox {tr ("Radio meters")};
   auto G = new QGridLayout {gb_m};
+  G->setContentsMargins (6, 2, 6, 2); G->setVerticalSpacing (1); G->setHorizontalSpacing (6);
   int r = 0;
   l_fwd_ = value_label (); G->addWidget (new QLabel {tr ("Forward power")}, r, 0); G->addWidget (l_fwd_, r++, 1);
   l_swr_ = value_label (); G->addWidget (new QLabel {tr ("SWR")}, r, 0); G->addWidget (l_swr_, r++, 1);
@@ -56,7 +66,9 @@ FlexPanel::FlexPanel (QSettings * settings, std::function<QString (qint64)> band
 
   auto gb_c = new QGroupBox {tr ("Slice")};
   auto C = new QGridLayout {gb_c};
+  C->setContentsMargins (6, 2, 6, 2); C->setVerticalSpacing (1); C->setHorizontalSpacing (6);
   cb_rxant_ = new QComboBox; cb_txant_ = new QComboBox; cb_mode_ = new QComboBox;
+  for (auto * c : {cb_rxant_, cb_txant_, cb_mode_}) c->setMinimumContentsLength (5);
   C->addWidget (new QLabel {tr ("RX antenna")}, 0, 0); C->addWidget (cb_rxant_, 0, 1);
   C->addWidget (new QLabel {tr ("TX antenna")}, 1, 0); C->addWidget (cb_txant_, 1, 1);
   C->addWidget (new QLabel {tr ("Mode")}, 2, 0); C->addWidget (cb_mode_, 2, 1);
@@ -66,6 +78,7 @@ FlexPanel::FlexPanel (QSettings * settings, std::function<QString (qint64)> band
   // on Enter / focus-out, never per keystroke - an amplifier is downstream.
   auto gb_p = new QGroupBox {tr ("Transmit power")};
   auto P = new QGridLayout {gb_p};
+  P->setContentsMargins (6, 2, 6, 2); P->setVerticalSpacing (1); P->setHorizontalSpacing (6);
   sb_rfpower_ = new QSpinBox; sb_tunepower_ = new QSpinBox; sb_maxpower_ = new QSpinBox;
   for (auto * b : {sb_rfpower_, sb_tunepower_, sb_maxpower_})
     {
@@ -91,6 +104,7 @@ FlexPanel::FlexPanel (QSettings * settings, std::function<QString (qint64)> band
   // The radio's antenna tuner, hidden until the radio says it has one.
   gb_atu_ = new QGroupBox {tr ("Antenna tuner")};
   auto T = new QGridLayout {gb_atu_};
+  T->setContentsMargins (6, 2, 6, 2); T->setVerticalSpacing (1); T->setHorizontalSpacing (6);
   l_atu_ = value_label ();
   pb_atu_tune_ = new QPushButton {tr ("Tune")};
   pb_atu_bypass_ = new QPushButton {tr ("Bypass")};
@@ -111,6 +125,7 @@ FlexPanel::FlexPanel (QSettings * settings, std::function<QString (qint64)> band
 
   auto gb_a = new QGroupBox {tr ("Local audio")};
   auto A = new QVBoxLayout {gb_a};
+  A->setContentsMargins (6, 2, 6, 2); A->setSpacing (1);
   cb_localmute_ = new QCheckBox {tr ("Mute front speaker")};
   cb_localmute_->setToolTip (tr ("Mutes the speaker in the radio's front panel (M series only).\n"
                                  "Line-out, headphones and the DAX audio JTDX-VU decodes are unaffected."));
@@ -149,6 +164,8 @@ FlexPanel::FlexPanel (QSettings * settings, std::function<QString (qint64)> band
         auto const f = e.split (':');
         if (f.size () == 3 && !f[1].isEmpty () && !f[2].isEmpty ()) band_ant_[f[0]] = f[1] + ':' + f[2];
       }
+
+  if (settings_) restoreGeometry (settings_->value ("FlexPanel/Geometry").toByteArray ());
 
   // runs while hidden too, so the antenna memory works with the panel closed
   timer_ = new QTimer {this};
@@ -308,4 +325,10 @@ void FlexPanel::refresh ()
   if (cb_localmute_->isEnabled () != st.spkr_supported) cb_localmute_->setEnabled (st.spkr_supported);
   if (cb_localmute_->isChecked () != st.spkr_mute) {filling_ = true; cb_localmute_->setChecked (st.spkr_mute); filling_ = false;}
   if (!st.model.isEmpty ()) l_model_->setText (tr ("Radio: %1").arg (st.model));
+}
+
+void FlexPanel::hideEvent (QHideEvent * e)
+{
+  if (settings_) settings_->setValue ("FlexPanel/Geometry", saveGeometry ());   // remember size and place
+  QDialog::hideEvent (e);
 }

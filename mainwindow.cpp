@@ -3064,7 +3064,10 @@ void MainWindow::subProcessError (QProcess * process, QProcess::ProcessError)
 void MainWindow::closeEvent(QCloseEvent * e)
 {
   m_valid = false;              // suppresses subprocess errors
-  if (m_flexPanel) m_settings->setValue ("FlexPanel/Visible", m_flexPanel->isVisible ());
+  if (m_flexPanel) {
+    m_settings->setValue ("FlexPanel/Visible", m_flexPanel->isVisible ());
+    if (m_flexPanel->isVisible ()) m_settings->setValue ("FlexPanel/Geometry", m_flexPanel->saveGeometry ());
+  }
   if(m_config.clear_DX_exit())
     {
       clearDX ("");

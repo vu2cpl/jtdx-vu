@@ -249,6 +249,11 @@ can have panel setting also".
   JTDX-VU followed it; on each offline -> online transition with a Flex rig
   it now `force_rig_mode`s the last monitored frequency, which also sets the
   data mode (MSHV's "start on the last frequency").
+- **Size:** MSHV's single column, compact (Manoj: "make it smaller like mshv
+  ... narrow and tall, but smaller size"): font 2 pt under the application
+  font, tight margins and spacing, narrower value boxes - 192 x 537 px, under
+  the main window's height (was 220 x 760). Size and place are remembered
+  (`FlexPanel/Geometry`). A two-column version (363 x 390) was rejected.
 - **Found while testing: Return pressed the tuner's Tune button.** In a
   QDialog the first push button is the default, so Enter in a power box - which
   the tooltip says commits the value - started `atu start`, i.e. transmitted.
