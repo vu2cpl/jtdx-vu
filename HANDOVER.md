@@ -8,6 +8,11 @@ Last updated: 2026-10-07
   secret scan, see below). Default branch `jtdx-vu`. The `upstream`
   remote is `jtdx-project/jtdx`; upstream has been dormant since
   2022-03 at tag 159.
+- **Local files (2026-10-07):** `~/Desktop/jdxvu/` was cleared — the release copies, the `test/` trial zips and
+  the `prev-install/` app and `.ini` backups that entries below point to are gone (marked "removed"); every
+  release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
+  recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
+  `~/Downloads`.
 - **Version:** JTDX-VU **0.7.0** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
@@ -34,7 +39,7 @@ Last updated: 2026-10-07
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
   `.sha256` attached; every asset downloaded anonymously and its
-  checksum OK; arm64 app reports 0.5.0; copies in `~/Desktop/jdxvu/v0.5.0/`.
+  checksum OK; arm64 app reports 0.5.0; copies in `~/Desktop/jdxvu/v0.5.0/` (removed 2026-10-07).
   - CI run 36974037893 (macOS: Intel ~10 min on the keg cache, arm64
     ~70 min) and 36974038144 (Windows), all green.
   - Pi `.deb` on meridianpi5 (prefix /usr/local): `apt-get install -s`
@@ -58,7 +63,7 @@ Last updated: 2026-10-07
   - CI run 37221289182 (macOS) and 37221289166 (Windows), green. All
     four builds plus `.sha256` downloaded anonymously (200), every
     checksum OK, arm64 app reports 0.6.0 / Rev b15929; copies in
-    `~/Desktop/jdxvu/v0.6.0/`.
+    `~/Desktop/jdxvu/v0.6.0/` (removed 2026-10-07).
   - Pi `.deb` on meridianpi5 (prefix /usr/local): Version 0.6.0,
     Conflicts: jtdx, `apt-get install -s` clean, uploaded by hand.
   - Website: paragraph "AutoSeq goes for what you need, a station queue
@@ -72,7 +77,7 @@ Last updated: 2026-10-07
   issue (AetherSDR)" section pointing at aethersdr/AetherSDR#6006.
   - CI run 37111236434 (macOS) and 37111236405 (Windows), green. All
     four builds plus `.sha256` downloaded anonymously, every checksum OK,
-    arm64 app reports 0.5.3; copies in `~/Desktop/jdxvu/v0.5.3/`.
+    arm64 app reports 0.5.3; copies in `~/Desktop/jdxvu/v0.5.3/` (removed 2026-10-07).
   - Pi `.deb` on meridianpi5 (prefix /usr/local): `apt-get install -s`
     clean, Conflicts: jtdx, uploaded by hand.
   - Installed on the Mac (local build of `bcad6f8c`, reports 0.5.3).
@@ -87,7 +92,7 @@ Last updated: 2026-10-07
   - CI run 37108417045 (macOS) and 37108417041 (Windows), green. All
     four builds plus `.sha256` downloaded anonymously, every checksum OK,
     arm64 app reports 0.5.2 with the band-change code; copies in
-    `~/Desktop/jdxvu/v0.5.2/`.
+    `~/Desktop/jdxvu/v0.5.2/` (removed 2026-10-07).
   - Pi `.deb` from `4ba63a58` on meridianpi5 (prefix /usr/local, cmake
     re-run): `apt-get install -s` clean, uploaded by hand.
   - Website: project page paragraph "CQ-only Call Non-Stop, TCI
@@ -104,7 +109,7 @@ Last updated: 2026-10-07
   - CI run 37055496531 (macOS) and 37055496515 (Windows), all green.
     All four builds plus `.sha256` downloaded anonymously, every
     checksum OK, arm64 app reports 0.5.1; copies in
-    `~/Desktop/jdxvu/v0.5.1/`.
+    `~/Desktop/jdxvu/v0.5.1/` (removed 2026-10-07).
   - Website: card sentence + project page paragraph "Auto CQ time limit
     and window fixes (v0.5.1)", table / release link / apt command on
     v0.5.1; pushed (`7a9b778`) after all eight URLs answered 206.
@@ -114,13 +119,13 @@ Last updated: 2026-10-07
     `.sha256`.
   - **Installed on the Mac** 2026-10-03: local build of `89a3b8b5`
     (reports 0.5.1, macOS 26+ only). The previous local 0.5.0+fixes app
-    is `~/Desktop/jdxvu/prev-install/JTDX-VU-0.5.0-local.app`. A stray
+    is `~/Desktop/jdxvu/prev-install/JTDX-VU-0.5.0-local.app` (removed 2026-10-07). A stray
     `jtdxjt9` (PPID 1, from 22:20 the night before, main app gone) was
     holding the shared memory and was killed first.
 - **Release v0.4.0: COMPLETE 2026-10-01** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.4.0,
   tag `v0.4.0` on `bf707bc8`. All four builds plus `.sha256` attached
   and verified (anonymous download, every checksum OK, arm64 app reports
-  0.4.0); copies in `~/Desktop/jdxvu/v0.4.0/`.
+  0.4.0); copies in `~/Desktop/jdxvu/v0.4.0/` (removed 2026-10-07).
   - CI run 36880480905 (macOS) and 36880480879 (Windows), all green.
     **The Intel keg cache works:** the Intel job took 10 min (14:57→15:08
     UTC) instead of 2.5–3.5 h. The arm64 job was the slow one (~50 min
@@ -147,7 +152,7 @@ Last updated: 2026-10-07
     before tagging.**
   - CI run 37558235427 (macOS) and 37558235504 (Windows), green. All eight
     files downloaded anonymously (200), every checksum OK, arm64 app reports
-    0.7.0 and its signature verifies; copies in `~/Desktop/jdxvu/v0.7.0/`.
+    0.7.0 and its signature verifies; copies in `~/Desktop/jdxvu/v0.7.0/` (removed 2026-10-07).
   - Pi `.deb` on meridianpi5 (prefix /usr/local, rsync of `git ls-files`,
     `nice make -j3`, `cpack -G DEB`): Version 0.7.0, Conflicts: jtdx,
     `apt-get install -s` clean, uploaded by hand with its `.sha256`.
@@ -155,7 +160,7 @@ Last updated: 2026-10-07
     rig mode at a glance (v0.7.0)", table / release link / apt command on
     v0.7.0, "Tested so far" and card updated; pushed (`e477301`) after all
     eight URLs answered 200.
-  - Reply to Frank PH2M (`~/Downloads/jtdx-vu-v0.7.0-reply-to-PH2M.txt`)
+  - Reply to Frank PH2M (`~/projects/JTDX-records/jtdx-vu-v0.7.0-reply-to-PH2M.txt`)
     sent by Manoj 2026-10-07.
 - **Installed app:** `/Applications/JTDX-VU.app` is a **local build bundled
   2026-10-06 23:01** that reports 0.6.0 (not the release zip, and older than
@@ -192,12 +197,12 @@ Last updated: 2026-10-07
   v0.4.0:** the Intel job restored the cache and finished in ~10 min. The arm64 job passed twice on the
   fixed workflow. Website updated the same morning (card + page,
   downloads table on v0.3.0; all three attached assets answer 206 to
-  an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/`.
+  an anonymous ranged GET). Copies in `~/Desktop/jdxvu/v0.3.0/` (removed 2026-10-07).
   `/Applications/JTDX-VU.app` is **v0.4.0** (local build of tag `v0.4.0`;
   title "JTDX-VU for VUCG V0.4.0"), installed 2026-10-01 20:36. Macro
   sets migrated (Default/Ragchew "599", Contest "599 %N", active
   Ragchew / DX). The previous v0.3.0 bundle is
-  in `~/Desktop/jdxvu/prev-install/`.
+  in `~/Desktop/jdxvu/prev-install/` (removed 2026-10-07).
 - **Release v0.2.1: COMPLETE 2026-09-28**. It's at
   https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.2.1 with all four
   builds plus a `.sha256` for each:
@@ -205,7 +210,7 @@ Last updated: 2026-10-07
     The Intel build took about 2.5 h and the attach step now works on
     Windows too.
   - The Pi `.deb` was built on meridianpi5 and uploaded by hand.
-  - Copies are in `~/Desktop/jdxvu/v0.2.1/`.
+  - Copies are in `~/Desktop/jdxvu/v0.2.1/` (removed 2026-10-07).
   - v0.2.0's notes say "superseded by v0.2.1": its CNS never gave up on
     a silent station. Its Intel build was cancelled.
   - v0.1.0 remains published.
@@ -830,7 +835,7 @@ LZ2HV's recording came from.
   margin. FT2 uses FT4's `rvec` (`lib/ft4/genft4.f90`,
   `lib/ft4_decode.f90`); anything that builds FT2/FT4 codewords must copy
   that one, not `ft8_decode`'s.
-- **Christo's recordings (FT2.zip, 2026-10-06):** five single 3.75 s periods
+- **Christo's recordings (FT2.zip, 2026-10-06; kept in `~/projects/JTDX-records/`, outside this public repo):** five single 3.75 s periods
   (two duplicated under `16_`/`17_` prefixes, presumably MSHV's SNR). JTDX-VU
   decodes all five - LZ2HV +24/+19, SP9HWY R-12 (-12), SP9HZZ (-13), and
   8 stations in 260304_124133 - and the pre-demapper baseline gets the same
@@ -942,7 +947,7 @@ shifted dial becomes the new Rx frequency, so every Tx shifts again (with
 TCI, Tx = dial + TxHz - 1500, about +1 kHz per Tx at 2500 Hz). Fix: after a
 Tx with a shifted frequency (`was_tx_`), `restoring_` keeps reporting the
 requested Rx frequency until the rig reports it (or 3 s pass). Builds; not
-yet tested - trial zip `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip` for
+yet tested - trial zip `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip` (removed 2026-10-07) for
 the MacBook. Open: why it never showed before (the mini uses split None;
 the MacBook setup is new) - asked Manoj.
 
@@ -989,7 +994,7 @@ would have set AetherSDR's RF power (top = 100 %), risky with an amp.
 Manoj: keep all six categories (zones, DXCC, grid, prefix, call) but make
 the page friendlier, and replace the Show dropdown with one tick as in his
 MSHV build. Mockup agreed ("lets try this"); trial build on the Desktop
-(now only `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip`) for him to try.
+(now only `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip` (removed 2026-10-07)) for him to try.
 - `Configuration::impl::vu_notifications_page()`: the original page
   (`verticalLayout_8`) is parked in a hidden widget; a new scrollable page
   takes its place. **Front end only** - every new control mirrors an
@@ -1325,7 +1330,7 @@ Manoj: the main window "does not resize as needed" (on his Mac).
   the layout minimum: about 1063x608 in FT8, 929x632 in JTTY (Mac font).
   Both fit a 1366x768 screen.
 - **Installed** 2026-10-02 21:56 (live app quit cleanly first; old app
-  in `~/Desktop/jdxvu/prev-install/JTDX-VU.app.before-resize`).
+  in `~/Desktop/jdxvu/prev-install/JTDX-VU.app.before-resize` (removed 2026-10-07)).
 - **After the install: no audio, black waterfall.** Not the build:
   TCI was connected (AetherSDR, 127.0.0.1:50001) but AetherSDR sent no
   audio (about 10 KB in total; a live stream is about 100 KB/s). The
@@ -1495,7 +1500,7 @@ macro editing only in Settings, and queue-while-transmitting.
   S / R / Name, Erase during live decoding, on air.
 - **Installed** 2026-10-02 after the tests (the live app had been quit
   cleanly at 11:29). The first launch runs the macro-set migration; the
-  .ini from before it is in `~/Desktop/jdxvu/prev-install/`.
+  .ini from before it is in `~/Desktop/jdxvu/prev-install/` (removed 2026-10-07).
 
 ### 2026-10-01 — Stop button hidden; Monitor is the start/stop
 
@@ -2483,7 +2488,7 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       also connected (per-client slice letters), the RF level from full-scale
       DAX audio, that `xmit 0` drops the carrier at once, and a QSO.
 - [x] **Tell Frank PH2M v0.7.0 is out** — emailed by Manoj 2026-10-07
-      (text in `~/Downloads/jtdx-vu-v0.7.0-reply-to-PH2M.txt`). Watch for his
+      (text in `~/projects/JTDX-records/jtdx-vu-v0.7.0-reply-to-PH2M.txt`). Watch for his
       report on the 70cm/23cm buttons.
 
 - [ ] **FT2 weak-signal gap vs MSHV** (2026-10-05 screen recording from
@@ -2618,7 +2623,7 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       2026-10-05: Manoj asked for all JTTY QSOs as MODE MFSK / SUBMODE
       JTTY. JTDX-VU's own `wsjtx_log.adi`: the 7 pre-v0.4.0 records (mode
       JTTY, 09-28..09-30) changed to MFSK/JTTY, all 11 now MFSK/JTTY; backup
-      `wsjtx_log.before-jtty-mfsk-20261005.adi`. `~/Downloads/jtty-qsos-mfsk.adi`
+      `wsjtx_log.before-jtty-mfsk-20261005.adi`. `~/projects/JTDX-records/jtty-qsos-mfsk.adi`
       holds the 11 corrected records for RUMlog / Club Log. RUMlog itself
       not touched (its DB is unreadable from here) - see the caveat above.
       Manoj's RUMlog export (11 QSOs) shows RUMlog writes `<mode:4>JTTY
@@ -2626,7 +2631,7 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       the caveat was wrong: RUMlog itself needs MODE MFSK. Also EA1BAF has
       IK3CHK's grid JN55UR and N8DC has EA3NE's JN11AN (old JTTY bug: grid
       not cleared). All 11 already marked sent to LoTW / eQSL / Club Log.
-      `~/Downloads/jtty-qsos-mfsk.adi` was rebuilt from the RUMlog export
+      `~/projects/JTDX-records/jtty-qsos-mfsk.adi` was rebuilt from the RUMlog export
       (only mode JTTY -> MFSK; RUMlog's correct times kept) - the first
       version came from JTDX-VU's log, whose early start times are wrong.
       **Done 2026-10-06 (Manoj): the 11 QSOs changed to MFSK/JTTY in RUMlog
