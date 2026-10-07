@@ -2976,6 +2976,7 @@ void MainWindow::createStatusBar()                           //createStatusBar
   mode_label->setFrameStyle(QFrame::Panel | QFrame::Sunken);
   statusBar()->addWidget(mode_label);
 
+
   last_tx_label->setAlignment(Qt::AlignHCenter);
   last_tx_label->setAlignment(Qt::AlignVCenter);
   last_tx_label->setContentsMargins(1,1,1,1);
@@ -7884,7 +7885,6 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
   }
 
   displayDialFrequency ();
-  ui->readFreq->setStyleSheet(ui->readFreq->styleSheet().left(230)+QString("background: %1;\n color: %2;\n}").arg(Radio::convert_dark("#00ff00",m_useDarkStyle),Radio::convert_dark("#000000",m_useDarkStyle)));
   m_rigOk=true;
   if (m_tciReconnecting && s.online () && s.frequency ()) {   // not the update sent while going offline
     m_tciReconnecting = false;
@@ -7892,7 +7892,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
     else showStatusMessage (tr ("TCI reconnected"), 10000);
   }
   ui->readFreq->setEnabled (false);
-  ui->readFreq->setText (s.split () ? "S" : "");
+  update_rig_mode_indicator (s);
   if(m_config.write_decoded_debug()) {
     QString pttstate = s.ptt () ? "PTT On" : "PTT Off";
     QString splitstate = s.split () ? " Split On" : " Split Off";
@@ -8970,4 +8970,38 @@ void MainWindow::profileDelete (QString const& name)
   QDir {profileData (name)}.removeRecursively ();
   QSettings last {profileIni ({}), QSettings::IniFormat};
   if (last.value ("Profiles/Last").toString () == name) last.setValue ("Profiles/Last", QString {});
+}
+
+
+// JTDX-VU: the round rig-status button left of the frequency also shows the
+// mode the rig reports (Manoj: "reuse the round green indicator").  Green when
+// it is the mode Settings > Radio asks for (Data/Pkt = DIGU, USB = USB) or when
+// Settings leaves the mode alone; yellow when not (a slice left in LSB after a
+// band change, say).  "/S" when split is on, as the old "S".
+void MainWindow::update_rig_mode_indicator (Transceiver::TransceiverState const& s)
+{
+  QString text;
+  switch (s.mode ())
+    {
+    case Transceiver::USB: text = "USB"; break;
+    case Transceiver::LSB: text = "LSB"; break;
+    case Transceiver::DIG_U: text = "DIGU"; break;
+    case Transceiver::DIG_L: text = "DIGL"; break;
+    case Transceiver::CW: text = "CW"; break;
+    case Transceiver::CW_R: text = "CW-R"; break;
+    case Transceiver::FSK: text = "RTTY"; break;
+    case Transceiver::FSK_R: text = "RTTY"; break;
+    case Transceiver::AM: text = "AM"; break;
+    case Transceiver::FM: text = "FM"; break;
+    case Transceiver::DIG_FM: text = "DFM"; break;
+    default: break;
+    }
+  Transceiver::MODE want {Transceiver::UNK};
+  if (m_config.data_mode () == Configuration::data_mode_data) want = Transceiver::DIG_U;
+  else if (m_config.data_mode () == Configuration::data_mode_USB) want = Transceiver::USB;
+  bool const wrong = want != Transceiver::UNK && s.mode () != Transceiver::UNK && s.mode () != want;
+  if (s.split ()) text += text.isEmpty () ? "S" : "/S";
+  ui->readFreq->setStyleSheet (ui->readFreq->styleSheet ().left (230) + QString ("background: %1;\n color: %2;\n}")
+                               .arg (Radio::convert_dark (wrong ? "#ffff40" : "#00ff00", m_useDarkStyle), Radio::convert_dark ("#000000", m_useDarkStyle)));
+  ui->readFreq->setText (text);
 }

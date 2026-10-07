@@ -291,6 +291,7 @@ public:
   // check if a real rig is configured
   bool is_dummy_rig () const;
   bool is_tci () const;
+  DataMode data_mode () const;   // JTDX-VU: Settings > Radio "Mode" (for the rig mode indicator)
   // Frequency resolution of the rig
   //
   //  0 - 1Hz

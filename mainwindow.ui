@@ -383,18 +383,18 @@
                     </property>
                     <property name="minimumSize">
                      <size>
-                      <width>22</width>
+                      <width>48</width>
                       <height>22</height>
                      </size>
                     </property>
                     <property name="maximumSize">
                      <size>
-                      <width>22</width>
+                      <width>48</width>
                       <height>22</height>
                      </size>
                     </property>
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If orange or red there has been a rig control failure, click to reset and read the dial frequency.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Rig status and the mode the rig reports. Green: rig OK, in the mode set in Settings &amp;gt; Radio. Yellow: rig OK but in a different mode. Orange or red: a rig control failure - click to reset and read the dial frequency. /S: split is on.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
@@ -405,9 +405,9 @@
  border-width:1px;
  border-radius:10px;
  border-color: gray;
- max-width:20px;
+ max-width:46px;
  max-height:20px;
- min-width:20px;
+ min-width:46px;
  min-height:20px;
  background-color: white;
  color: black;

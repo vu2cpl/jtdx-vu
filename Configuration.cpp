@@ -1162,6 +1162,7 @@ bool Configuration::is_dummy_rig () const
   return m_->rig_is_dummy_;
 }
 
+Configuration::DataMode Configuration::data_mode () const {return m_->data_mode_;}
 bool Configuration::is_tci () const
 {
   return m_->is_tci_;
