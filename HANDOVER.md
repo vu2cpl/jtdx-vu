@@ -153,6 +153,11 @@ Last updated: 2026-10-07
   - CI run 37558235427 (macOS) and 37558235504 (Windows), green. All eight
     files downloaded anonymously (200), every checksum OK, arm64 app reports
     0.7.0 and its signature verifies; copies in `~/Desktop/jdxvu/v0.7.0/` (removed 2026-10-07).
+  - Installed on the Mac mini 2026-10-07 ~18:30 from the release zip (sha256 OK, `ditto -x -k`,
+    reports 0.7.0, executable identical to the release). It replaced a local build from 2026-10-06
+    23:01 (about `f77d80d9`, still labelled 0.6.0), now in the Trash as
+    "JTDX-VU 0.6.0-dev (replaced 2026-10-07 by v0.7.0).app". Settings untouched. Ad-hoc signed, not
+    notarised (spctl "rejected"), same as every earlier install.
   - Pi `.deb` on meridianpi5 (prefix /usr/local, rsync of `git ls-files`,
     `nice make -j3`, `cpack -G DEB`): Version 0.7.0, Conflicts: jtdx,
     `apt-get install -s` clean, uploaded by hand with its `.sha256`.
