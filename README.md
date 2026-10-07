@@ -184,12 +184,12 @@ or Pi 5 is recommended.
   UDP server (Settings > Reporting) used to pop up a "Network Error" box on
   every send; now the status bar says "UDP host:port: ... - check Settings >
   Reporting", and a failed name lookup is retried every 30 s.
-- **70cm and 23cm band buttons** (next release, asked for by Frank PH2M
+- **70cm and 23cm band buttons** (since v0.7.0, asked for by Frank PH2M
   for the European UHF/SHF FT8/FT4 activity). Tick them in View > Band &
   Mode Buttons... as for 4m and 2m. A 23cm FT8 working frequency
   (1296.174 MHz, as in WSJT-X) is in the default frequency list for new
   or reset lists; 70cm already had 432.174.
-- **QO-100** (next release). A **QO-100** band button tunes FT8 on the
+- **QO-100** (since v0.7.0). A **QO-100** band button tunes FT8 on the
   satellite (10489.540 MHz downlink / 2400.040 MHz uplink). QSOs made on the
   transponder log as a satellite QSO, as LoTW wants: FREQ / BAND = uplink
   (13cm), FREQ_RX / BAND_RX = downlink (3cm), PROP_MODE SAT, SAT_NAME
@@ -215,18 +215,17 @@ or Pi 5 is recommended.
   SDR program - switches **Auto CQ** off, and the status bar says so.
   **AnsB4** and **1 QSO** stay as you set them (they were switched off too
   up to v0.5.3); a mode change leaves all of them alone.
-- **No crash while TCI is reconnecting** (next release). A frequency, PTT
+- **No crash while TCI is reconnecting** (since v0.7.0). A frequency, PTT
   or rig restart arriving while the TCI link was still connecting could
   crash JTDX-VU (same fault as the quit crash fixed in v0.4.0, now closed for every
   path).
-- **Rig mode shown** (next release). The round rig-status light left of the
+- **Rig mode shown** (since v0.7.0). The round rig-status light left of the
   frequency is now a box showing the mode the rig reports (DIGU, USB,
   LSB...), in the frequency's font: green when it is the mode set in
   Settings > Radio, yellow when not - a radio left in LSB after a band change
   stands out. Orange while connecting, red ERR on a rig control failure
   (click it to reset, as before). Works in light and dark style.
-- **FlexRadio over VITA-49, no SmartSDR needed** (next release, not yet
-  tried on a radio). Rig *FlexRadio VITA-49 Slice A..H* with the radio's
+- **FlexRadio over VITA-49, no SmartSDR needed** (since v0.7.0). Rig *FlexRadio VITA-49 Slice A..H* with the radio's
   address (port 4992) in the CAT port field talks SmartSDR straight to a
   FLEX-6000/8000: it takes or creates a slice, tunes it, sets DIGU and keys
   it, and with *Use TCI / VITA-49 Audio* ticked the receive audio comes in
@@ -348,7 +347,7 @@ or Pi 5 is recommended.
   to both over TCI, 2026-10-07): JTDX-VU and MSHV decode FT2 to the same
   floor, everything at -12 dB, about half at -15, nothing at -17, with no
   false decodes. MSHV prints FT2 reports 2-3 dB lower than JTDX-VU for the
-  same signal, so compare counts, not numbers. Since the next release AP7
+  same signal, so compare counts, not numbers. Since v0.7.0 AP7
   keeps a call pair across short quiet spells and accepts decodes by MSHV's
   own rule; at -15 dB that roughly doubled the decodes (25 -> 47 of 120,
   MSHV 61), with no false AP7 decodes.

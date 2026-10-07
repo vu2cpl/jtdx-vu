@@ -8,7 +8,7 @@ Last updated: 2026-10-07
   secret scan, see below). Default branch `jtdx-vu`. The `upstream`
   remote is `jtdx-project/jtdx`; upstream has been dormant since
   2022-03 at tag 159.
-- **Version:** JTDX-VU **0.6.0** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.0** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -25,7 +25,11 @@ Last updated: 2026-10-07
   AutoSeq, the right-click queue, the redesigned Notifications page with a
   New only tick and Background highlight, TX/RX sliders (TX follows the
   TCI drive), Auto CQ / 1 QSO exclusive, per-filter wanted hiding, keeps
-  AnsB4 / 1 QSO on band change, and fixes the Fake It split runaway over TCI.
+  AnsB4 / 1 QSO on band change, and fixes the Fake It split runaway over TCI;
+  v0.7.0 adds the FlexRadio VITA-49 rig type and panel, QO-100, profiles, the
+  rig mode beside the frequency, FT2 decoding level with MSHV (demapper, AP7
+  and its fixes), 70cm / 23cm buttons, and fixes the TCI reconnect and JTTY
+  false-decode crashes.
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -126,16 +130,12 @@ Last updated: 2026-10-07
     install -s` clean, 8 s headless start OK, uploaded by hand.
   - Website updated the same evening (card + page, downloads table on
     v0.4.0), pushed after all assets answered.
-- **Unreleased on `jtdx-vu` after v0.6.0** (each has its own "What changed"
-  entry, all marked "for the next release"): QO-100 support and the SDR-Control
-  "QO-100 rig IF" / "Reported high by"; profiles (Profile menu = `-r`
-  instances); 70cm and 23cm band buttons (promised to Frank PH2M); FT2 AP7 port
-  plus the 2026-10-07 history / quality-gate fixes; the TCI reconnect-loop crash
-  fix; the JTTY `unpack28` crash fix (checked on the Mac); the FlexRadio VITA-49
-  rig type (fake radio only, **not yet on the FLEX-6600**); the FT2 test
-  harnesses (`tools/ft2_autotest.sh`, `lib/ft2/tools/bench/`). Version is still
-  0.6.0 in `Versions.cmake`; a release needs the bump, notes and the usual
-  four builds.
+- **Release v0.7.0: IN PROGRESS 2026-10-07** (Manoj: "looks good for a
+  release", then "Publish v0.7.0 now" with FlexRadio transmit marked as
+  tested on a simulated radio only). Everything listed as "for the next
+  release" in "What changed" since v0.6.0 is in it. Notes drafted from the
+  v0.6.0 layout. Steps: tag `v0.7.0` -> CI (macOS arm64 / Intel, Windows),
+  Pi `.deb` on meridianpi5, checksums, website, reply to Frank PH2M.
 - **Installed app:** `/Applications/JTDX-VU.app` is a **local build bundled
   2026-10-06 23:01** that reports 0.6.0 (not the release zip, and older than
   the 2026-10-07 work). Local builds run on macOS 26+ only. Settings are in
