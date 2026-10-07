@@ -188,12 +188,18 @@ subroutine get_ft2_bitmetrics(cd,bitmetrics,badsync)
       w=real(k-35)/real(67-35); w=max(0.,min(1.,w))
       h_est(k)=(1.-w)*(h_sync(7)+h_sync(8))/2.+w*(h_sync(9)+h_sync(10))/2.
    enddo
-   h_est(66)=(h_sync(9)+h_sync(10))/2.; h_est(67)=(h_sync(10)+h_sync(11))/2.; h_est(68)=(h_sync(11)+h_sync(12))/2.; h_est(69)=h_sync(12)
+   h_est(66)=(h_sync(9)+h_sync(10))/2.
+   h_est(67)=(h_sync(10)+h_sync(11))/2.
+   h_est(68)=(h_sync(11)+h_sync(12))/2.
+   h_est(69)=h_sync(12)
    do k=70,98
       w=real(k-68)/real(100-68); w=max(0.,min(1.,w))
       h_est(k)=(1.-w)*(h_sync(11)+h_sync(12))/2.+w*(h_sync(13)+h_sync(14))/2.
    enddo
-   h_est(99)=(h_sync(13)+h_sync(14))/2.; h_est(100)=(h_sync(14)+h_sync(15))/2.; h_est(101)=(h_sync(15)+h_sync(16))/2.; h_est(102)=h_sync(16)
+   h_est(99)=(h_sync(13)+h_sync(14))/2.
+   h_est(100)=(h_sync(14)+h_sync(15))/2.
+   h_est(101)=(h_sync(15)+h_sync(16))/2.
+   h_est(102)=h_sync(16)
 ! Step 3: MMSE equalise y_eq = conj(H) y / (|H|^2 + Nvar), and per-symbol SNR
    snr_min=1.d30; snr_max=-1.d30; snr_mean=0.d0
    do k=0,NN-1
