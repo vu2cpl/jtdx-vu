@@ -155,8 +155,8 @@ Last updated: 2026-10-07
     rig mode at a glance (v0.7.0)", table / release link / apt command on
     v0.7.0, "Tested so far" and card updated; pushed (`e477301`) after all
     eight URLs answered 200.
-  - Reply to Frank PH2M drafted in `~/Downloads/jtdx-vu-v0.7.0-reply-to-PH2M.txt`,
-    NOT sent (Manoj's).
+  - Reply to Frank PH2M (`~/Downloads/jtdx-vu-v0.7.0-reply-to-PH2M.txt`)
+    sent by Manoj 2026-10-07.
 - **Installed app:** `/Applications/JTDX-VU.app` is a **local build bundled
   2026-10-06 23:01** that reports 0.6.0 (not the release zip, and older than
   the 2026-10-07 work). Local builds run on macOS 26+ only. Settings are in
@@ -2474,8 +2474,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       there is fixed but not yet re-tried on the radio). Check: `client gui` with SmartSDR
       also connected (per-client slice letters), the RF level from full-scale
       DAX audio, that `xmit 0` drops the carrier at once, and a QSO.
-- [ ] **Tell Frank PH2M v0.7.0 is out** (draft in
-      `~/Downloads/jtdx-vu-v0.7.0-reply-to-PH2M.txt`).
+- [x] **Tell Frank PH2M v0.7.0 is out** — emailed by Manoj 2026-10-07
+      (text in `~/Downloads/jtdx-vu-v0.7.0-reply-to-PH2M.txt`). Watch for his
+      report on the 70cm/23cm buttons.
 
 - [ ] **FT2 weak-signal gap vs MSHV** (2026-10-05 screen recording from
       LZ2HV, KN23, 14.084 FT2, JTDX-VU 0.6.0 beside MSHV 2.76.7, 15
