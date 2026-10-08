@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-07
+Last updated: 2026-10-08
 
 ## Current state
 
@@ -242,6 +242,24 @@ Last updated: 2026-10-07
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-08 — About box credits JTTY and FT2; Decodium team credit request (for the next release)
+
+Martino Merola IU8LMC wrote on behalf of the "Decodium / DecoSystem Team"
+(2026-10-08, Gmail, subject "Omission of FT2 Developer Credits") asking
+that the team be credited as FT2's developers. Until now the README, the
+v0.7.0 release notes, the FT2 source headers and vu2cpl.com named only
+"Martino IU8LMC (ARI Caserta)", and the in-program About box credited
+neither FT2 nor JTTY.
+
+- `about.cpp`: new "JTDX-VU additions" block. JTTY: K1JT, K9AN, G4KLA and
+  the WSJT-X group (WSJT-X 3.2). FT2: created by Martino Merola IU8LMC
+  (ARI Caserta), reference implementation in MSHV by LZ2HV. Band/mode
+  buttons, DXCC colours and QO-100 logging follow MSHV. Builds clean (`make jtdx`).
+- Manoj replied the same day: credit was given to Martino personally, we
+  didn't know of the team, and asked for the members' names/callsigns and
+  a Decodium project link to add to README, About box, release notes and
+  vu2cpl.com.
 
 ### 2026-10-07 — Rig mode shown beside the frequency (for the next release)
 
@@ -2487,6 +2505,10 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
+- [ ] **FT2 credit for the Decodium / DecoSystem team** (2026-10-08):
+  waiting for IU8LMC's list of team members and the project link. Then add
+  them to `about.cpp`, README's FT2 section, the next release notes'
+  credits line and the vu2cpl.com JTDX-VU card.
 - [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07: connect,
       receive and DAX streams work on the radio; the band-change failure found
       there is fixed but not yet re-tried on the radio). Check: `client gui` with SmartSDR
