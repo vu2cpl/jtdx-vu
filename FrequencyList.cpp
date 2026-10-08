@@ -151,12 +151,14 @@ namespace
       {222065000, Modes::JT65, IARURegions::R2,true},
 	  
       {432065000, Modes::JT65, IARURegions::ALL,true},
+      {432170000, Modes::FT4, IARURegions::ALL,true},    // JTDX-VU: as PH2M uses it
       {432174000, Modes::FT8, IARURegions::ALL,true},
       {432300000, Modes::WSPR, IARURegions::ALL,true},
       
       {902065000, Modes::JT65, IARURegions::R2,true},
       
       {1296065000, Modes::JT65, IARURegions::ALL,true},
+      {1296170000, Modes::FT4, IARURegions::ALL,true},   // JTDX-VU: as PH2M uses it
       {1296174000, Modes::FT8, IARURegions::ALL,true},   // JTDX-VU: as WSJT-X
       {1296500000, Modes::WSPR, IARURegions::ALL,true},
       
@@ -375,6 +377,25 @@ bool FrequencyList_v2::add_defaults_for_mode (Mode mode)
   for (auto const& item : default_frequency_list)
     {
       if (item.mode_ == mode) items << item;
+    }
+  if (items.isEmpty ()) return false;
+  m_->add (items);
+  return true;
+}
+
+bool FrequencyList_v2::add_default_frequencies (QList<Frequency> const& frequencies)
+{
+  FrequencyItems items;
+  for (auto const& item : default_frequency_list)
+    {
+      if (!frequencies.contains (item.frequency_)) continue;
+      bool present = false;
+      for (auto const& have : m_->frequency_list_)
+        {
+          if (have.frequency_ == item.frequency_ && have.mode_ == item.mode_
+              && have.region_ == item.region_) present = true;
+        }
+      if (!present) items << item;
     }
   if (items.isEmpty ()) return false;
   m_->add (items);

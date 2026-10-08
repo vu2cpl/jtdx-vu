@@ -13,7 +13,7 @@ Last updated: 2026-10-08
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.0** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.1** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -34,7 +34,9 @@ Last updated: 2026-10-08
   v0.7.0 adds the FlexRadio VITA-49 rig type and panel, QO-100, profiles, the
   rig mode beside the frequency, FT2 decoding level with MSHV (demapper, AP7
   and its fixes), 70cm / 23cm buttons, and fixes the TCI reconnect and JTTY
-  false-decode crashes.
+  false-decode crashes; v0.7.1 (2026-10-08) only corrects the About box
+  credits (FT2: IU8LMC + 9H1SR / Decodium; JTTY). Unreleased since: FT4 on
+  70cm / 23cm, the 8m button, one-time seeding of new default rows.
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -135,6 +137,8 @@ Last updated: 2026-10-08
     install -s` clean, 8 s headless start OK, uploaded by hand.
   - Website updated the same evening (card + page, downloads table on
     v0.4.0), pushed after all assets answered.
+- **Release v0.7.1: COMPLETE 2026-10-08** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.1,
+  tag on `079026e7`; About box credits only. Details under What changed.
 - **Release v0.7.0: COMPLETE 2026-10-07** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.0,
   tag `v0.7.0` on **`29d8cab0`**: the FlexRadio VITA-49 rig type and panel,
   QO-100, profiles, the rig mode beside the frequency, FT2 level with MSHV
@@ -242,6 +246,50 @@ Last updated: 2026-10-08
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-08 — FT4 on 70cm / 23cm, 8m button, one-time seeding of new default rows (for the next release, v0.7.2)
+
+Frank PH2M (2026-10-08 mail, with IC-7300 / IC-9700 screenshots of the band
+buttons) gave the FT4 spots he uses on UHF/SHF and asked for an 8m button.
+His "missing worked-before stations" were the Hide-worked button.
+
+- `FrequencyList.cpp`: FT4 432.170 and 1296.170 MHz in the default list.
+- `bandmodeswitcher.cpp`: "8m" in the band-button list between 10m and 6m,
+  off by default (Bands.cpp already had 8m, and the default list FT8
+  40.680 MHz for Region 1).
+- New lists get these, but a saved list never sees later defaults and the
+  band button then falls back to the band's FT8 row. So
+  `FrequencyList_v2::add_default_frequencies` /
+  `Configuration::seed_default_frequencies (QList<Frequency>)` add the
+  shipped rows on given frequencies that the list lacks, and MainWindow
+  calls it once at start for {432.170, 1296.170, 40.680} MHz, guarded by
+  `JTDXVU/FrequencySeed` = 1 (a row deleted later stays deleted). For the
+  next such batch, bump the seed number and add the frequencies.
+- Tested: a `-r seedtest` copy of the FLEX VITA49 profile (rig set to None)
+  whose list had none of the three rows; after one start the decoded
+  `FrequenciesForModes` held each once and `FrequencySeed=1`; a second start
+  added nothing. Real JTDX-VU.ini and FLEX VITA49 ini byte-identical
+  afterwards; test profile files deleted.
+- Draft reply to Frank: `~/projects/JTDX-records/jtdx-vu-v0.7.2-reply-to-PH2M.txt`
+  (not sent).
+
+### 2026-10-08 — v0.7.1 released: About box credits (FT2 corrected, JTTY)
+
+- https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.1, tag on `079026e7`
+  (version bump only on top of the About box / credit commits). No other
+  program change from v0.7.0.
+- CI macOS 37716346363 (29 min) and Windows 37716346348 (14 min) green; Pi
+  .deb on meridianpi5 (`nice make -j3`, `cpack -G DEB`): Version 0.7.1,
+  Conflicts: jtdx, `apt-get install -s` clean, uploaded by hand. All eight
+  files downloaded; checksums OK; each binary reports 0.7.1 and carries the
+  new credit; arm64 signature verifies. Copies in `~/Desktop/jdxvu/v0.7.1/`.
+- Installed on the Mac mini from the release zip (executable identical to
+  the release), replacing the trial build; relaunched on the FLEX VITA49
+  profile.
+- Manoj replied to Martino IU8LMC with links to the GitHub credits and
+  About box screenshots.
+- mshv-macos-port release notes (public mac11 + mac1, private mac11-priv)
+  got the same FT2 credit sentence — see the MSHV-Mac HANDOVER.
 
 ### 2026-10-08 — FT2 credit corrected; About box credits JTTY and FT2 (for the next release)
 

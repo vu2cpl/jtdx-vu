@@ -125,6 +125,10 @@ public:
   // none for it - a saved list predating a new mode (JTTY) never sees them
   bool add_defaults_for_mode (Mode);
 
+  // JTDX-VU: append the shipped default rows on these frequencies that the
+  // list lacks - for defaults added after users' lists were saved
+  bool add_default_frequencies (QList<Frequency> const&);
+
   // Model API
   QModelIndex add (Item);
   bool remove (Item);

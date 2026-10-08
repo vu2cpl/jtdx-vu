@@ -188,7 +188,11 @@ or Pi 5 is recommended.
   for the European UHF/SHF FT8/FT4 activity). Tick them in View > Band &
   Mode Buttons... as for 4m and 2m. A 23cm FT8 working frequency
   (1296.174 MHz, as in WSJT-X) is in the default frequency list for new
-  or reset lists; 70cm already had 432.174.
+  or reset lists; 70cm already had 432.174. Since the next release after
+  v0.7.1, FT4 has its own spots there too (432.170 and 1296.170 MHz, as
+  PH2M uses them), and there is an **8m** button (FT8 on 40.680 MHz,
+  Region 1) for stations with an 8m permit. These rows are added once to
+  an existing frequency list on first start; no reset needed.
 - **QO-100** (since v0.7.0). A **QO-100** band button tunes FT8 on the
   satellite (10489.540 MHz downlink / 2400.040 MHz uplink). QSOs made on the
   transponder log as a satellite QSO, as LoTW wants: FREQ / BAND = uplink

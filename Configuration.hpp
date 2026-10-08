@@ -249,6 +249,7 @@ public:
   IARURegions::Region region () const;
   FrequencyList_v2 * frequencies ();
   bool seed_default_frequencies (Modes::Mode);   // JTDX-VU: see FrequencyList_v2::add_defaults_for_mode
+  bool seed_default_frequencies (QList<Radio::Frequency> const&);   // JTDX-VU: see FrequencyList_v2::add_default_frequencies
   FrequencyList_v2 const * frequencies () const;
   StationList * stations ();
   StationList const * stations () const;

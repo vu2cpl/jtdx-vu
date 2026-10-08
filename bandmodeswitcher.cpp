@@ -25,7 +25,7 @@ QStringList const& BandModeSwitcher::all_modes ()
 QStringList const& BandModeSwitcher::all_bands ()
 {
   static QStringList const bands {"160m", "80m", "60m", "40m", "30m", "20m", "17m", "15m",
-                                  "12m", "10m", "6m", "4m", "2m", "70cm", "23cm",   // JTDX-VU: 70cm / 23cm asked for by PH2M
+                                  "12m", "10m", "8m", "6m", "4m", "2m", "70cm", "23cm",   // JTDX-VU: 8m, 70cm / 23cm asked for by PH2M
                                   "QO-100"};   // JTDX-VU: QO-100 = the satellite (3cm downlink)
   return bands;
 }

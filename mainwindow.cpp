@@ -1239,6 +1239,13 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     on_cbShowWanted_toggled (m_wantedchkd);   // apply the saved choice
   }
   connect (m_switcher, &BandModeSwitcher::band_clicked, this, &MainWindow::switch_to_band);
+  // JTDX-VU: defaults added after users' frequency lists were saved, put in
+  // once (a row deleted later stays deleted): FT4 on 70cm / 23cm, FT8 on 8m
+  if (m_settings->value ("JTDXVU/FrequencySeed", 0).toInt () < 1)
+    {
+      m_config.seed_default_frequencies (QList<Radio::Frequency> {432170000, 1296170000, 40680000});
+      m_settings->setValue ("JTDXVU/FrequencySeed", 1);
+    }
   {
     // JTDX-VU Non-stop toggle: AutoSeq menu + the "Auto CQ" button
     m_nonstop = m_settings->value ("JTDXVU/NonStop", false).toBool ();

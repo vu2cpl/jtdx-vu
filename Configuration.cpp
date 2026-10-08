@@ -1140,6 +1140,12 @@ bool Configuration::seed_default_frequencies (Modes::Mode mode)
   m_->next_frequencies_.add_defaults_for_mode (mode);
   return added;
 }
+bool Configuration::seed_default_frequencies (QList<Radio::Frequency> const& frequencies)
+{
+  bool const added = m_->frequencies_.add_default_frequencies (frequencies);
+  m_->next_frequencies_.add_default_frequencies (frequencies);
+  return added;
+}
 QStringListModel * Configuration::macros () {return &m_->macros_;}
 QStringListModel const * Configuration::macros () const {return &m_->macros_;}
 QDir Configuration::save_directory () const {return m_->save_directory_;}
