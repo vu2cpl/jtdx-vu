@@ -1,5 +1,5 @@
 # JTDX-VU release version (what the operator sees: title, About, Info.plist, PSK Reporter)
-set (JTDXVU_VERSION 0.7.0)
+set (JTDXVU_VERSION 0.7.1)
 
 # Version number components (upstream JTDX base, left as released)
 set (WSJTX_VERSION_MAJOR 2)
