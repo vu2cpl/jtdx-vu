@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-08 (evening)
+Last updated: 2026-10-08 (late evening)
 
 ## Current state
 
@@ -41,7 +41,9 @@ Last updated: 2026-10-08 (evening)
   Auto CQ button keeps its width (count on a second line) and its countdown
   runs in the first half of each minute too (`a00f05c6`, `e64be38d`;
   installed on the Mac mini); `%LOG` in a JTTY macro logs the QSO without
-  the dialog (`6fcbe714`, installed 2026-10-08 22:41).
+  the dialog (`6fcbe714`, installed 2026-10-08 22:41); the GitHub release
+  update check, Help > Check for Updates... plus a daily automatic check
+  (`e9796edb`, built and tested, NOT installed).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -258,6 +260,68 @@ Last updated: 2026-10-08 (evening)
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-08 — Update check against GitHub releases (for the next release)
+
+Manoj: every app of his gets an in-app check against its GitHub releases in
+its next release - no Sparkle, no extra servers, the same behaviour
+everywhere (spec approved by him; done from the MSHV-Mac session).
+`e9796edb`. No release, version bump, tag or install was made.
+
+- New `updatecheck.{h,cpp}` (`UpdateCheck`, added to `wsjtx_CXXSRCS`):
+  one anonymous `GET https://api.github.com/repos/vu2cpl/jtdx-vu/releases/latest`
+  (`Accept: application/vnd.github+json`, `User-Agent: JTDX-VU/<JTDXVU_VERSION>`,
+  10 s timeout by a QTimer + `abort ()`, not Qt 5.15's transfer timeout).
+  Reads `tag_name`, `name`, `html_url`, `body`. Its own
+  QNetworkAccessManager, as ClubLog: EQSL and WSPRnet `readAll ()` every
+  reply on MainWindow's shared one.
+- `UpdateCheck::is_newer ()` is the pure comparison: leading v/V dropped,
+  split on non-digits, integer tuples, missing = 0.
+- **Automatic:** MainWindow fires it 10 s after start if
+  `Configuration::check_for_updates ()` (Settings > General > Behavior
+  "Check for updates automatically", ini `[Configuration] CheckForUpdates`,
+  default true). At most once per 24 h: `JTDXVU/UpdateLastCheck` (UTC ISO
+  string) is written when the check is *tried*, so an offline start waits a
+  day; a time in the future does not hold it off. Silent on any failure, and
+  for the tag in `JTDXVU/UpdateSkipVersion`. Both keys are per profile (each
+  profile is its own ini), so each profile checks once a day.
+- **Manual:** Help > Check for Updates... (before About, `NoRole` so it stays
+  in Help on macOS) always reports: the dialog, "You're up to date (JTDX-VU
+  x)", or "Couldn't check for updates: <reason>" (HTTP errors show GitHub's
+  `message`, first sentence). A manual request during an automatic check
+  makes that check report.
+- **Dialog:** "JTDX-VU <new> is available — you have <current>.", the
+  release name only if it says more than "JTDX-VU v<x>" (ours don't), the
+  notes as plain text (Markdown as written) in a scrollable read-only box,
+  Skip This Version | Remind Me Later | Download. Non-modal; no default
+  button (a QDialogButtonBox made Download the default when shown, so Return
+  would have opened the browser - plain buttons instead); Esc = Remind Me
+  Later; the automatic one opens with `WA_ShowWithoutActivating` so JTTY
+  typing and Halt Tx keep the keyboard. Download opens `html_url` only if
+  it is https://github.com, else the releases/latest page.
+- **Test hook:** `JTDXVU_UPDATE_TEST_VERSION=0.0.1` (inert unless set)
+  replaces the version compared and shown; the User-Agent keeps the real one.
+- README: a "Tells you when a new release is out" item.
+- **Tests** (no app launch; a scratch Qt program built from the real
+  `updatecheck.cpp` + `revision_utils.cpp`, `QT_QPA_PLATFORM=offscreen`, the
+  browser open intercepted by `QDesktopServices::setUrlHandler`):
+  19 comparison cases pass (0.7.10 > 0.7.2, v0.7.2 = 0.7.2, 1.0 = 1.0.0, ...).
+  Live: request seen as above, HTTP 200, **tag_name `v0.7.2`**, name
+  "JTDX-VU v0.7.2", 6977-char body; as 0.7.2 manual says up to date and
+  automatic says nothing, records UpdateLastCheck, a second automatic sends
+  nothing. As 0.0.1: dialog with the right heading, non-modal; Download
+  opened `https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.2`; Later and
+  Esc store nothing; Skip stored `v0.7.2`, after which automatic was quiet
+  and manual still showed it. Through a proxy on a closed / a mute local
+  port (nothing left the Mac): manual "Connection refused" and "no answer
+  from GitHub within 10 s" (10.2 s), automatic silent. Rendered offscreen
+  to a PNG to check the layout. g++ 15.2 / Qt 5.15.18 on ubersdr:
+  `-fsyntax-only -Wall -Wextra -pedantic` clean, also with deprecated Qt
+  API disabled (temp dir removed). App build 0 errors.
+- **Not exercised:** the HTTP 4xx branch (needs GitHub to refuse, e.g. the
+  60/h anonymous rate limit) and the bad-JSON branch; the menu item, the
+  Settings checkbox and the 10 s timer were checked in the build (strings,
+  `ui_Configuration.h`), not in a running app.
 
 ### 2026-10-08 — JTTY: `%LOG` in a macro logs the QSO without the dialog (for the next release)
 
@@ -2738,6 +2802,12 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
+- [ ] **Update check in the real app** (`e9796edb`, unreleased): tested only
+      in a scratch program built from the same class. On the next install
+      (or the next release's checks) see Help > Check for Updates... say
+      "You're up to date", the Settings > General tick, and - with a newer
+      release out - the dialog ~10 s after start. Release notes for the next
+      release: mention the check and the one request to api.github.com.
 - [x] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08)
   — lifted the same morning ("cut a new release"); **RELEASED 2026-10-08**
   with the corrected FT2 credit in the notes.
