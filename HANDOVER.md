@@ -260,6 +260,11 @@ chain scaled, with MSHV (LZ2HV) as the reference.
 - `about.cpp`: new "JTDX-VU additions" block crediting JTTY (K1JT, K9AN,
   G4KLA, WSJT-X group), FT2 (wording above) and the MSHV-derived UI
   features. The About box previously credited neither mode. Builds clean.
+- About box tidy (same day): dialog titled "About JTDX-VU", the additions
+  under a bold "JTDX-VU additions" heading, licence line reads "JTDX and
+  JTDX-VU are licensed under the terms of version 3 of the GNU General
+  Public License (GPL)". Trial build with it: `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip`.
+  The installed /Applications copy is still v0.7.0 (old About box).
 - `README.md` FT2 section: same wording, "as introduced in MSHV" removed.
 - Same wording on vu2cpl.com (card + JTDX-VU project page) and in the
   mshv-macos-port README (`~/projects/mshv-public-release`).

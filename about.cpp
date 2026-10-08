@@ -35,7 +35,7 @@ CAboutDlg::CAboutDlg(QWidget *parent) :
                          "NL9222, OE1MWW, ON3CQ, PA7TWO, PP5FMM, R3BB, RK3AOL, RX3ASP, RA4UDC, RW4O, R0JF,<br>"
                          "SM0LTV, SP2L, SV1IYF, UA3ALE, US-E-12, VE3NEA, VK3AMA, VK6KXW, VK7YUM, VR2UPU,<br>"
                          "W9MDB, YL3GBC family and LY3BG family: Vytas and Rimas Kudelis. <br><br>"
-                         "JTDX-VU additions:<br>"
+                         "<b>JTDX-VU additions</b><br>"
                          "JTTY is by Joe Taylor, K1JT, Steve Franke, K9AN, Rob Sherwood, G4KLA,<br>"
                          "and the WSJT-X development group (from WSJT-X 3.2).<br>"
                          "FT2 was created by Martino Merola, IU8LMC (ARI Caserta), with<br>"
@@ -44,9 +44,9 @@ CAboutDlg::CAboutDlg(QWidget *parent) :
                          "JTDX-VU's FT2 is JTDX's FT4 code with MSHV by Hrisimir Hristov, LZ2HV,<br>"
                          "as the reference.<br>"
                          "Band/mode buttons, DXCC colours and QO-100 logging follow MSHV by LZ2HV.<br>"
-                         "<br><br>"
-                         "JTDX is licensed under the terms of Version3<br>"
-                         "of the GNU General Public License(GPL)<br>"
+                         "<br>"
+                         "JTDX and JTDX-VU are licensed under the terms of version 3<br>"
+                         "of the GNU General Public License (GPL)<br>"
                          "<a href=\"https://www.gnu.org/licenses/gpl-3.0.txt\">"
                          "https://www.gnu.org/licenses/gpl-3.0.txt</a>");
 }

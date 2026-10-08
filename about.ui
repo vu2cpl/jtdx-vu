@@ -20,7 +20,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>About JTDX</string>
+   <string>About JTDX-VU</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
