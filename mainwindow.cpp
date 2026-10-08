@@ -6443,7 +6443,10 @@ void MainWindow::on_dxCallEntry_textChanged(const QString &t) //dxCall changed
       else m_hisCall.clear();
   } else m_hisCall=t.toUpper().trimmed();
   // JTDX-VU: a new or typed DX call is not from our CQ until shown otherwise
-  if (m_hisCall != prevCall) m_cqRunQso = false;
+  if (m_hisCall != prevCall) {
+      m_cqRunQso = false;
+      m_jttyLoggedCall.clear ();             // JTDX-VU: a new DX call is a new JTTY QSO for %LOG
+  }
   // JTDX-VU: JTTY has no auto-sequencer to stamp the QSO start; take it from
   // when the DX call was picked or typed, or every QSO logs a stale start
   if (m_mode == "JTTY" && !m_hisCall.isEmpty()) {
@@ -6539,6 +6542,8 @@ void MainWindow::on_genStdMsgsPushButton_clicked() { genStdMsgs(m_rpt); }
 
 void MainWindow::on_logQSOButton_clicked()
 {
+  bool const jttyAutoLog = m_jttyAutoLog;   // JTDX-VU: set by a %LOG macro for this one call
+  m_jttyAutoLog = false;
   if (m_hisCall.isEmpty()) return;
   auto currenttime = m_jtdxtime->currentDateTimeUtc2();
   auto dateTimeQSOOff = currenttime;
@@ -6563,7 +6568,7 @@ void MainWindow::on_logQSOButton_clicked()
       auto const sent = m_jttyRstSent && !m_jttyRstSent->text ().trimmed ().isEmpty () ? m_jttyRstSent->text ().trimmed ().toUpper () : QString {"599"};
       auto const rcvd = m_jttyRstRcvd && !m_jttyRstRcvd->text ().trimmed ().isEmpty () ? m_jttyRstRcvd->text ().trimmed ().toUpper () : QString {"599"};
       m_logDlg->initLogQSO (m_hisCall, m_hisGrid, m_modeTx, sent, rcvd, distance, m_name,
-                        m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),autolog);
+                        m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),autolog || jttyAutoLog);
       m_logqso73=false;
       return;
   }
@@ -6596,7 +6601,10 @@ void MainWindow::acceptQSO2(QDateTime const& QSO_date_off, QString const& call, 
   Frequency const log_freq = Radio::qo100_uplink (dial_freq);
   bool const qo100 = Radio::is_qo100 (dial_freq);
   m_logBook.addAsWorked (call, m_config.bands ()->find (log_freq), mode, date, grid, name);
-  if (m_mode == "JTTY") jttyRestyleHeard ();   // JTDX-VU: the call is worked now
+  if (m_mode == "JTTY") {                      // JTDX-VU: the call is worked now
+      m_jttyLoggedCall = call.trimmed ().toUpper ();
+      jttyRestyleHeard ();
+  }
   ui->decodedTextBrowser->refilter (m_logBook);  // JTDX-VU: a just-worked station drops out of "New ..." views
   QString operator_call = m_config.my_callsign(); QString my_call = m_config.my_callsign(); QString my_grid = m_config.my_grid();
   // JTDX-VU: the WSJT-X "QSO Logged" message has no satellite fields, and

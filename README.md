@@ -315,6 +315,12 @@ or Pi 5 is recommended.
     the set's exchange, %RST the RST sent, %NAME his name, and station
     details %OP (name), %QTH, %TX (radio), %ANT (antenna). Set Serial
     Number to "none" for a non-contest QSO and %N is left out of %E.
+  - **Auto logging from a macro:** put %LOG in a macro (e.g. "TU %H 73
+    %LOG") and sending it also logs the QSO, straight in without the Log
+    QSO dialog; %LOG itself is not sent, and a macro of just %LOG only
+    logs. A QSO is logged once: pressing it again, or the "TU ..." message
+    that normally opens the dialog, leaves an already-logged QSO alone
+    until the DX call changes. The Log QSO button still opens the dialog.
   - **Auto CQ** (right-hand button column) repeats a macro with a gap
     after each call, 10 s by default, and stops after the **time limit**
     (5 minutes by default, since v0.5.1), which the button counts down

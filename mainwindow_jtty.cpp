@@ -499,6 +499,18 @@ void MainWindow::jttyMacro (int key)
   auto exchange = JttySettings::exchange (m_settings);
   if (m_jttyPanel->serialNumber () <= 0) exchange = exchange.remove (QRegularExpression {"%N(?!AME)"}).simplified ();
   tpl.replace ("%E", exchange);
+  // %LOG: the macro also logs the QSO, straight in without the Log QSO dialog
+  // (as Settings' auto log does), once per QSO; the variable is not sent
+  bool const logIt = tpl.contains ("%LOG");
+  if (logIt)
+    {
+      if (his.isEmpty ())
+        {
+          refuse (tr ("JTTY: enter the DX call first (click a call in the decodes or Calls heard)"), ui->dxCallEntry);
+          return;
+        }
+      tpl.replace (QRegularExpression {"\\s*%LOG\\s*"}, " ");
+    }
   // the QSO fields, before %N (and %H / %M) could eat into them
   if (tpl.contains ("%NAME"))
     {
@@ -540,7 +552,22 @@ void MainWindow::jttyMacro (int key)
       return;
     }
   tpl.replace ("%M", my).replace ("%H", his).replace ("%Q", queued).replace ("%N", serial);
-  jtty_tx (tpl);
+  jtty_tx (tpl);                        // nothing to send for a macro of just %LOG
+  if (logIt)
+    {
+      if (jttyAlreadyLogged ())
+        statusBar ()->showMessage (tr ("JTTY: this QSO is already in the log (%1)").arg (his), 4000);
+      else
+        {
+          m_jttyAutoLog = true;
+          on_logQSOButton_clicked ();
+        }
+    }
+}
+
+bool MainWindow::jttyAlreadyLogged () const
+{
+  return !m_jttyLoggedCall.isEmpty () && m_jttyLoggedCall == ui->dxCallEntry->text ().trimmed ().toUpper ();
 }
 
 void MainWindow::jtty_tx (QString message)
@@ -598,7 +625,9 @@ void MainWindow::jtty_tx (QString message)
   if (shown.startsWith ("TU ") && !ui->dxCallEntry->text ().trimmed ().isEmpty ())
     {
       m_jttyPanel->setSerialNumber (m_jttyPanel->serialNumber () + 1);
-      QTimer::singleShot (0, this, SLOT (on_logQSOButton_clicked ()));
+      QTimer::singleShot (0, this, [this] {
+          if (!jttyAlreadyLogged ()) on_logQSOButton_clicked ();   // not again after %LOG or Log QSO
+        });
     }
   tx_status_label->setText (tr ("Tx: ") + shown.left (30));
   // a Tx line in the Rx Frequency pane, in order with the decodes; negative

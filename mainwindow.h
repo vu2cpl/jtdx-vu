@@ -737,6 +737,8 @@ private:
   JttyHeardList * m_jttyHeard {nullptr}; // in place of the wanted-call filters
   QString m_jttyHeardBand;
   QString m_jttyFieldsCall;             // the DX call the QSO fields belong to
+  QString m_jttyLoggedCall;             // the JTTY QSO already logged (cleared by a new DX call)
+  bool m_jttyAutoLog {false};           // %LOG: the next Log QSO goes in without the dialog
   QStringList m_jttyTxQueue;            // type-ahead: sent as soon as the current message ends
   bool m_jttyDequeuing {false};         // jttySendQueued is sending the queue's head
   QHash<QBoxLayout *, QVector<int>> m_jttyStretchSaved; // the FT modes' stretch of the layouts JTTY changes
@@ -898,6 +900,7 @@ private:
   void renderJttyQsoLines ();
   void jtty_tx (QString message);       // encode + generate wave, then let guiUpdate key up
   void jttyMacro (int key);             // F1..F8: expand %M %H %Q %E, then jtty_tx
+  bool jttyAlreadyLogged () const;      // the DX call's QSO is in the log (%LOG / Log QSO / TU)
   void jttyHalt ();
   void jttyClearTx ();                  // JTTY part of a halt: Auto CQ off, Tx state cleared
   void jttyAutoCqToggled (bool on);

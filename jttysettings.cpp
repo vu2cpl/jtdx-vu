@@ -415,6 +415,7 @@ JttySettingsPage::JttySettingsPage (QWidget * parent)
   setsLayout->addWidget (new QLabel {tr ("%M my call, %H DX call, %Q Call next (or DX call), %N serial, %E exchange,\n"
                                          "%RST the RST you send, %NAME his name (both from the JTTY QSO fields),\n"
                                          "%OP name, %QTH location, %TX radio, %ANT antenna (Station details above).\n"
+                                         "%LOG logs the QSO without the log dialog when the key is sent (not sent itself).\n"
                                          "The set chosen here (or on the JTTY panel) is the one the keys use.\n"
                                          "The panel shows Serial Number only when the set uses %N.")});
 
