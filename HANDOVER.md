@@ -13,7 +13,7 @@ Last updated: 2026-10-08
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.1** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.2** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -35,9 +35,9 @@ Last updated: 2026-10-08
   rig mode beside the frequency, FT2 decoding level with MSHV (demapper, AP7
   and its fixes), 70cm / 23cm buttons, and fixes the TCI reconnect and JTTY
   false-decode crashes; v0.7.1 (2026-10-08) only corrects the About box
-  credits (FT2: IU8LMC + 9H1SR / Decodium; JTTY). Unreleased since: FT4 on
-  70cm / 23cm, the 8m button, one-time seeding of new default rows, the
-  Auto CQ countdown on the button.
+  credits (FT2: IU8LMC + 9H1SR / Decodium; JTTY); v0.7.2 (2026-10-08) adds
+  FT4 on 70cm / 23cm, the 8m button, one-time seeding of new default rows
+  and the Auto CQ countdown on the button.
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -140,6 +140,9 @@ Last updated: 2026-10-08
     v0.4.0), pushed after all assets answered.
 - **Release v0.7.1: COMPLETE 2026-10-08** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.1,
   tag on `079026e7`; About box credits only. Details under What changed.
+- **Release v0.7.2: COMPLETE 2026-10-08** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.2,
+  tag `v0.7.2` on `0edfa30a`. Cut from the MSHV-Mac session (Manoj: "cut a new
+  release. both JTDX and MSHV"); see "v0.7.2 released" under What changed.
 - **Release v0.7.0: COMPLETE 2026-10-07** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.0,
   tag `v0.7.0` on **`29d8cab0`**: the FlexRadio VITA-49 rig type and panel,
   QO-100, profiles, the rig mode beside the frequency, FT2 level with MSHV
@@ -172,9 +175,9 @@ Last updated: 2026-10-08
     eight URLs answered 200.
   - Reply to Frank PH2M (`~/projects/JTDX-records/jtdx-vu-v0.7.0-reply-to-PH2M.txt`)
     sent by Manoj 2026-10-07.
-- **Installed app:** `/Applications/JTDX-VU.app` is a **local build bundled
-  2026-10-06 23:01** that reports 0.6.0 (not the release zip, and older than
-  the 2026-10-07 work). Local builds run on macOS 26+ only. Settings are in
+- **Installed app:** `/Applications/JTDX-VU.app` is the **v0.7.2 release
+  zip** (arm64, installed 2026-10-08 ~11:35, executable identical to the
+  release). Local builds run on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
 - **Release v0.3.0: COMPLETE 2026-09-29** — all four builds attached — JTTY + FT2 + separate
@@ -323,6 +326,45 @@ His "missing worked-before stations" were the Hide-worked button.
 - Reply to Frank SENT 2026-10-08 (Gmail, "Re: Technical / Node-RED discussion"):
   `~/projects/JTDX-records/jtdx-vu-v0.7.2-reply-to-PH2M.txt` - promises both
   in v0.7.2 and that he'll hear when it's out.
+
+### 2026-10-08 — v0.7.2 released: FT4 on 70cm / 23cm, 8m button, Auto CQ countdown
+
+- https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.2, tag on `0edfa30a`
+  ("Version 0.7.2": `Versions.cmake` 0.7.1 → 0.7.2, README "since the next
+  release after v0.7.1" → "since v0.7.2", countdown lines marked since v0.7.2).
+  Cut from the MSHV-Mac session on Manoj's "cut a new release. both JTDX and
+  MSHV", which lifted the morning's hold; a relay of that to this session
+  expired undelivered (different permission modes), so nothing ran twice.
+- Contents since v0.7.1: FT4 on 432.170 / 1296.170 MHz, the 8m button (off by
+  default), one-time seeding of those rows into existing lists
+  (`JTDXVU/FrequencySeed`), the Auto CQ countdown (`3d5b9b5d`). No Fortran
+  changed since v0.7.1, so the 132-column check was not needed.
+- Notes from the v0.7.1 template: what's new, an "AetherSDR users" paragraph
+  (#6006 is fixed in AetherSDR 26.10.1 — PR #6116 is in that tag — replacing
+  the old "known issue"), downloads / install / credits with 0.7.2 names.
+  Release created right after the tag push, so CI attached to it.
+- CI macOS 37731634422 (28 min) and Windows 37731634426 (17 min) green. Pi
+  .deb on meridianpi5 (rsync of `git ls-files` at `0edfa30a`, `cmake ..`,
+  `nice make -j3`, `cpack -G DEB`): Package jtdx-vu, Version 0.7.2, arm64,
+  Conflicts: jtdx, `apt-get install -s` clean, an 8 s offscreen `--test-mode`
+  start OK, sha256 `13276d1caf28b5d8…`, uploaded by hand. The headless run's
+  leftovers on the Pi (`~/.qttest`, `/tmp/JTDX-VU - test*`, shm 196662) were
+  removed; no jtdxjt9 orphan. (`timeout` SIGTERMs the app: check `pgrep -x
+  jtdxjt9` after, and note `pgrep -f` inside `ssh '…'` matches its own shell.)
+- All eight files downloaded anonymously (200), every checksum OK; both macOS
+  apps report 0.7.2 with the right arch, carry `updateCnsCountdown` /
+  `watchdog_counts`, and pass `codesign --verify --deep --strict`; Windows
+  `jtdx.exe` carries 0.7.2.
+- Installed on the Mac mini from the arm64 release zip (`ditto`), replacing
+  v0.7.1 (now in the Trash as "JTDX-VU 0.7.1 (replaced 2026-10-08 by
+  v0.7.2).app"); executable identical to the release; not relaunched (it
+  would open the FLEX VITA49 profile and connect to the radio — Manoj's call).
+- Website: paragraph "FT4 on 70cm and 23cm, an 8m button and an Auto CQ
+  countdown (v0.7.2)", downloads table / release link on v0.7.2, card sentence,
+  a "Tested so far" line for the countdown; pushed (`c522a65`) after all eight
+  URLs answered 200.
+- Frank PH2M: "it's out" note drafted in
+  `~/projects/JTDX-records/jtdx-vu-v0.7.2-released-to-PH2M.txt`, NOT sent.
 
 ### 2026-10-08 — v0.7.1 released: About box credits (FT2 corrected, JTTY)
 
@@ -2615,10 +2657,15 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08).
-  Waiting so far: FT4 on 70cm / 23cm, the 8m button, one-time seeding of new
-  default rows. When it ships, tell Frank PH2M (promised in the 2026-10-08
-  reply) and use the corrected FT2 credit in the notes.
+- [x] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08)
+  — lifted the same morning ("cut a new release"); **RELEASED 2026-10-08**
+  with the corrected FT2 credit in the notes.
+- [ ] **Tell Frank PH2M v0.7.2 is out** — draft in
+  `~/projects/JTDX-records/jtdx-vu-v0.7.2-released-to-PH2M.txt`, for Manoj to
+  send.
+- [ ] **Watch the Auto CQ countdown in FT8 while calling** (CNS on, Enable Tx
+  on): it was never seen running down in m:ss, only in JTTY and on an idle
+  watchdog.
 - [ ] **FT2 credit** (2026-10-08): wording fixed everywhere incl. the v0.7.0
   release notes; reuse it in future release notes. Watch for IU8LMC's
   reply in case the team wants more names.
