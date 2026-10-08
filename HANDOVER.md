@@ -41,7 +41,7 @@ Last updated: 2026-10-08 (evening)
   Auto CQ button keeps its width (count on a second line) and its countdown
   runs in the first half of each minute too (`a00f05c6`, `e64be38d`;
   installed on the Mac mini); `%LOG` in a JTTY macro logs the QSO without
-  the dialog (`6fcbe714`, NOT installed).
+  the dialog (`6fcbe714`, installed 2026-10-08 22:41).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -179,9 +179,13 @@ Last updated: 2026-10-08 (evening)
     eight URLs answered 200.
   - Reply to Frank PH2M (`~/projects/JTDX-records/jtdx-vu-v0.7.0-reply-to-PH2M.txt`)
     sent by Manoj 2026-10-07.
-- **Installed app:** `/Applications/JTDX-VU.app` is the **v0.7.2 release
-  zip** (arm64, installed 2026-10-08 ~11:35, executable identical to the
-  release). Local builds run on macOS 26+ only. Settings are in
+- **Installed app:** `/Applications/JTDX-VU.app` is a **local build of
+  `6fcbe714`** (labelled 0.7.2: the Auto CQ button fixes + the JTTY `%LOG`
+  macro), made with `./macos-bundle.sh`, installed 2026-10-08 22:41 on
+  Manoj's "install both" (signature valid, executable identical to
+  `build/bundle`, previous copy to the Trash; not launched — it would open
+  the FLEX VITA49 profile on the radio). Before it: the v0.7.2 release zip
+  (11:35), then a build of `e64be38d`. Local builds run on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
 - **Release v0.3.0: COMPLETE 2026-09-29** — all four builds attached — JTTY + FT2 + separate
@@ -287,7 +291,8 @@ add a log qso in macro to enable auto logging?", then "add in jtdx vu also".
   log; F7 `%LOG` → "already in the log". Test files to the Trash. **First
   attempt ran on a blank default test profile** (seed written to the wrong
   folder): jtdxjt9 exited with code 2 behind a modal "Subprocess Error",
-  which also blocked every menu click — quit after closing it. Not installed.
+  which also blocked every menu click — quit after closing it. **Installed
+  22:41** (`./macos-bundle.sh`, previous copy to the Trash, not launched).
 
 ### 2026-10-08 — Auto CQ button: keeps its width, and counts down in the first half of the minute too (for the next release)
 
