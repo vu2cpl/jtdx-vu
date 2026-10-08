@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-08 (late evening)
+Last updated: 2026-10-09
 
 ## Current state
 
@@ -43,7 +43,9 @@ Last updated: 2026-10-08 (late evening)
   installed on the Mac mini); `%LOG` in a JTTY macro logs the QSO without
   the dialog (`6fcbe714`, installed 2026-10-08 22:41); the GitHub release
   update check, Help > Check for Updates... plus a daily automatic check
-  (`e9796edb`, built and tested, NOT installed).
+  that saves its time only after a success, looks again every hour while
+  running and is off for "dev" versions (`e9796edb`, `0bd95894`; built and
+  tested, NOT installed).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -261,6 +263,73 @@ Last updated: 2026-10-08 (late evening)
 
 ## What changed
 
+### 2026-10-09 — Update check: time saved only on success, hourly re-check, no automatic check on dev builds
+
+Manoj's decisions on `e9796edb` (given in the MSHV-Mac session).
+`0bd95894`. No release, version bump, tag or install.
+
+- **Only a success is saved.** Success = HTTP 200 and a JSON object with a
+  `tag_name`, newer or not (any other status, 204 included, is a failure).
+  `JTDXVU/UpdateLastCheck` is written only then, with the time the request
+  was *sent* (whole seconds), by automatic and manual checks alike (a
+  manual success also restarts the 24 h - our reading; Manoj only said
+  manual *failures* leave the throttle alone). A failure (offline,
+  timeout, any HTTP error incl. the 403 rate limit, bad JSON, no tag_name)
+  writes nothing, so the next start tries again. A failed *automatic*
+  attempt sets an in-memory back-off (`last_failure_` = its send time): no
+  automatic attempt for 1 h. Manual failures set nothing. Replaces
+  "written when tried" from 10-08.
+- **Hourly re-check.** `UpdateCheck::start_automatic (enabled)` (MainWindow
+  passes `m_config.check_for_updates ()` as a lambda, asked at every look)
+  does the ~10 s look, then starts a repeating 1 h QTimer from that moment,
+  so a check due 24 h (or a retry due 1 h) later is due by the tick that
+  comes then. `Qt::PreciseTimer`: Qt turns a coarse timer over 20 s into a
+  very coarse one, which can fire up to 0.5 s early and would push a due
+  check an hour later.
+- **The decision is pure:** `UpdateCheck::automatic_check_due (enabled,
+  version, busy, window_open, now, last_success, last_failure)` - due only
+  when the setting is on, `version` has no "dev" (any case), no check is
+  under way, none of the checker's dialogs/messages is open (never a
+  second dialog; a "Remind Me Later" dialog left open holds checks off
+  until closed), 24 h since the last success and 1 h since a failed
+  automatic attempt. An invalid time or one in the future (clock set back)
+  does not hold it off.
+- **Dev builds:** `jtdxvu_version ()` containing "dev" makes no automatic
+  request (start or timer); Help > Check for Updates... still checks. The
+  test is on the program's own version, so `JTDXVU_UPDATE_TEST_VERSION`
+  still only replaces the version compared and shown (on a dev build with
+  the override set, still no automatic request).
+- Settings tooltip and README paragraph reworded; README title line and
+  title-bar example said v0.6.0, now 0.7.2.
+- **Tests** (no app launch): a scratch Qt program from the real
+  `updatecheck.cpp` + `revision_utils.cpp`, offscreen, browser open
+  intercepted, built twice (0.7.2 and `0.7.3-dev`); the api.github.com
+  request rewritten by a QNetworkAccessManager subclass to a fake GitHub on
+  127.0.0.1, or sent as is through a refused / mute local proxy (nothing
+  left the Mac). 27 decision cases (23:59:59 and 23:59:59.5 not due, 24 h
+  due; 59:59 not due, 1 h due; dev/DEV/devel; clock set back; stored ISO
+  strings). Automatic: success saves the send time and is silent; refused,
+  timeout (10 s), 403 rate limit, 404, 500, bad JSON, no tag_name and 204
+  each leave the saved time untouched, are silent, back off 59:59 / retry
+  at 1 h; manual: each reported ("HTTP 403 - API rate limit exceeded for
+  ...", "Connection refused", "no answer from GitHub within 10 s",
+  "unexpected reply from GitHub", "HTTP 204", ...), nothing saved, no
+  back-off. Newer release and skipped release count as success; an open
+  dialog or message holds automatic looks off; busy = one request. Timer:
+  nothing for 9 s, one request at ~10 s, then a repeating 3 600 000 ms
+  precise timer; with the interval shortened in the scratch, ticks go
+  through the decision (quiet within 24 h, send when due, back off after a
+  failure, retry after 1 h, quiet while a dialog is open; setting off = no
+  request). Dev build: no request at ~10 s or from ticks, manual works,
+  override 0.0.1 shows the dialog from manual only. Release build with the
+  override `0.7.3-dev`: automatic still goes. **One live request:** HTTP
+  200, time saved, silent (X-RateLimit-Remaining 47). App build 0 errors;
+  g++ 15.2 / Qt 5.15.18 on ubersdr `-fsyntax-only -Wall -Wextra -pedantic`
+  clean, also gnu++17 and deprecated API off (temp dir removed). Harness:
+  scratchpad `jtdxvu-uc-1009/` (session scratch, not kept).
+- **Not exercised:** the real app (not launched): the hourly timer and the
+  dev skip were tested in the scratch only.
+
 ### 2026-10-08 — Update check against GitHub releases (for the next release)
 
 Manoj: every app of his gets an in-app check against its GitHub releases in
@@ -282,7 +351,8 @@ everywhere (spec approved by him; done from the MSHV-Mac session).
   "Check for updates automatically", ini `[Configuration] CheckForUpdates`,
   default true). At most once per 24 h: `JTDXVU/UpdateLastCheck` (UTC ISO
   string) is written when the check is *tried*, so an offline start waits a
-  day; a time in the future does not hold it off. Silent on any failure, and
+  day (superseded 10-09: written only after a success, hourly re-check);
+  a time in the future does not hold it off. Silent on any failure, and
   for the tag in `JTDXVU/UpdateSkipVersion`. Both keys are per profile (each
   profile is its own ini), so each profile checks once a day.
 - **Manual:** Help > Check for Updates... (before About, `NoRole` so it stays
@@ -2802,12 +2872,15 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **Update check in the real app** (`e9796edb`, unreleased): tested only
-      in a scratch program built from the same class. On the next install
-      (or the next release's checks) see Help > Check for Updates... say
-      "You're up to date", the Settings > General tick, and - with a newer
-      release out - the dialog ~10 s after start. Release notes for the next
-      release: mention the check and the one request to api.github.com.
+- [ ] **Update check in the real app** (`e9796edb`, `0bd95894`, unreleased):
+      tested only in a scratch program built from the same class. On the
+      next install (or the next release's checks) see Help > Check for
+      Updates... say "You're up to date", the Settings > General tick, and -
+      with a newer release out - the dialog ~10 s after start (or within an
+      hour of it while running). Release notes for the next release: mention
+      the check (daily, hourly retry when offline, Help menu any time) and
+      the one request to api.github.com. If a development version string is
+      ever used, it must contain "dev" to keep automatic checks off.
 - [x] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08)
   — lifted the same morning ("cut a new release"); **RELEASED 2026-10-08**
   with the corrected FT2 credit in the notes.
