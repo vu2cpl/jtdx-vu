@@ -268,7 +268,10 @@ or Pi 5 is recommended.
   answer is dropped after the AutoSeq counters (Settings > Sequencing),
   as usual. While CNS is on the Tx watchdog is the **Auto CQ time
   limit** (Settings > JTTY, 5 minutes by default; 10 minutes fixed up to
-  v0.5.0), so unanswered CQ still stops. Auto CQ and **1 QSO** exclude each
+  v0.5.0), so unanswered CQ still stops. While CNS is on, the button
+  counts that watchdog down ("Auto CQ 4:37", or "Auto CQ 12m" from 10
+  minutes up): it runs down while you transmit and holds still while Tx
+  is idle, like the "WD" box. Auto CQ and **1 QSO** exclude each
   other (since v0.6.0): switching Auto CQ on clears 1 QSO, and pressing
   1 QSO during an Auto CQ run means "finish this QSO, then stop" - both go
   off when Tx halts after it.
@@ -313,7 +316,8 @@ or Pi 5 is recommended.
     Number to "none" for a non-contest QSO and %N is left out of %E.
   - **Auto CQ** (right-hand button column) repeats a macro with a gap
     after each call, 10 s by default, and stops after the **time limit**
-    (5 minutes by default, since v0.5.1); pressing it again turns it off and
+    (5 minutes by default, since v0.5.1), which the button counts down
+    while it runs; pressing it again turns it off and
     halts a CQ on the air (Esc and Halt Tx stop any JTTY send). In the FT
     modes the same button is Call Non-Stop. Settings > JTTY sets the
     macro, gap, call limit and stop-on-my-call, the station details, and

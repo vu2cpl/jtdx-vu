@@ -36,7 +36,8 @@ Last updated: 2026-10-08
   and its fixes), 70cm / 23cm buttons, and fixes the TCI reconnect and JTTY
   false-decode crashes; v0.7.1 (2026-10-08) only corrects the About box
   credits (FT2: IU8LMC + 9H1SR / Decodium; JTTY). Unreleased since: FT4 on
-  70cm / 23cm, the 8m button, one-time seeding of new default rows.
+  70cm / 23cm, the 8m button, one-time seeding of new default rows, the
+  Auto CQ countdown on the button.
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -246,6 +247,49 @@ Last updated: 2026-10-08
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-08 — Auto CQ button counts down what is left (for the next release, v0.7.2)
+
+Manoj asked what the Auto CQ "watchdog" is and wanted a countdown on the
+button (the same change went into MSHV-Mac's private JTTY, `9fa653d` there).
+Done in the MSHV-Mac session, on a worktree branch, rebased onto `31c422e9`.
+
+- `MainWindow::updateCnsCountdown ()`, called from `updateCnsButton ()` and
+  from guiUpdate's once-a-second block: while Auto CQ is on the button reads
+  "Auto CQ m:ss", or "Auto CQ 12m" from 10 minutes up (the button is at most
+  80 px wide; "Auto CQ 0:58" fills it).
+  - JTTY: the Auto CQ time limit from `m_jttyAutoCqStartMs`. It is checked
+    before each call, so at 0:00 the CQ on the air still ends.
+  - FT modes, CNS on (not Hound, not WSPR): the Tx watchdog
+    (`watchdog_minutes ()` - `m_idleMinutes`). It counts whole minutes on
+    `minuteTimer`, only while transmitting, so the countdown runs while
+    calling and holds at the full minutes while Tx is idle. The minute
+    timer's test moved unchanged into `watchdog_counts (qint64 sec)`, so the
+    button asks the watchdog's own question; the seconds come from
+    `minuteTimer.remainingTime ()`, so the two step together when it drifts.
+    0:00 once `m_txwatchdog` has tripped.
+- README: CNS and JTTY Auto CQ paragraphs mention the countdown.
+- Tested on a `--test-mode` instance (rig None, audio on the unused "RX
+  Audio" loopback): JTTY 1:00 -> 0:03 then off; a 15-minute limit shows
+  "Auto CQ 15m" and fits; FT8 with CNS idle holds at 2:00 (and at 14m after
+  a JTTY transmission had used a minute), the WD box showing the same.
+  **Not seen: an FT8 CQ run counting down in m:ss** - Enable Tx could not be
+  switched on through accessibility in the test instance. Watch it on air.
+- **Test-instance trap, hit doing this:** a plain launch of a build with
+  `HOME=<scratch>` is NOT isolated - Qt's ConfigLocation on macOS ignores
+  `$HOME`, so it read `Profiles/Last` from the real `JTDX-VU.ini` and ran
+  the real **FLEX VITA49** profile (it connected to the radio for ~30 s - its `flex_trace.txt` shows `client gui`, DAX streams, `slice tune 0 14.090000`, DIGU and no `xmit`;
+  no slice left behind - checked with
+  `MSHV-Mac/tools/flex_clients_slices.py`). Its only lasting effect: the
+  one-time default-row seeding above ran on that profile
+  (`JTDXVU/FrequencySeed=1` and the 432.170 / 1296.170 / 40.680 rows are in
+  `JTDX-VU - FLEX VITA49.ini` since 09:53) - what v0.7.2's first start of
+  that profile would do anyway. Isolate a test run with **`--test-mode`**:
+  it skips `Profiles/Last` and uses profile "test"
+  (`~/Library/Preferences/JTDX-VU - test.ini`, data in
+  `~/Library/Application Support/JTDX-VU - test`), which can be seeded
+  first and deleted after. A build-tree `jtdx.app` also needs `jtdxjt9`
+  copied into `Contents/MacOS`, or it quits at the subprocess error.
 
 ### 2026-10-08 — FT4 on 70cm / 23cm, 8m button, one-time seeding of new default rows (for the next release, v0.7.2)
 
