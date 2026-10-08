@@ -280,11 +280,16 @@ Done in the MSHV-Mac session, on a worktree branch, rebased onto `31c422e9`.
   `$HOME`, so it read `Profiles/Last` from the real `JTDX-VU.ini` and ran
   the real **FLEX VITA49** profile (it connected to the radio for ~30 s - its `flex_trace.txt` shows `client gui`, DAX streams, `slice tune 0 14.090000`, DIGU and no `xmit`;
   no slice left behind - checked with
-  `MSHV-Mac/tools/flex_clients_slices.py`). Its only lasting effect: the
-  one-time default-row seeding above ran on that profile
-  (`JTDXVU/FrequencySeed=1` and the 432.170 / 1296.170 / 40.680 rows are in
-  `JTDX-VU - FLEX VITA49.ini` since 09:53) - what v0.7.2's first start of
-  that profile would do anyway. Isolate a test run with **`--test-mode`**:
+  `MSHV-Mac/tools/flex_clients_slices.py`). Its lasting effect: the
+  one-time default-row seeding ran on that profile and wrote
+  `JTDXVU/FrequencySeed=1`, but the instance was stopped with SIGTERM
+  before the frequency list was saved, so the 432.170 / 1296.170 / 40.680
+  rows are NOT in `JTDX-VU - FLEX VITA49.ini` (checked 10:23 by decoding
+  `FrequenciesForModes`). Left so, v0.7.2 would skip that profile:
+  **remove the `FrequencySeed=1` line from it, with JTDX-VU closed**
+  (open item). Stop a test instance cleanly (Quit / AppleScript `quit`),
+  never SIGTERM - that loses unsaved settings and orphans `jtdxjt9`
+  (it held SysV shm until cleaned up). Isolate a test run with **`--test-mode`**:
   it skips `Profiles/Last` and uses profile "test"
   (`~/Library/Preferences/JTDX-VU - test.ini`, data in
   `~/Library/Application Support/JTDX-VU - test`), which can be seeded
@@ -2609,6 +2614,11 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
+- [ ] **FLEX VITA49 profile: remove `FrequencySeed=1`** (2026-10-08): set by a
+  stray test run at 09:53 without the rows being saved (see the Auto CQ
+  countdown entry). With JTDX-VU closed:
+  `sed -i '' '/^FrequencySeed=1$/d' ~/Library/Preferences/"JTDX-VU - FLEX VITA49.ini"`.
+  Claude's edit of the live ini was blocked; Manoj to run it or approve it.
 - [ ] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08).
   Waiting so far: FT4 on 70cm / 23cm, the 8m button, one-time seeding of new
   default rows. When it ships, tell Frank PH2M (promised in the 2026-10-08
