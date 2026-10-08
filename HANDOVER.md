@@ -280,6 +280,9 @@ was sized to its text (AnsB4's Preferred policy, max 80 px against Monitor's
   :52 3:08. The watchdog itself was always right - only the display lagged.
   Note: like stock JTDX, any click, key press or window activation in
   JTDX-VU resets the watchdog, so the count goes back to 5:00 then.
+- Installed on the Mac mini 2026-10-08 (build of `e64be38d`, labelled 0.7.2,
+  replacing the v0.7.2 release copy, now in the Trash); trial zip in
+  `~/Desktop/jdxvu/test/`. Relaunched on the FLEX VITA49 profile.
 - README CNS paragraph updated.
 
 ### 2026-10-08 — Auto CQ button counts down what is left (for the next release, v0.7.2)
