@@ -188,8 +188,8 @@ or Pi 5 is recommended.
   for the European UHF/SHF FT8/FT4 activity). Tick them in View > Band &
   Mode Buttons... as for 4m and 2m. A 23cm FT8 working frequency
   (1296.174 MHz, as in WSJT-X) is in the default frequency list for new
-  or reset lists; 70cm already had 432.174. Since the next release after
-  v0.7.1, FT4 has its own spots there too (432.170 and 1296.170 MHz, as
+  or reset lists; 70cm already had 432.174. Since v0.7.2, FT4 has its
+  own spots there too (432.170 and 1296.170 MHz, as
   PH2M uses them), and there is an **8m** button (FT8 on 40.680 MHz,
   Region 1) for stations with an 8m permit. These rows are added once to
   an existing frequency list on first start; no reset needed.
@@ -269,7 +269,7 @@ or Pi 5 is recommended.
   as usual. While CNS is on the Tx watchdog is the **Auto CQ time
   limit** (Settings > JTTY, 5 minutes by default; 10 minutes fixed up to
   v0.5.0), so unanswered CQ still stops. While CNS is on, the button
-  counts that watchdog down ("Auto CQ 4:37", or "Auto CQ 12m" from 10
+  counts that watchdog down (since v0.7.2) ("Auto CQ 4:37", or "Auto CQ 12m" from 10
   minutes up): it runs down while you transmit and holds still while Tx
   is idle, like the "WD" box. Auto CQ and **1 QSO** exclude each
   other (since v0.6.0): switching Auto CQ on clears 1 QSO, and pressing
@@ -317,7 +317,7 @@ or Pi 5 is recommended.
   - **Auto CQ** (right-hand button column) repeats a macro with a gap
     after each call, 10 s by default, and stops after the **time limit**
     (5 minutes by default, since v0.5.1), which the button counts down
-    while it runs; pressing it again turns it off and
+    while it runs (since v0.7.2); pressing it again turns it off and
     halts a CQ on the air (Esc and Halt Tx stop any JTTY send). In the FT
     modes the same button is Call Non-Stop. Settings > JTTY sets the
     macro, gap, call limit and stop-on-my-call, the station details, and
