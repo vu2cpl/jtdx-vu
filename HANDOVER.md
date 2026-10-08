@@ -2565,6 +2565,10 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
+- [ ] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08).
+  Waiting so far: FT4 on 70cm / 23cm, the 8m button, one-time seeding of new
+  default rows. When it ships, tell Frank PH2M (promised in the 2026-10-08
+  reply) and use the corrected FT2 credit in the notes.
 - [ ] **FT2 credit** (2026-10-08): wording fixed everywhere incl. the v0.7.0
   release notes; reuse it in future release notes. Watch for IU8LMC's
   reply in case the team wants more names.
