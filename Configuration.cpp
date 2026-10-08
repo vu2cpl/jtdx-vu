@@ -793,6 +793,7 @@ private:
   bool sched_mix_5_;
   bool monitor_off_at_startup_;
   bool monitor_last_used_;
+  bool check_for_updates_ {true};   // JTDX-VU: automatic GitHub release check (UpdateCheck)
   bool log_as_RTTY_;
   bool report_in_comments_;
   bool distance_in_comments_;
@@ -1026,6 +1027,7 @@ bool Configuration::prevent_spotting_false () const {return m_->prevent_spotting
 bool Configuration::filterUDP () const {return m_->filterUDP_;}
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
+bool Configuration::check_for_updates () const {return m_->check_for_updates_;}
 bool Configuration::log_as_RTTY () const {return m_->log_as_RTTY_;}
 bool Configuration::send_to_eqsl () const {return m_->send_to_eqsl_;}
 QString Configuration::eqsl_username () const {return m_->eqsl_username_;}
@@ -2148,6 +2150,7 @@ Radio::convert_dark("#fafbfe",useDarkStyle_),Radio::convert_dark("#dcdef1",useDa
   ui_->band_mix_check_box_5->setChecked (sched_mix_5_);
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
+  ui_->check_for_updates_check_box->setChecked (check_for_updates_);   // JTDX-VU
   ui_->log_as_RTTY_check_box->setChecked (log_as_RTTY_);
   ui_->report_in_comments_check_box->setChecked (report_in_comments_);
   ui_->distance_in_comments_check_box->setChecked (distance_in_comments_);
@@ -2516,6 +2519,7 @@ void Configuration::impl::read_settings ()
   else monitor_off_at_startup_ = false;
 
   monitor_last_used_ = settings_->value ("MonitorLastUsed", false).toBool ();
+  check_for_updates_ = settings_->value ("CheckForUpdates", true).toBool ();   // JTDX-VU
   spot_to_psk_reporter_ = settings_->value ("PSKReporter", false).toBool ();
   spot_to_dxsummit_ = settings_->value ("AllowSpotsDXSummit", false).toBool ();
   prevent_spotting_false_ = settings_->value ("preventFalseUDPspots", true).toBool ();
@@ -2865,6 +2869,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Type2MsgGen", QVariant::fromValue (type_2_msg_gen_));
   settings_->setValue ("MonitorOFF", monitor_off_at_startup_);
   settings_->setValue ("MonitorLastUsed", monitor_last_used_);
+  settings_->setValue ("CheckForUpdates", check_for_updates_);   // JTDX-VU
   settings_->setValue ("PSKReporter", spot_to_psk_reporter_);
   settings_->setValue ("AllowSpotsDXSummit", spot_to_dxsummit_);
   settings_->setValue ("preventFalseUDPspots", prevent_spotting_false_);
@@ -3552,6 +3557,7 @@ void Configuration::impl::accept ()
   tx_QSY_allowed_ = ui_->tx_QSY_check_box->isChecked ();
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
+  check_for_updates_ = ui_->check_for_updates_check_box->isChecked ();   // JTDX-VU
   type_2_msg_gen_ = static_cast<Type2MsgGen> (ui_->type_2_msg_gen_combo_box->currentIndex ());
   log_as_RTTY_ = ui_->log_as_RTTY_check_box->isChecked ();
   report_in_comments_ = ui_->report_in_comments_check_box->isChecked ();

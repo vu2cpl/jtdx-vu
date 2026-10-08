@@ -251,6 +251,7 @@ set (wsjtx_CXXSRCS
   flexpanel.cpp
   jttysettings.cpp
   mainwindow_jtty.cpp
+  updatecheck.cpp
   wsprnet.cpp
   WSPRBandHopping.cpp
   JTDXMessageBox.cpp

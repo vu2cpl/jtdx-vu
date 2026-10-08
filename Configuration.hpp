@@ -168,6 +168,7 @@ public:
   bool sched_mix_5 () const;
   bool monitor_off_at_startup () const;
   bool monitor_last_used () const;
+  bool check_for_updates () const;   // JTDX-VU: Settings > General "Check for updates automatically"
   bool log_as_RTTY () const;
   bool report_in_comments () const;
   bool distance_in_comments () const;

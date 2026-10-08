@@ -134,6 +134,17 @@ or Pi 5 is recommended.
   - On first launch, JTDX-VU copies the stock JTDX settings and data
     across and repoints the paths in the .ini. The stock files are only
     read.
+- **Tells you when a new release is out** (since the next release). About
+  10 s after start, at most once a day, JTDX-VU asks GitHub for the latest
+  JTDX-VU release. If it is newer than yours, a window shows its release
+  notes with **Download** (opens the release page in your browser), **Skip
+  This Version** and **Remind Me Later**; otherwise, or when offline, it
+  says nothing. Nothing is downloaded or installed. **Help > Check for
+  Updates...** checks at any time and always says what it found. Turn the
+  daily check off with Settings > General > "Check for updates
+  automatically". The only request is one anonymous `GET` to
+  `api.github.com` (`/repos/vu2cpl/jtdx-vu/releases/latest`); no other
+  server is involved.
 - **Club Log worked-before source** (File > Club Log & Alerts...). Your
   Club Log log replaces `wsjtx_log.adi` as the source for JTDX's own
   New DXCC / New Band / New Band+Mode colours, filters and auto-reply

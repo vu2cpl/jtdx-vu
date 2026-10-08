@@ -670,6 +670,19 @@ quiet period when decoding is done.</string>
             </item>
            </layout>
           </item>
+          <item row="5" column="0">
+           <widget class="QCheckBox" name="check_for_updates_check_box">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Once a day, about 10 s after start, ask GitHub (api.github.com) whether a newer JTDX-VU release is out, and if so show its release notes with a Download button that opens the release page. Nothing is downloaded or installed, and nothing is shown when there is no new release or no connection.&lt;/p&gt;&lt;p&gt;Help &amp;gt; Check for Updates... checks at any time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Check for updates automatically</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

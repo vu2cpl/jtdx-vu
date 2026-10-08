@@ -61,6 +61,7 @@
 #include "wsprnet.h"
 #include "eqsl.h"
 #include "clublog.h"
+#include "updatecheck.h"
 #include "bandmodeswitcher.h"
 #include "jttypanel.h"
 #include "flexpanel.h"
@@ -1150,6 +1151,21 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
         m_clubLog->settings_dialog (this, m_config.my_callsign ());
       });
   }
+
+  // JTDX-VU: a newer release on GitHub?  Help > Check for Updates... always
+  // reports; the automatic check runs ~10 s after start, at most once a day,
+  // while Settings > General "Check for updates automatically" is on, and is
+  // silent unless there is a release to offer.  See updatecheck.h.
+  m_updateCheck = new UpdateCheck {m_settings, this};
+  {
+    auto action = new QAction {tr ("Check for Updates..."), this};
+    action->setMenuRole (QAction::NoRole);   // stays in Help on macOS too
+    ui->menuHelp->insertAction (ui->actionAbout, action);
+    connect (action, &QAction::triggered, m_updateCheck, &UpdateCheck::check_manual);
+  }
+  QTimer::singleShot (10 * 1000, this, [this] {
+      if (m_config.check_for_updates ()) m_updateCheck->check_automatic ();
+    });
 
   // JTDX-VU: MSHV-style band / mode buttons above the decode panes
   m_switcher = new BandModeSwitcher {m_settings, m_useDarkStyle};
