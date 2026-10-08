@@ -286,8 +286,9 @@ Done in the MSHV-Mac session, on a worktree branch, rebased onto `31c422e9`.
   before the frequency list was saved, so the 432.170 / 1296.170 / 40.680
   rows are NOT in `JTDX-VU - FLEX VITA49.ini` (checked 10:23 by decoding
   `FrequenciesForModes`). Left so, v0.7.2 would skip that profile:
-  **remove the `FrequencySeed=1` line from it, with JTDX-VU closed**
-  (open item). Stop a test instance cleanly (Quit / AppleScript `quit`),
+  **remove the `FrequencySeed=1` line from it, with JTDX-VU closed** -
+  done 2026-10-08 ~10:40 on Manoj's word (only that line changed; checked
+  against a pre-edit copy). Stop a test instance cleanly (Quit / AppleScript `quit`),
   never SIGTERM - that loses unsaved settings and orphans `jtdxjt9`
   (it held SysV shm until cleaned up). Isolate a test run with **`--test-mode`**:
   it skips `Profiles/Last` and uses profile "test"
@@ -2614,11 +2615,6 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **FLEX VITA49 profile: remove `FrequencySeed=1`** (2026-10-08): set by a
-  stray test run at 09:53 without the rows being saved (see the Auto CQ
-  countdown entry). With JTDX-VU closed:
-  `sed -i '' '/^FrequencySeed=1$/d' ~/Library/Preferences/"JTDX-VU - FLEX VITA49.ini"`.
-  Claude's edit of the live ini was blocked; Manoj to run it or approve it.
 - [ ] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08).
   Waiting so far: FT4 on 70cm / 23cm, the 8m button, one-time seeding of new
   default rows. When it ships, tell Frank PH2M (promised in the 2026-10-08
