@@ -37,7 +37,10 @@ Last updated: 2026-10-08
   false-decode crashes; v0.7.1 (2026-10-08) only corrects the About box
   credits (FT2: IU8LMC + 9H1SR / Decodium; JTTY); v0.7.2 (2026-10-08) adds
   FT4 on 70cm / 23cm, the 8m button, one-time seeding of new default rows
-  and the Auto CQ countdown on the button.
+  and the Auto CQ countdown on the button. Unreleased since v0.7.2: the
+  Auto CQ button keeps its width (count on a second line) and its countdown
+  runs in the first half of each minute too (`a00f05c6`, `e64be38d`;
+  installed on the Mac mini).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
