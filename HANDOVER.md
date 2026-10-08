@@ -263,9 +263,8 @@ chain scaled, with MSHV (LZ2HV) as the reference.
 - `README.md` FT2 section: same wording, "as introduced in MSHV" removed.
 - Same wording on vu2cpl.com (card + JTDX-VU project page) and in the
   mshv-macos-port README (`~/projects/mshv-public-release`).
-- Not yet changed: the v0.7.0 GitHub release notes' credits line (says
-  "FT2 was created by Martino IU8LMC (ARI Caserta)") — use the new wording
-  in the next release's notes.
+- v0.7.0 GitHub release notes: credits line updated to the same wording
+  (edited in place, 2026-10-08).
 
 ### 2026-10-07 — Rig mode shown beside the frequency (for the next release)
 
@@ -2511,9 +2510,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **FT2 credit in the next release notes** (2026-10-08): use the
-  IU8LMC + 9H1SR / Decodium 2026-02-16 / MSHV 2.76.5 wording (see What
-  changed). Watch for IU8LMC's reply in case the team wants more names.
+- [ ] **FT2 credit** (2026-10-08): wording fixed everywhere incl. the v0.7.0
+  release notes; reuse it in future release notes. Watch for IU8LMC's
+  reply in case the team wants more names.
 - [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07: connect,
       receive and DAX streams work on the radio; the band-change failure found
       there is fixed but not yet re-tried on the radio). Check: `client gui` with SmartSDR
