@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-08
+Last updated: 2026-10-08 (evening)
 
 ## Current state
 
@@ -40,7 +40,8 @@ Last updated: 2026-10-08
   and the Auto CQ countdown on the button. Unreleased since v0.7.2: the
   Auto CQ button keeps its width (count on a second line) and its countdown
   runs in the first half of each minute too (`a00f05c6`, `e64be38d`;
-  installed on the Mac mini).
+  installed on the Mac mini); `%LOG` in a JTTY macro logs the QSO without
+  the dialog (`6fcbe714`, NOT installed).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -253,6 +254,40 @@ Last updated: 2026-10-08
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-08 — JTTY: `%LOG` in a macro logs the QSO without the dialog (for the next release)
+
+Manoj (in the MSHV-Mac session, for MSHV's JTTY, `6adc6e3` there): "can you
+add a log qso in macro to enable auto logging?", then "add in jtdx vu also".
+
+- `mainwindow_jtty.cpp` `jttyMacro ()`: a macro containing `%LOG` (also via
+  the set's exchange) needs a DX call, has the variable cut out, sends the
+  rest (nothing for a macro of just `%LOG`), then sets `m_jttyAutoLog` and
+  calls `on_logQSOButton_clicked ()`, which passes autologging to
+  `LogQSO::initLogQSO`, so `accept ()` runs without showing the dialog — the
+  same path as Settings' auto log; the log file, `acceptQSO2`, the UDP
+  "QSO Logged" / ADIF sends and the RUMlog bridge all apply as for a manual
+  log. The flag is read and cleared first thing in the button handler, so it
+  never leaks to a later click.
+- Once per QSO: `acceptQSO2` records `m_jttyLoggedCall` in JTTY, and
+  `on_dxCallEntry_textChanged` clears it when the DX call changes.
+  `jttyAlreadyLogged ()` makes a repeat `%LOG` say so in the status bar, and
+  the WSJT-X "TU ..." rule (serial bump + log dialog) now skips the dialog for
+  a QSO already logged — also after a manual Log QSO. The Log QSO button
+  itself always opens the dialog.
+- Settings > JTTY's variable list and README's JTTY section describe `%LOG`.
+- **Test** (`--test-mode`: the settings live in
+  `~/.qttest/Library/Preferences/JTDX-VU - test.ini`, NOT
+  `~/Library/Preferences/`; seeded from the FLEX VITA49 profile with rig
+  None, VOX, "RX Audio" in/out, [Alerts] and [ClubLog] removed, PSK
+  Reporter / secondary UDP / TCP / eQSL off, primary UDP to a local
+  listener; `jtdxjt9` copied into the build's `Contents/MacOS` and removed
+  after): F8 `TU %H 73 %LOG` → one "QSO Logged" to the listener and in
+  `wsjtx_log.adi`, no dialog, TX "TU … 73"; F8 again → transmitted, no second
+  log; F7 `%LOG` → "already in the log". Test files to the Trash. **First
+  attempt ran on a blank default test profile** (seed written to the wrong
+  folder): jtdxjt9 exited with code 2 behind a modal "Subprocess Error",
+  which also blocked every menu click — quit after closing it. Not installed.
 
 ### 2026-10-08 — Auto CQ button: keeps its width, and counts down in the first half of the minute too (for the next release)
 
