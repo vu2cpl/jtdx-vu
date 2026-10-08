@@ -2700,20 +2700,22 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
   with the corrected FT2 credit in the notes.
 - [x] **Tell Frank PH2M v0.7.2 is out** — SENT by Manoj 2026-10-08 (draft
   `~/projects/JTDX-records/jtdx-vu-v0.7.2-released-to-PH2M.txt`).
-- [ ] **Watch the Auto CQ countdown in FT8 while calling** (CNS on, Enable Tx
-  on): it was never seen running down in m:ss, only in JTTY and on an idle
-  watchdog.
-- [ ] **FT2 credit** (2026-10-08): wording fixed everywhere incl. the v0.7.0
-  release notes; reuse it in future release notes. Watch for IU8LMC's
-  reply in case the team wants more names.
+- [x] **Watch the Auto CQ countdown in FT8 while calling** (CNS on, Enable Tx
+  on) — done 2026-10-08 on a test copy: it held whole minutes in the first
+  half of each minute (Manoj saw "stuck at 5:00"); fixed in `e64be38d`,
+  then seen running 4:48 -> 3:08 in 20 s steps.
+- [x] **FT2 credit** (2026-10-08): wording fixed everywhere incl. the v0.7.0
+  release notes; reuse it in future release notes. Martino IU8LMC replied
+  with thanks (2026-10-08) - no further names asked for.
 - [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07: connect,
       receive and DAX streams work on the radio; the band-change failure found
       there is fixed but not yet re-tried on the radio). Check: `client gui` with SmartSDR
       also connected (per-client slice letters), the RF level from full-scale
       DAX audio, that `xmit 0` drops the carrier at once, and a QSO.
 - [x] **Tell Frank PH2M v0.7.0 is out** — emailed by Manoj 2026-10-07
-      (text in `~/projects/JTDX-records/jtdx-vu-v0.7.0-reply-to-PH2M.txt`). Watch for his
-      report on the 70cm/23cm buttons.
+      (text in `~/projects/JTDX-records/jtdx-vu-v0.7.0-reply-to-PH2M.txt`). His report
+      came 2026-10-08 (buttons in use on IC-7300 / IC-9700; FT4 spots and 8m
+      asked for, in v0.7.2); he replied again after the v0.7.2 note.
 
 - [ ] **FT2 weak-signal gap vs MSHV** (2026-10-05 screen recording from
       LZ2HV, KN23, 14.084 FT2, JTDX-VU 0.6.0 beside MSHV 2.76.7, 15
