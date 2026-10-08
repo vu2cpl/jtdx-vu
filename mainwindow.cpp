@@ -3800,6 +3800,19 @@ int MainWindow::watchdog_minutes () const
   return nonstop_active () ? JttySettings::autoCqMinutes (m_settings) : m_config.watchdog ();
 }
 
+// JTDX-VU: the minute timer's test, moved here so the Auto CQ countdown can
+// ask it about the next minute too: a minute counts while transmitting, or
+// within about one T/R cycle of the last transmission
+bool MainWindow::watchdog_counts (qint64 sec) const
+{
+  if (m_txwatchdog) return true;
+  qint64 const deltasec = sec - m_secTxStopped;
+  if (m_modeTx == "FT8") return deltasec <= 32;
+  if (m_modeTx == "FT4") return deltasec <= 16;   //to be checked
+  if (m_modeTx == "FT2") return deltasec <= 8;
+  return deltasec <= 134;
+}
+
 // JTDX-VU: Non-stop is off in Hound mode (the only special operating mode
 // JTDX has)
 bool MainWindow::nonstop_active () const
@@ -5046,6 +5059,7 @@ void MainWindow::guiUpdate()
 //Once per second:
   if(nsec != m_sec0) {
     if (m_jttyLayout != (m_mode == "JTTY")) jttyApplyLayout ();   // JTDX-VU: modes set up without commonActions (WSPR)
+    updateCnsCountdown ();                                            // JTDX-VU
     if (watchdog_minutes () && !m_transmitting && !m_mode.startsWith ("WSPR")
         && m_idleMinutes >= watchdog_minutes ()) {
       txwatchdog (true);       // switch off Enable Tx button
@@ -8633,14 +8647,7 @@ void MainWindow::on_the_minute ()
     if (qAbs (ms_error) > 1000) { minuteTimer.setSingleShot (true); minuteTimer.start (ms_error + 60 * 1000); }
     }
   if(watchdog_minutes () && !m_mode.startsWith ("WSPR")) {
-    qint64 deltasec=(m_jtdxtime->currentMSecsSinceEpoch2()/1000) - m_secTxStopped;
-    bool update=true;
-    if(!m_txwatchdog) {
-       if(m_modeTx=="FT8") { if(deltasec > 32) update=false; }
-       else if(m_modeTx=="FT4") { if(deltasec > 16) update=false; } //to be checked
-       else if(m_modeTx=="FT2") { if(deltasec > 8) update=false; }
-       else { if(deltasec > 134) update=false; }
-    }
+    bool update=watchdog_counts (m_jtdxtime->currentMSecsSinceEpoch2()/1000);
     if (update && (m_idleMinutes < watchdog_minutes ())) { ++m_idleMinutes; update_watchdog_label (); }
   }
   else { txwatchdog (false); }
@@ -8830,6 +8837,47 @@ void MainWindow::updateCnsButton ()
           "halts after that QSO, as with 1 QSO. Off in Hound mode. The Tx watchdog still stops Tx: "
           "while this is on it is the Auto CQ\n"
           "time limit in Settings > JTTY (5 min by default)."));
+  updateCnsCountdown ();
+}
+
+// JTDX-VU: while Auto CQ is on, its button counts down what is left before it
+// stops calling.  JTTY: the Auto CQ time limit, from when it was switched on;
+// it is checked before each call, so at 0:00 the CQ on the air still ends.
+// FT modes (CNS): the Tx watchdog, which counts whole minutes on the minute
+// while you transmit (watchdog_counts) - so it runs down while calling and
+// holds still while Tx is idle, and starts again from the full time when a
+// new message goes out.
+void MainWindow::updateCnsCountdown ()
+{
+  if (!m_cnsButton) return;
+  bool const jtty = m_mode == "JTTY";
+  int sec = -1;
+  if (jtty && m_jttyAutoCq)
+    {
+      qint64 const left = qint64 (JttySettings::autoCqMinutes (m_settings)) * 60000
+                          - (m_jtdxtime->currentMSecsSinceEpoch2 () - m_jttyAutoCqStartMs);
+      sec = left > 0 ? int ((left + 999) / 1000) : 0;
+    }
+  else if (!jtty && nonstop_active () && !m_mode.startsWith ("WSPR"))
+    {
+      int const left_min = watchdog_minutes () - m_idleMinutes;
+      if (m_txwatchdog || left_min <= 0) sec = 0;
+      else
+        {
+          // time to the minute timer's next tick, from the timer itself, so
+          // the count and the watchdog step together even when it drifts
+          qint64 const now = m_jtdxtime->currentMSecsSinceEpoch2 ();
+          int const tick_ms = minuteTimer.isActive () ? qMax (0, minuteTimer.remainingTime ()) : int (60000 - now % 60000);
+          int const to_minute = (tick_ms + 999) / 1000;
+          sec = watchdog_counts ((now + tick_ms) / 1000) ? (left_min - 1) * 60 + to_minute : left_min * 60;
+        }
+    }
+  // the button is at most 80 px wide: from 10 minutes up whole minutes
+  // (rounded up, like the "WD 6m" box), m:ss below that
+  auto const text = sec < 0 ? tr ("Auto CQ")
+                  : sec >= 600 ? tr ("Auto CQ") + QString {" %1m"}.arg ((sec + 59) / 60)
+                  : tr ("Auto CQ") + QString {" %1:%2"}.arg (sec / 60).arg (sec % 60, 2, 10, QChar {'0'});
+  if (m_cnsButton->text () != text) m_cnsButton->setText (text);
 }
 
 // JTDX-VU: profiles.  A profile is one complete settings set - rig (TCI,

@@ -887,6 +887,7 @@ private:
   bool queued (QString const& call) const;
   void band_change_reset ();  // JTDX-VU: Auto CQ off on a new band (AnsB4 / 1 QSO stay)
   bool nonstop_active () const;  // JTDX-VU: Non-stop on and not in Hound mode
+  bool watchdog_counts (qint64 sec) const;  // JTDX-VU: does the Tx watchdog count the minute ending at 'sec'
   bool singleshot_now () const;  // JTDX-VU: 1 QSO, or Non-stop with a QSO we answered
   // JTDX-VU JTTY (mainwindow_jtty.cpp)
   bool jtty_decode (int k);
@@ -905,6 +906,7 @@ private:
   void jttyAutoCqStop (QString const& why);
   void jttyAutoCqCheckDecode (QString const& text);
   void updateCnsButton ();              // CNS = Call Non-Stop, or JTTY Auto CQ in JTTY
+  void updateCnsCountdown ();           // the time left on the Auto CQ button, once a second
   QPushButton * m_cnsButton {nullptr};
   bool jttyPickCall (QTextCursor cursor, bool quiet);   // word or selection -> DX Call
   void jttyClickOnCall (bool secondPane);
