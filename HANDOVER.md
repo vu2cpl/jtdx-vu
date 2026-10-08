@@ -251,6 +251,24 @@ Last updated: 2026-10-08
 
 ## What changed
 
+### 2026-10-08 — Auto CQ button keeps its width during the countdown (for the next release)
+
+Manoj: "width of autocq button should not change". In v0.7.2 the button
+was sized to its text (AnsB4's Preferred policy, max 80 px against Monitor's
+68-75 px), so "Auto CQ 0:58" widened it and the right-hand column.
+
+- `mainwindow.cpp`: the button's size policy is Ignored both ways, so its
+  size never follows the text; min/max width = Monitor's, min height = two
+  text lines (capped at the old 45 px max). `updateCnsCountdown ()` puts the
+  count on a second line ("Auto CQ" / "4:37", "12m" from 10 min up).
+- Tested off-screen (Qt 5 offscreen platform, scratch program): in a column
+  beside an expanding area, the button's geometry was identical for "Auto
+  CQ", "Auto CQ\n0:58", "Auto CQ\n12m" at two window heights. The mock did
+  not reproduce v0.7.2's widening (another button fixed the mock column's
+  width), so the visual check in the real window is still to do - watch the
+  button the next time Auto CQ runs on a build with this.
+- README CNS paragraph updated.
+
 ### 2026-10-08 — Auto CQ button counts down what is left (for the next release, v0.7.2)
 
 Manoj asked what the Auto CQ "watchdog" is and wanted a countdown on the

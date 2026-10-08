@@ -1267,9 +1267,13 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     auto button = new QPushButton {tr ("Auto CQ")};
     button->setCheckable (true);
     button->setFocusPolicy (Qt::NoFocus);
-    button->setSizePolicy (ui->AnsB4Button->sizePolicy ());
-    button->setMinimumSize (ui->AnsB4Button->minimumSize ());
-    button->setMaximumSize (80, 45);
+    // its size must not follow the text, or the countdown below would resize
+    // it (and with it the whole column): as wide as Monitor above it, and from
+    // the start tall enough for the two-line "Auto CQ" + count
+    button->setSizePolicy (QSizePolicy::Ignored, QSizePolicy::Ignored);
+    button->setMinimumSize (ui->monitorButton->minimumWidth (),
+                            qMin (45, 2 * button->fontMetrics ().lineSpacing () + 8));
+    button->setMaximumSize (ui->monitorButton->maximumWidth (), 45);
     m_cnsButton = button;
     int const column_index = ui->verticalLayout_2->indexOf (ui->monitorButton) + 1;
     ui->verticalLayout_2->insertWidget (column_index, button);
@@ -8872,11 +8876,11 @@ void MainWindow::updateCnsCountdown ()
           sec = watchdog_counts ((now + tick_ms) / 1000) ? (left_min - 1) * 60 + to_minute : left_min * 60;
         }
     }
-  // the button is at most 80 px wide: from 10 minutes up whole minutes
-  // (rounded up, like the "WD 6m" box), m:ss below that
+  // the count goes on a second line so the button keeps its width: from 10
+  // minutes up whole minutes (rounded up, like the "WD 6m" box), m:ss below
   auto const text = sec < 0 ? tr ("Auto CQ")
-                  : sec >= 600 ? tr ("Auto CQ") + QString {" %1m"}.arg ((sec + 59) / 60)
-                  : tr ("Auto CQ") + QString {" %1:%2"}.arg (sec / 60).arg (sec % 60, 2, 10, QChar {'0'});
+                  : sec >= 600 ? tr ("Auto CQ") + QString {"\n%1m"}.arg ((sec + 59) / 60)
+                  : tr ("Auto CQ") + QString {"\n%1:%2"}.arg (sec / 60).arg (sec % 60, 2, 10, QChar {'0'});
   if (m_cnsButton->text () != text) m_cnsButton->setText (text);
 }
 

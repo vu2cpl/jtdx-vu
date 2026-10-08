@@ -269,8 +269,9 @@ or Pi 5 is recommended.
   as usual. While CNS is on the Tx watchdog is the **Auto CQ time
   limit** (Settings > JTTY, 5 minutes by default; 10 minutes fixed up to
   v0.5.0), so unanswered CQ still stops. While CNS is on, the button
-  counts that watchdog down (since v0.7.2) ("Auto CQ 4:37", or "Auto CQ 12m" from 10
-  minutes up): it runs down while you transmit and holds still while Tx
+  counts that watchdog down (since v0.7.2) - "4:37", or "12m" from 10
+  minutes up, on a second line under "Auto CQ" so the button keeps its
+  width (since the next release; v0.7.2 widened it): it runs down while you transmit and holds still while Tx
   is idle, like the "WD" box. Auto CQ and **1 QSO** exclude each
   other (since v0.6.0): switching Auto CQ on clears 1 QSO, and pressing
   1 QSO during an Auto CQ run means "finish this QSO, then stop" - both go
