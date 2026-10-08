@@ -270,8 +270,9 @@ His "missing worked-before stations" were the Hide-worked button.
   `FrequenciesForModes` held each once and `FrequencySeed=1`; a second start
   added nothing. Real JTDX-VU.ini and FLEX VITA49 ini byte-identical
   afterwards; test profile files deleted.
-- Draft reply to Frank: `~/projects/JTDX-records/jtdx-vu-v0.7.2-reply-to-PH2M.txt`
-  (not sent).
+- Reply to Frank SENT 2026-10-08 (Gmail, "Re: Technical / Node-RED discussion"):
+  `~/projects/JTDX-records/jtdx-vu-v0.7.2-reply-to-PH2M.txt` - promises both
+  in v0.7.2 and that he'll hear when it's out.
 
 ### 2026-10-08 — v0.7.1 released: About box credits (FT2 corrected, JTTY)
 
