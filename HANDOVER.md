@@ -291,7 +291,10 @@ add a log qso in macro to enable auto logging?", then "add in jtdx vu also".
   log; F7 `%LOG` → "already in the log". Test files to the Trash. **First
   attempt ran on a blank default test profile** (seed written to the wrong
   folder): jtdxjt9 exited with code 2 behind a modal "Subprocess Error",
-  which also blocked every menu click — quit after closing it. **Installed
+  which also blocked every menu click — quit after closing it. Test tools
+  kept in `~/projects/MSHV-Mac/tools/`: `wsjtx_udp_listen.py`, `ax_walk.js`,
+  `ax_act.js` (JTDX's widgets are nested, so plain System Events finds
+  none). **Installed
   22:41** (`./macos-bundle.sh`, previous copy to the Trash, not launched).
 
 ### 2026-10-08 — Auto CQ button: keeps its width, and counts down in the first half of the minute too (for the next release)
