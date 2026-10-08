@@ -333,10 +333,13 @@ or Pi 5 is recommended.
   uplink or IF) is shown as 10489.540 and the log carries 2400.040 /
   10489.540, PROP_MODE SAT, SAT_NAME QO-100.
 - **FT2** (new in v0.3.0): FT4's protocol at twice
-  the speed — 3.75 s periods, 41.67 baud — as introduced in MSHV. The
-  mode was created by Martino IU8LMC (ARI Caserta); MSHV's C++
-  implementation is by Hrisimir LZ2HV. JTDX-VU decodes and transmits it
-  with a scaled copy of JTDX's own FT4 chain. Default dial frequencies
+  the speed — 3.75 s periods, 41.67 baud. FT2 was created by Martino
+  Merola IU8LMC (ARI Caserta), with Salvatore Raccampo 9H1SR as lead C++
+  developer; it first went on air in Decodium on 2026-02-16
+  ([ft2.it](https://ft2.it)), and MSHV by Hrisimir LZ2HV added it in
+  2.76.5 on 2026-03-24. JTDX-VU uses no Decodium code: it decodes and
+  transmits FT2 with a scaled copy of JTDX's own FT4 chain, with MSHV's
+  implementation as the reference. Default dial frequencies
   follow MSHV (14.084, 7.052, 21.144 MHz …). Add the FT2 button in
   View > Band & Mode Buttons... if you want it on the switcher.
   Since v0.6.0 the decoder also has MSHV's log-sum-exp demapper and

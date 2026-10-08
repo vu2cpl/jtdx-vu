@@ -243,23 +243,29 @@ Last updated: 2026-10-08
 
 ## What changed
 
-### 2026-10-08 — About box credits JTTY and FT2; Decodium team credit request (for the next release)
+### 2026-10-08 — FT2 credit corrected; About box credits JTTY and FT2 (for the next release)
 
 Martino Merola IU8LMC wrote on behalf of the "Decodium / DecoSystem Team"
 (2026-10-08, Gmail, subject "Omission of FT2 Developer Credits") asking
-that the team be credited as FT2's developers. Until now the README, the
-v0.7.0 release notes, the FT2 source headers and vu2cpl.com named only
-"Martino IU8LMC (ARI Caserta)", and the in-program About box credited
-neither FT2 nor JTTY.
+that the team be credited as FT2's developers. Manoj replied the same day
+(credit had been to Martino personally; asked for team names).
 
-- `about.cpp`: new "JTDX-VU additions" block. JTTY: K1JT, K9AN, G4KLA and
-  the WSJT-X group (WSJT-X 3.2). FT2: created by Martino Merola IU8LMC
-  (ARI Caserta), reference implementation in MSHV by LZ2HV. Band/mode
-  buttons, DXCC colours and QO-100 logging follow MSHV. Builds clean (`make jtdx`).
-- Manoj replied the same day: credit was given to Martino personally, we
-  didn't know of the team, and asked for the members' names/callsigns and
-  a Decodium project link to add to README, About box, release notes and
-  vu2cpl.com.
+Facts (from ft2.it): FT2 was created by Martino Merola IU8LMC (ARI
+Caserta) with Salvatore Raccampo 9H1SR as lead C++ developer; first on
+air in Decodium on 2026-02-16; MSHV added it in 2.76.5 on 2026-03-24.
+So the old README phrase "as introduced in MSHV" was wrong. Code credit
+was already right: JTDX-VU has no Decodium code, its FT2 is JTDX's FT4
+chain scaled, with MSHV (LZ2HV) as the reference.
+
+- `about.cpp`: new "JTDX-VU additions" block crediting JTTY (K1JT, K9AN,
+  G4KLA, WSJT-X group), FT2 (wording above) and the MSHV-derived UI
+  features. The About box previously credited neither mode. Builds clean.
+- `README.md` FT2 section: same wording, "as introduced in MSHV" removed.
+- Same wording on vu2cpl.com (card + JTDX-VU project page) and in the
+  mshv-macos-port README (`~/projects/mshv-public-release`).
+- Not yet changed: the v0.7.0 GitHub release notes' credits line (says
+  "FT2 was created by Martino IU8LMC (ARI Caserta)") — use the new wording
+  in the next release's notes.
 
 ### 2026-10-07 — Rig mode shown beside the frequency (for the next release)
 
@@ -2505,10 +2511,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **FT2 credit for the Decodium / DecoSystem team** (2026-10-08):
-  waiting for IU8LMC's list of team members and the project link. Then add
-  them to `about.cpp`, README's FT2 section, the next release notes'
-  credits line and the vu2cpl.com JTDX-VU card.
+- [ ] **FT2 credit in the next release notes** (2026-10-08): use the
+  IU8LMC + 9H1SR / Decodium 2026-02-16 / MSHV 2.76.5 wording (see What
+  changed). Watch for IU8LMC's reply in case the team wants more names.
 - [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07: connect,
       receive and DAX streams work on the radio; the band-change failure found
       there is fixed but not yet re-tried on the radio). Check: `client gui` with SmartSDR
