@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.7.2
+# JTDX-VU for VUCG community — v0.7.3
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -127,14 +127,14 @@ or Pi 5 is recommended.
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.7.2"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.7.3"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
   - On first launch, JTDX-VU copies the stock JTDX settings and data
     across and repoints the paths in the .ini. The stock files are only
     read.
-- **Tells you when a new release is out** (since the next release). Once a
+- **Tells you when a new release is out** (since v0.7.3). Once a
   day JTDX-VU asks GitHub for the latest JTDX-VU release: about 10 s after
   start, or later while it stays open, whenever a day has passed since the
   last check that got an answer. If it is newer than yours, a window shows
@@ -285,7 +285,7 @@ or Pi 5 is recommended.
   v0.5.0), so unanswered CQ still stops. While CNS is on, the button
   counts that watchdog down (since v0.7.2) - "4:37", or "12m" from 10
   minutes up, on a second line under "Auto CQ" so the button keeps its
-  width (since the next release; v0.7.2 widened it): it runs down while you transmit and holds still while Tx
+  width (since v0.7.3; v0.7.2 widened it): it runs down while you transmit and holds still while Tx
   is idle, like the "WD" box. Auto CQ and **1 QSO** exclude each
   other (since v0.6.0): switching Auto CQ on clears 1 QSO, and pressing
   1 QSO during an Auto CQ run means "finish this QSO, then stop" - both go
@@ -329,7 +329,7 @@ or Pi 5 is recommended.
     the set's exchange, %RST the RST sent, %NAME his name, and station
     details %OP (name), %QTH, %TX (radio), %ANT (antenna). Set Serial
     Number to "none" for a non-contest QSO and %N is left out of %E.
-  - **Auto logging from a macro:** put %LOG in a macro (e.g. "TU %H 73
+  - **Auto logging from a macro** (since v0.7.3): put %LOG in a macro (e.g. "TU %H 73
     %LOG") and sending it also logs the QSO, straight in without the Log
     QSO dialog; %LOG itself is not sent, and a macro of just %LOG only
     logs. A QSO is logged once: pressing it again, or the "TU ..." message
