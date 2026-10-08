@@ -363,8 +363,9 @@ His "missing worked-before stations" were the Hide-worked button.
   countdown (v0.7.2)", downloads table / release link on v0.7.2, card sentence,
   a "Tested so far" line for the countdown; pushed (`c522a65`) after all eight
   URLs answered 200.
-- Frank PH2M: "it's out" note drafted in
-  `~/projects/JTDX-records/jtdx-vu-v0.7.2-released-to-PH2M.txt`, NOT sent.
+- Frank PH2M: "it's out" note
+  (`~/projects/JTDX-records/jtdx-vu-v0.7.2-released-to-PH2M.txt`) SENT by Manoj
+  the same day. Manoj will test the FT8 countdown on air later.
 
 ### 2026-10-08 — v0.7.1 released: About box credits (FT2 corrected, JTTY)
 
@@ -2660,9 +2661,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [x] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08)
   — lifted the same morning ("cut a new release"); **RELEASED 2026-10-08**
   with the corrected FT2 credit in the notes.
-- [ ] **Tell Frank PH2M v0.7.2 is out** — draft in
-  `~/projects/JTDX-records/jtdx-vu-v0.7.2-released-to-PH2M.txt`, for Manoj to
-  send.
+- [x] **Tell Frank PH2M v0.7.2 is out** — SENT by Manoj 2026-10-08 (draft
+  `~/projects/JTDX-records/jtdx-vu-v0.7.2-released-to-PH2M.txt`).
 - [ ] **Watch the Auto CQ countdown in FT8 while calling** (CNS on, Enable Tx
   on): it was never seen running down in m:ss, only in JTTY and on an idle
   watchdog.
