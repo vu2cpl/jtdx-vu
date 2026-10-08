@@ -251,7 +251,7 @@ Last updated: 2026-10-08
 
 ## What changed
 
-### 2026-10-08 — Auto CQ button keeps its width during the countdown (for the next release)
+### 2026-10-08 — Auto CQ button: keeps its width, and counts down in the first half of the minute too (for the next release)
 
 Manoj: "width of autocq button should not change". In v0.7.2 the button
 was sized to its text (AnsB4's Preferred policy, max 80 px against Monitor's
@@ -263,10 +263,23 @@ was sized to its text (AnsB4's Preferred policy, max 80 px against Monitor's
   count on a second line ("Auto CQ" / "4:37", "12m" from 10 min up).
 - Tested off-screen (Qt 5 offscreen platform, scratch program): in a column
   beside an expanding area, the button's geometry was identical for "Auto
-  CQ", "Auto CQ\n0:58", "Auto CQ\n12m" at two window heights. The mock did
-  not reproduce v0.7.2's widening (another button fixed the mock column's
-  width), so the visual check in the real window is still to do - watch the
-  button the next time Auto CQ runs on a build with this.
+  CQ", "Auto CQ\n0:58", "Auto CQ\n12m" at two window heights. Then in the
+  real window (`--test-mode` copy of the FLEX VITA49 settings with rig None,
+  VOX, audio on the unused "RX Audio" loopback - test-mode settings live in
+  `~/.qttest/Library/Preferences/`, not `~/Library/Preferences/`): the
+  button stayed Monitor's width through the countdown.
+- **Countdown stuck at 5:00 / whole minutes (Manoj), fixed:** the button
+  predicted the next minute with `watchdog_counts (next tick)`, which uses
+  `m_secTxStopped` - the end of the PREVIOUS transmission. In the first half
+  of each minute that is > 32 s before the tick, so it showed the whole
+  minute (5:00 on the first one) and only ran in the second half. Seen on
+  the test copy calling CQ: 07:02:01 4:00, 07:02:26 4:00 (should be 3:35),
+  07:02:56 3:04, 07:03:26 3:00. Now the coming minute counts if Enable Tx is
+  on or a transmission is under way (it ends before the tick), else the old
+  test. After: 07:06:12 4:48, :32 4:28, :52 4:08, 07:07:12 3:48, :32 3:28,
+  :52 3:08. The watchdog itself was always right - only the display lagged.
+  Note: like stock JTDX, any click, key press or window activation in
+  JTDX-VU resets the watchdog, so the count goes back to 5:00 then.
 - README CNS paragraph updated.
 
 ### 2026-10-08 — Auto CQ button counts down what is left (for the next release, v0.7.2)

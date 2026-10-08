@@ -8873,7 +8873,12 @@ void MainWindow::updateCnsCountdown ()
           qint64 const now = m_jtdxtime->currentMSecsSinceEpoch2 ();
           int const tick_ms = minuteTimer.isActive () ? qMax (0, minuteTimer.remainingTime ()) : int (60000 - now % 60000);
           int const to_minute = (tick_ms + 999) / 1000;
-          sec = watchdog_counts ((now + tick_ms) / 1000) ? (left_min - 1) * 60 + to_minute : left_min * 60;
+          // the coming minute counts if we are calling (Enable Tx on, or a
+          // transmission under way - it ends before the tick), as the
+          // watchdog will see it then; m_secTxStopped alone is the previous
+          // transmission's end, too early in the first half of the minute
+          bool const counts = m_enableTx || m_transmitting || watchdog_counts ((now + tick_ms) / 1000);
+          sec = counts ? (left_min - 1) * 60 + to_minute : left_min * 60;
         }
     }
   // the count goes on a second line so the button keeps its width: from 10
