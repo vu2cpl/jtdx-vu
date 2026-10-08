@@ -695,7 +695,7 @@ private:
   WSPRNet *wsprNet;
   EQSL *Eqsl;
   ClubLog *m_clubLog {nullptr};  // JTDX-VU
-  UpdateCheck *m_updateCheck {nullptr};  // JTDX-VU: Help > Check for Updates..., daily check at start
+  UpdateCheck *m_updateCheck {nullptr};  // JTDX-VU: Help > Check for Updates..., automatic daily check
   BandModeSwitcher *m_switcher {nullptr};  // JTDX-VU
   bool m_nonstop {false};  // JTDX-VU Non-stop (Tx watchdog still applies)
   QStringList m_queue;          // JTDX-VU: right-click queue, called by AutoSeq when next decoded

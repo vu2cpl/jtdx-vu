@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.6.0
+# JTDX-VU for VUCG community — v0.7.2
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -127,24 +127,27 @@ or Pi 5 is recommended.
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.6.0"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.7.2"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
   - On first launch, JTDX-VU copies the stock JTDX settings and data
     across and repoints the paths in the .ini. The stock files are only
     read.
-- **Tells you when a new release is out** (since the next release). About
-  10 s after start, at most once a day, JTDX-VU asks GitHub for the latest
-  JTDX-VU release. If it is newer than yours, a window shows its release
-  notes with **Download** (opens the release page in your browser), **Skip
-  This Version** and **Remind Me Later**; otherwise, or when offline, it
-  says nothing. Nothing is downloaded or installed. **Help > Check for
-  Updates...** checks at any time and always says what it found. Turn the
-  daily check off with Settings > General > "Check for updates
-  automatically". The only request is one anonymous `GET` to
-  `api.github.com` (`/repos/vu2cpl/jtdx-vu/releases/latest`); no other
-  server is involved.
+- **Tells you when a new release is out** (since the next release). Once a
+  day JTDX-VU asks GitHub for the latest JTDX-VU release: about 10 s after
+  start, or later while it stays open, whenever a day has passed since the
+  last check that got an answer. If it is newer than yours, a window shows
+  its release notes with **Download** (opens the release page in your
+  browser), **Skip This Version** and **Remind Me Later**; otherwise it
+  says nothing. When GitHub can't be reached it also says nothing, and
+  tries again an hour later and at the next start. Nothing is downloaded
+  or installed. **Help > Check for Updates...** checks at any time and
+  always says what it found. Turn the daily check off with Settings >
+  General > "Check for updates automatically"; development builds (a
+  version with "dev" in it) only check from the Help menu. The only
+  request is one anonymous `GET` to `api.github.com`
+  (`/repos/vu2cpl/jtdx-vu/releases/latest`); no other server is involved.
 - **Club Log worked-before source** (File > Club Log & Alerts...). Your
   Club Log log replaces `wsjtx_log.adi` as the source for JTDX's own
   New DXCC / New Band / New Band+Mode colours, filters and auto-reply

@@ -31,10 +31,13 @@ namespace
   char const * const latest_release_api = "https://api.github.com/repos/vu2cpl/jtdx-vu/releases/latest";
   char const * const releases_page = "https://github.com/vu2cpl/jtdx-vu/releases/latest";
   int const timeout_ms = 10 * 1000;
-  int const automatic_interval_s = 24 * 3600;
+  int const first_look_ms = 10 * 1000;           // the automatic look after start
+  int const look_interval_ms = 3600 * 1000;      // then one every hour while running
+  int const automatic_interval_s = 24 * 3600;    // since the last successful check
+  int const failure_backoff_s = 3600;            // since a failed automatic attempt
 
   // settings (JTDX-VU's own group, beside NonStop, WantedShow, ...)
-  char const * const last_check_key = "JTDXVU/UpdateLastCheck";    // UTC, ISO 8601; automatic checks only
+  char const * const last_check_key = "JTDXVU/UpdateLastCheck";    // UTC, ISO 8601; last SUCCESSFUL check (sent at)
   char const * const skip_version_key = "JTDXVU/UpdateSkipVersion";  // tag_name the operator skipped
 
   // "v0.7.10" -> (0, 7, 10); "1.0" -> (1, 0); nothing numeric -> ()
@@ -57,6 +60,19 @@ namespace
     if (url.isValid () && url.scheme () == "https" && url.host () == "github.com") return url;
     return QUrl {releases_page};
   }
+}
+
+bool UpdateCheck::automatic_check_due (bool enabled, QString const& version, bool busy, bool window_open,
+                                       QDateTime const& now, QDateTime const& last_success,
+                                       QDateTime const& last_failure)
+{
+  if (!enabled || busy || window_open) return false;   // never two checks, never a second dialog
+  if (version.contains ("dev", Qt::CaseInsensitive)) return false;   // development build: Help menu only
+  // a time in the future (clock set back) does not hold a check off
+  auto const within = [&now] (QDateTime const& then, int seconds) {
+      return then.isValid () && then <= now && then.secsTo (now) < seconds;
+    };
+  return !within (last_success, automatic_interval_s) && !within (last_failure, failure_backoff_s);
 }
 
 bool UpdateCheck::is_newer (QString const& candidate, QString const& current)
@@ -87,7 +103,14 @@ UpdateCheck::UpdateCheck (QSettings * settings, QWidget * window)
   , settings_ {settings}
   , window_ {window}
   , timeout_ {new QTimer {this}}
+  , hourly_ {new QTimer {this}}
 {
+  // Precise: Qt runs a coarse timer this long as a very coarse one, which
+  // may fire up to half a second early - and a look just short of 24 h (or
+  // 1 h) after a check would leave it to the next look, an hour later
+  hourly_->setTimerType (Qt::PreciseTimer);
+  hourly_->setInterval (look_interval_ms);
+  connect (hourly_, &QTimer::timeout, this, &UpdateCheck::check_automatic);
   timeout_->setSingleShot (true);
   timeout_->setInterval (timeout_ms);
   connect (timeout_, &QTimer::timeout, this, [this] {
@@ -99,16 +122,30 @@ UpdateCheck::UpdateCheck (QSettings * settings, QWidget * window)
     });
 }
 
+void UpdateCheck::start_automatic (std::function<bool ()> enabled)
+{
+  enabled_ = std::move (enabled);
+  QTimer::singleShot (first_look_ms, this, [this] {
+      check_automatic ();
+      // the hourly looks count from here, just after the time this check is
+      // stamped with, so a check due 24 h (or a retry due 1 h) later is due
+      // by the tick that comes then
+      hourly_->start ();
+    });
+}
+
 void UpdateCheck::check_automatic ()
 {
-  if (reply_) return;
-  auto const now = QDateTime::currentDateTimeUtc ();
-  auto const last = QDateTime::fromString (settings_->value (last_check_key).toString (), Qt::ISODate);
-  // a last check in the future (clock set back) does not hold it off
-  if (last.isValid () && last <= now && last.secsTo (now) < automatic_interval_s) return;
-  // recorded when tried, so an offline start does not retry on every launch
-  settings_->setValue (last_check_key, now.toString (Qt::ISODate));
-  start (false);
+  // JTDX-VU stays open for days: this runs at start and every hour, and
+  // the pure automatic_check_due () decides.  The development-build test is
+  // on the program's own version, not the JTDXVU_UPDATE_TEST_VERSION one.
+  if (automatic_check_due (enabled_ && enabled_ (), jtdxvu_version (), busy (), !dialog_.isNull (),
+                           QDateTime::currentDateTimeUtc (),
+                           QDateTime::fromString (settings_->value (last_check_key).toString (), Qt::ISODate),
+                           last_failure_))
+    {
+      start (false);
+    }
 }
 
 void UpdateCheck::check_manual ()
@@ -128,7 +165,12 @@ void UpdateCheck::start (bool manual)
   // ClubLog's constructor).
   if (!network_manager_) network_manager_ = new QNetworkAccessManager {this};
   manual_ = manual;
+  automatic_ = !manual;
   timed_out_ = false;
+  // whole seconds, as UpdateLastCheck is stored: never later than the
+  // moment sent, so "24 h since" is never short of 24 h
+  started_ = QDateTime::currentDateTimeUtc ();
+  started_ = started_.addMSecs (-started_.time ().msec ());
   QNetworkRequest request {QUrl {latest_release_api}};
   request.setRawHeader ("Accept", "application/vnd.github+json");
   request.setHeader (QNetworkRequest::UserAgentHeader, QString {"JTDX-VU/" + jtdxvu_version ()});
@@ -150,9 +192,9 @@ void UpdateCheck::on_reply (QNetworkReply * reply)
       return;
     }
   auto const body = reply->readAll ();
+  auto const status = reply->attribute (QNetworkRequest::HttpStatusCodeAttribute).toInt ();
   if (reply->error () != QNetworkReply::NoError)
     {
-      auto const status = reply->attribute (QNetworkRequest::HttpStatusCodeAttribute).toInt ();
       if (status >= 400)
         {
           // GitHub says why in a JSON "message" (e.g. the hourly rate limit);
@@ -172,6 +214,11 @@ void UpdateCheck::on_reply (QNetworkReply * reply)
         }
       return;
     }
+  if (status != 200)   // a success is a 200 with a release in it, nothing else
+    {
+      report_failure (tr ("HTTP %1").arg (status));
+      return;
+    }
 
   QJsonParseError error;
   auto const document = QJsonDocument::fromJson (body, &error);
@@ -182,6 +229,11 @@ void UpdateCheck::on_reply (QNetworkReply * reply)
       report_failure (tr ("unexpected reply from GitHub"));
       return;
     }
+
+  // A successful check, automatic or manual, newer release or not: the only
+  // place UpdateLastCheck is written (with the time it was sent)
+  settings_->setValue (last_check_key, started_.toString (Qt::ISODate));
+  last_failure_ = QDateTime {};
 
   auto const current = current_version ();
   if (is_newer (tag, current))
@@ -198,8 +250,12 @@ void UpdateCheck::on_reply (QNetworkReply * reply)
 
 void UpdateCheck::report_failure (QString const& reason)
 {
+  // Nothing is saved, so the next start tries again.  A failed automatic
+  // attempt holds the next automatic one off for an hour (in memory only); a
+  // manual one changes nothing.
+  if (automatic_) last_failure_ = started_;
   // automatic checks stay silent: offline, a timeout or the rate limit is
-  // nothing the operator needs to hear about at start-up
+  // nothing the operator needs to hear about
   if (manual_) show_message (tr ("Couldn't check for updates: %1").arg (reason), true);
 }
 

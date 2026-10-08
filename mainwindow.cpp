@@ -1153,8 +1153,10 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
   }
 
   // JTDX-VU: a newer release on GitHub?  Help > Check for Updates... always
-  // reports; the automatic check runs ~10 s after start, at most once a day,
-  // while Settings > General "Check for updates automatically" is on, and is
+  // reports.  The automatic check looks ~10 s after start and then every
+  // hour (the program stays open for days), and goes out at most once per
+  // 24 h after a successful check, while Settings > General "Check for
+  // updates automatically" is on and never from a development build; it is
   // silent unless there is a release to offer.  See updatecheck.h.
   m_updateCheck = new UpdateCheck {m_settings, this};
   {
@@ -1163,9 +1165,7 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     ui->menuHelp->insertAction (ui->actionAbout, action);
     connect (action, &QAction::triggered, m_updateCheck, &UpdateCheck::check_manual);
   }
-  QTimer::singleShot (10 * 1000, this, [this] {
-      if (m_config.check_for_updates ()) m_updateCheck->check_automatic ();
-    });
+  m_updateCheck->start_automatic ([this] {return m_config.check_for_updates ();});
 
   // JTDX-VU: MSHV-style band / mode buttons above the decode panes
   m_switcher = new BandModeSwitcher {m_settings, m_useDarkStyle};
