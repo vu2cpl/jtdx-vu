@@ -264,6 +264,15 @@ Last updated: 2026-10-09
 
 ## What changed
 
+### 2026-10-09 — README: "Common problems" section (docs only)
+
+- New section after "How to install": the macOS shared-memory error
+  (points to install step 5) and duplicate decodes 50/100 Hz apart.
+- The duplicates came from Manoj's MacBook on QO-100: RX level meter at
+  82 dB, so 50 Hz hum mixed into every strong signal (copies 15-20 dB down
+  at ±50/100 Hz multiples). Lowering the RX level to ~30-40 dB removed
+  them. Not a decoder issue.
+
 ### 2026-10-09 — QO-100: Club Log alert and JTTY status checked the 3cm downlink, not 13cm (for the next release)
 
 - **Symptom (Manoj, new MacBook install):** YL2KF on QO-100 FT8 alerted as

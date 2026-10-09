@@ -120,6 +120,19 @@ or Pi 5 is recommended.
 **Upgrading:** install the new `.deb` the same way; settings are kept.
 **Removing:** `sudo apt remove jtdx-vu`.
 
+## Common problems
+
+- **"Unable to create shared memory segment" (macOS).** The one-time
+  shared-memory setting is missing on this Mac. See step 5 of the macOS
+  install above.
+- **The same message decoded at several frequencies**, 50 or 100 Hz apart
+  and weaker than the real one. The receive audio is too loud and is
+  clipping, which turns any mains hum into copies of every strong signal.
+  Turn the receive audio down at the source (the rig's USB audio level,
+  or SDR-Control) until the level meter reads about 30–40 dB on a quiet
+  band. If copies remain at that level, look for a hum source, such as a
+  laptop charger causing a ground loop.
+
 ## What's different from stock JTDX
 
 - **Native build on current macOS.** Builds with Homebrew Qt 5.15,
