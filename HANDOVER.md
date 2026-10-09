@@ -264,6 +264,15 @@ Last updated: 2026-10-09
 
 ## What changed
 
+### 2026-10-09 — RUMlog routing checked; bridge turned on in two profiles (settings only)
+
+MSHV's FLEX VITA49 profile sent JTTY QSOs to RUMlog as mode "JTTY" (its WSJT-X "QSO Logged" message reached RUMlog
+before the bridge's MFSK/JTTY ADIF; fixed on the MSHV side). JTDX-VU checked for the same fault: none of its four
+profiles sends "QSO Logged" to RUMlog (UDP1 goes to DXCA, 192.168.1.109:2334) and its log holds JTTY as MFSK/JTTY, so
+no fault. But the default profile (`JTDX-VU.ini`) and "TCI FLEX HF" had the secondary UDP server (the RUMlog bridge)
+OFF, so QSOs logged there reached RUMlog by no path. Turned on in both with JTDX-VU closed (`UDP2Server=127.0.0.1`,
+`UDP2ServerPort=2233`, `EnableUDP2adifBroadcast=true`), matching FLEX VITA49 and QO-100. No code change.
+
 ### 2026-10-09 — v0.7.3 released: update check, JTTY `%LOG`, Auto CQ button fixes
 
 - https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.3, annotated tag on
