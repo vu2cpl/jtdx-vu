@@ -280,10 +280,19 @@ Last updated: 2026-10-10
 - **Fix:** `FlexTransceiver::udp_register ()` sends that datagram from the
   audio socket to the radio's 4993 right after `client udpport`, and again
   every 5 s from `do_poll`. The radio ignores it on a plain LAN.
-- Builds. Trial zip `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip`. **Not
-  yet tested** on VU2OY's radio or re-checked on the LAN; the
-  `tools/flex_selftest.sh` run needs `tools/ft2_autotest.sh` signals first
-  and was skipped.
+- Builds. Trial zip `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip`.
+  **Confirmed working on VU2OY's radio over the VPN** (Manoj, 2026-10-10).
+  Not yet re-checked on Manoj's own radio on the LAN; `tools/flex_selftest.sh`
+  needs `tools/ft2_autotest.sh` signals first and was skipped.
+- Why Manoj's own site never needed it: on his UniFi the Internal -> VPN
+  direction is left at Allow (vlan-setup MIGRATION-PLAN "VPN design"), so the
+  radio's unsolicited UDP reaches a VPN client. Only the client's replies
+  would be blocked, and VITA-49 needs none. VU2OY's gateway lets traffic
+  toward VPN clients through only as a reply. His exact rule is unknown.
+- **MSHV has the same gap:** LZ2HV's VITA-49 start-up in `network.cpp`
+  sends `client udpport` and never any UDP to the radio. Port the fix to
+  MSHV-Mac and offer it to Christo as a diff (open).
+
 
 ### 2026-10-09 — README: "Common problems" section (docs only)
 
