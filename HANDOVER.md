@@ -264,6 +264,37 @@ Last updated: 2026-10-10
 
 ## What changed
 
+### 2026-10-10 — Flex: no-audio reconnect loop stopped, connect-time frequency fight fixed, ERR box stays clickable (trial, for the next release)
+
+- **From KK4CDK's flex_trace.txt** (FLEX-6700, Windows, same LAN, v0.7.3):
+  every connect created the DAX RX stream to his PC (`ip=192.168.1.72`,
+  `dax_clients=1`), no audio arrived, and 10 s later it hit `no audio from the radio`.
+  The TCI-style auto-reconnect then restarted it every ~15 s, about 30 times in
+  10 minutes, re-tuning each time (his relay clicks). Cause: almost certainly
+  Windows Firewall; the `udp_register` fix (733aa9aa) should get through it.
+- **Frequency fight:** at every connect two requests went out 38 ms apart,
+  14.074 then 14.100. On coming online, `switch_mode` snapped the radio's
+  default 14.100 to the FT8 frequency 14.074, then the deferred "start on the
+  last frequency" `force_rig_mode (m_lastMonitoredFrequency)` sent an older
+  14.100. **Fix** (`handle_transceiver_update`): for a Flex coming online the
+  remembered frequency replaces the radio's before the mode refresh, and the
+  deferred call re-asserts the mode on the same `m_freqNominal`. One target.
+- **Loop stop** (`handle_transceiver_failure`): a Flex that fails with "no audio"
+  twice in a row (`m_flexNoAudioCount`, reset when audio arrives in `dataSink`)
+  stops auto-reconnecting. It shows a status line and a message naming the firewall
+  (Windows and macOS steps, VPN), and says to click the red ERR box.
+- **ERR box:** `on_readFreq_clicked` now calls `rigOpen ()` when offline. A
+  failing rig's final offline update no longer repaints `readFreq` green and
+  disabled. That had happened on every failure, so the "click ERR to reset"
+  tooltip never worked.
+- **Tested** against `tools/fake_flex.py` with two new switches: `FAKE_NO_AUDIO`
+  (control only, no UDP) and the existing `FAKE_GUI_SLICE` (14.100 USB slice
+  handed to the client), with Data mode on. Connect 1 sent one `slice tune 0
+  14.074` and one `slice set 0 mode=DIGU`, with no jump back. Connect 2 needed nothing. There were
+  exactly two connects, then the message, and the box stayed red "ERR". Clicking ERR was
+  not tested (screen locked). The "polluted remembered 14.100" case from his
+  trace was reasoned about, not reproduced.
+
 ### 2026-10-10 — Show US State (trial, for the next release)
 
 - **Asked for by** KK4CDK (Miguel). JTDX 2.2.160-rc10 has it, but 2.2.160 is

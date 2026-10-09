@@ -2108,6 +2108,7 @@ void MainWindow::writeHaltTxEvent(QString reason)
 //-------------------------------------------------------------- dataSink()
 void MainWindow::dataSink(qint64 frames)
 {
+  m_flexNoAudioCount = 0;          // JTDX-VU: audio is arriving
   if (m_tciNoAudio && m_tci) {   // JTDX-VU: TCI audio is flowing again
     m_tciNoAudio = false;
     showStatusMessage (tr ("TCI audio back"), 10000);
@@ -7650,6 +7651,7 @@ void MainWindow::on_readFreq_clicked()
 {
   if (m_transmitting) return;
   if (m_config.transceiver_online ()) Q_EMIT m_config.sync_transceiver (true, true);
+  else rigOpen ();   // JTDX-VU: the red ERR box reconnects a rig that gave up
 }
 
 void MainWindow::on_pbTxMode_clicked()
@@ -7865,15 +7867,16 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
   // slice back on the frequency we were on, in our data mode, as MSHV does
   // ("start on the last frequency").  Deferred a tick: this runs inside the
   // rig's own update.
-  if (!old_state.online () && s.online () && m_config.rig_name ().startsWith ("FlexRadio VITA")) {
-    Frequency const want = m_lastMonitoredFrequency;
-    if (want) QTimer::singleShot (0, this, [this, want] {
-        if (m_config.transceiver_online ()) m_config.force_rig_mode (want);
-      });
-  }
+  // The frequency is decided once, here: it stands in for the radio's default
+  // before the mode refresh below re-tunes, so both requests name the same
+  // frequency. Two sources (the mode refresh snapping 14.100 to 14.074, then a
+  // deferred restore of an older frequency) made the slice jump back and forth
+  // at every connect (KK4CDK's trace, 2026-10-10).
+  bool const flex_online = !old_state.online () && s.online () && m_config.rig_name ().startsWith ("FlexRadio VITA");
+  Frequency const flex_want = flex_online ? m_lastMonitoredFrequency : 0;
   m_rigState = s;
   auto old_freqNominal = m_freqNominal;
-  m_freqNominal = s.frequency ();
+  m_freqNominal = flex_want ? flex_want : s.frequency ();
   // initializing
   if (old_state.online () == false && s.online () == true) {
       on_monitorButton_clicked(true);
@@ -7887,6 +7890,11 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
       else if(m_mode=="T10") on_actionT10_triggered();
       else if(m_mode=="WSPR-2") on_actionWSPR_2_triggered();
       else if(m_mode=="JTTY") jttyModeSelected();
+      // deferred a tick (this runs inside the rig's own update); same frequency
+      // the mode refresh just chose, so it only re-asserts the data mode
+      if (flex_online) QTimer::singleShot (0, this, [this] {
+          if (m_config.transceiver_online ()) m_config.force_rig_mode (m_freqNominal);
+        });
   }
   if (s.frequency () != old_state.frequency () || s.split () != m_splitMode) {
       m_splitMode = s.split ();
@@ -7940,8 +7948,13 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
     if (m_tciNoAudio) showStatusMessage (tr ("TCI reconnected, still no audio from the SDR program - restart it"));
     else showStatusMessage (tr ("TCI reconnected"), 10000);
   }
-  ui->readFreq->setEnabled (false);
-  update_rig_mode_indicator (s);
+  // JTDX-VU: the update a failing rig sends as it goes offline must not
+  // repaint the red, clickable ERR box green and disabled - ERR is how the
+  // operator reconnects (after the Flex no-audio stop, for one)
+  if (s.online ()) {
+    ui->readFreq->setEnabled (false);
+    update_rig_mode_indicator (s);
+  }
   if(m_config.write_decoded_debug()) {
     QString pttstate = s.ptt () ? "PTT On" : "PTT Off";
     QString splitstate = s.split () ? " Split On" : " Split Off";
@@ -7960,6 +7973,28 @@ void MainWindow::handle_transceiver_failure (QString const& reason)
   // JTDX-VU: TCI - keep retrying quietly instead of the Rig Control Error
   // dialog, so it comes back on its own once the SDR program is running again
   if (m_config.is_tci ()) {
+    // JTDX-VU: a FlexRadio whose DAX audio never arrives (a firewall, a VPN)
+    // would be reconnected - and re-tuned, relays clicking - every 15 s for
+    // ever. After two in a row, stop and say why; the ERR button reconnects.
+    if (reason.contains ("no audio") && m_config.rig_name ().startsWith ("FlexRadio VITA")
+        && ++m_flexNoAudioCount >= 2) {
+      m_flexNoAudioCount = 0;
+      m_tciReconnecting = false;
+      m_tciNoAudio = true;
+      showStatusMessage (tr ("FlexRadio: no audio from the radio - stopped reconnecting"));
+      QTimer::singleShot (0, this, [this] {
+          JTDXMessageBox::warning_message (this, tr ("FlexRadio: no audio"),
+            tr ("JTDX-VU connects to the radio, but the radio's DAX audio never reaches this computer, "
+                "so it has stopped reconnecting.\n\n"
+                "The usual cause is a firewall blocking the radio's incoming audio:\n"
+                "- Windows: Windows Security > Firewall & network protection > Allow an app through firewall: "
+                "tick Private and Public for JTDX-VU (jtdx.exe).\n"
+                "- macOS: System Settings > Network > Firewall: allow incoming connections for JTDX-VU.\n"
+                "Over a VPN, the network at the radio's end can block it too.\n\n"
+                "Click the red ERR box beside the frequency to reconnect."));
+        });
+      return;
+    }
     m_tciReconnecting = true;
     if (reason.contains ("no audio")) m_tciNoAudio = true;   // TCITransceiver::do_poll watchdog
     showStatusMessage (tr ("TCI: %1 - reconnecting every 5 s").arg (reason));

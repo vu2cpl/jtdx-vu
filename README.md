@@ -278,7 +278,11 @@ or Pi 5 is recommended.
   FLEX-6000/8000: it takes or creates a slice, tunes it, sets DIGU and keys
   it, and with *Use TCI / VITA-49 Audio* ticked the receive audio comes in
   as a DAX stream over VITA-49 and the transmit audio goes out the same way,
-  so no DAX driver, virtual sound card or TCI bridge sits in the path. One
+  so no DAX driver, virtual sound card or TCI bridge sits in the path. The
+  radio sends that audio to the computer over UDP. JTDX-VU first sends the
+  radio a packet, so the audio gets back through a firewall, NAT or VPN. If
+  no audio arrives on two connects in a row, it stops reconnecting and says
+  why (usually the firewall), and clicking the red ERR box reconnects. One
   API session, so the radio's relays click once per over. Ported from the
   MSHV-Mac backend. No split: use Fake It or None. The TX slider is the
   radio's RF power (it follows the radio, which keeps power per band; while

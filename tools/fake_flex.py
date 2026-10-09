@@ -183,7 +183,7 @@ def tx_listener(a):
 def main():
     global log
     ap = argparse.ArgumentParser()
-    ap.add_argument("--sig", required=True); ap.add_argument("--snr", default="-10"); ap.add_argument("--repeats", type=int, default=2)
+    ap.add_argument("--sig", default=None); ap.add_argument("--snr", default="-10"); ap.add_argument("--repeats", type=int, default=2)
     ap.add_argument("--port", type=int, default=4992); ap.add_argument("--log", default="fake_flex.txt")
     ap.add_argument("--wait", type=float, default=25.0); ap.add_argument("--noise", type=float, default=0.05)
     ap.add_argument("--txdir", default="."); ap.add_argument("--freq", type=int, default=14074000)
@@ -195,7 +195,7 @@ def main():
     # 24 kHz stream (12 kHz Nyquist): noise RMS sigma per sample is 10*log10(0.5*12000/2500) = 3.8 dB
     # under a full-scale tone in 2500 Hz - not the 6.8 of the 48 kHz TCI sim
     levels = [(sigma * 10 ** ((float(v) - 3.8) / 20), float(v)) for v in filter(None, a.snr.split(","))]
-    sigs48 = load_signals(a.sig)
+    sigs48 = load_signals(a.sig) if a.sig else {}
     rendered = {}
     for g, _ in levels:
         for k, sig in sigs48.items():
@@ -211,7 +211,7 @@ def main():
             for k in range(6): plan.append((t + k * PERIOD, k + 1, g))
             t += 8 * PERIOD
     t_end = t + 5
-    print(f"{len(plan)} periods, first at {time.strftime('%H:%M:%S', time.gmtime(plan[0][0]))} UTC, ends {time.strftime('%H:%M:%S', time.gmtime(t_end))}", flush=True)
+    if plan: print(f"{len(plan)} periods, first at {time.strftime('%H:%M:%S', time.gmtime(plan[0][0]))} UTC, ends {time.strftime('%H:%M:%S', time.gmtime(t_end))}", flush=True)
 
     srv = socket.socket(); srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); srv.bind(("0.0.0.0", a.port)); srv.listen(5)
     def acceptor():
@@ -228,7 +228,9 @@ def main():
         delay = bt - time.time()
         if delay > 0: time.sleep(delay)
         with lock: sid, port, peer = state["rx_stream"], state["udpport"], state["peer"]
-        if sid and port:
+        # FAKE_NO_AUDIO: control works, no VITA-49 ever arrives - a firewall or a
+        # VPN dropping the radio's UDP (KK4CDK, VU2OY, 2026-10-10)
+        if sid and port and not os.environ.get("FAKE_NO_AUDIO"):
             off = rnd.randrange(0, NB)
             block = noise[off:off + FPP]
             for (ts, k, g) in plan:
