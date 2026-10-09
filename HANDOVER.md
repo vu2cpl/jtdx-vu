@@ -3112,7 +3112,12 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       (only mode JTTY -> MFSK; RUMlog's correct times kept) - the first
       version came from JTDX-VU's log, whose early start times are wrong.
       **Done 2026-10-06 (Manoj): the 11 QSOs changed to MFSK/JTTY in RUMlog
-      and the EA1BAF / N8DC grids corrected by hand.**
+      and the EA1BAF / N8DC grids corrected by hand.** BUT on 2026-10-09
+      RUMlog's ReadAdif export shows all 11 (and the 6 MSHV ones of 10-08)
+      as `MODE=JTTY SUBMODE=JTTY` again, while FT4 reads MFSK/FT4: RUMlog
+      6.5.1 keeps JTTY as its own mode whatever is imported or edited. Needs
+      a RUMlog mode mapping or Tom DL2RUM adding JTTY → MFSK; re-importing
+      does nothing.
 - [ ] **JTTY start-time fix** installed 2026-10-01; check the next
       JTTY QSO logs a sensible start time.
 - [ ] **JTTY screen redesign (2026-10-02):** installed; try on air -
