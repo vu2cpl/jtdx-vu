@@ -275,7 +275,10 @@ Last updated: 2026-10-09
   "3cm". The decode window, "New only" filter, auto-seq `wanted ()` and
   logging already used `Radio::qo100_uplink` (13cm).
 - **Fix:** both now convert with `Radio::qo100_uplink` first; the alert's
-  band label reads 13cm too. Builds clean; not yet checked on air.
+  band label reads 13cm too. **Confirmed on air** by Manoj on the MacBook
+  (trial zip `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip`, built from
+  `deeb1bbc`): DK1KQ (Club Log 13CM / QO-100, 2024-05-25), which had also
+  been alerting as new, no longer does. YL2KF itself not re-heard yet.
 - Side note, same session: a new Mac also needs the shared-memory sysctl
   (README step 5) — the MacBook stopped with "Unable to create shared memory
   segment" until it was set.
