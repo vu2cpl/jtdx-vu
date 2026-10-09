@@ -132,14 +132,10 @@ or Pi 5 is recommended.
   or SDR-Control) until the level meter reads about 30–40 dB on a quiet
   band. If copies remain at that level, look for a hum source, such as a
   laptop charger causing a ground loop. Unlike MSHV, JTDX shows the same
-  message again when it is decoded more than 45 Hz away. Tick
-  **Misc > Hide FT8 dupe messages** to drop weaker repeats instead. It is
-  saved per profile, and a level that is too high still costs weak decodes.
-- **A menu is missing (macOS laptops).** On a MacBook with a notch,
-  macOS hides app menus that do not fit beside the menu-bar icons, and
-  JTDX-VU has many menus (Misc, Profile, Language, Help are the first to
-  go). Quit some menu-bar apps, or pick a "More Space" resolution in
-  System Settings > Displays, and the menus come back.
+  message again when it is decoded more than 45 Hz away. To drop weaker
+  repeats instead, tick **Misc > Hide FT8 dupe messages** in the menu bar
+  (it is not in Settings). It is saved per profile, and a level that is
+  too high still costs weak decodes.
 
 ## What's different from stock JTDX
 

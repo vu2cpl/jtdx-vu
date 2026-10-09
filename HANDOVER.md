@@ -276,9 +276,9 @@ Last updated: 2026-10-09
   JTDX shows a repeat >45 Hz away unless **Misc > Hide FT8 dupe messages**
   (`HideFT8Dupes`, per profile) is ticked; all four profiles on the Mac
   mini have it off. README now says so.
-- Manoj could not find the Misc menu on the MacBook. Not confirmed, but
-  the likely cause is the notch: macOS drops app menus that do not fit
-  beside the status icons, and JTDX-VU has 11 menus. README entry added.
+- Manoj looked for the option in Settings; it is in the Misc menu (menu
+  bar). A README guess that the MacBook notch hid Misc was wrong and has
+  been removed; the README now says "in the menu bar, not in Settings".
 
 ### 2026-10-09 — QO-100: Club Log alert and JTTY status checked the 3cm downlink, not 13cm (for the next release)
 
