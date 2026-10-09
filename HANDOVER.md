@@ -264,6 +264,22 @@ Last updated: 2026-10-09
 
 ## What changed
 
+### 2026-10-09 — QO-100: Club Log alert and JTTY status checked the 3cm downlink, not 13cm (for the next release)
+
+- **Symptom (Manoj, new MacBook install):** YL2KF on QO-100 FT8 alerted as
+  "New band" on 3cm, though the 2024-11-09 QSO is in Club Log as BAND 13CM
+  / SAT QO-100. Club Log was on and freshly fetched.
+- **Cause:** `ClubLog::check_decode` (called with `m_freqNominal`, the
+  10489 MHz downlink) and `jttyHeardStatus` (JTTY band / call status) passed
+  the dial straight to `LogBook::matchDXCC` / `matchCall`, so they looked up
+  "3cm". The decode window, "New only" filter, auto-seq `wanted ()` and
+  logging already used `Radio::qo100_uplink` (13cm).
+- **Fix:** both now convert with `Radio::qo100_uplink` first; the alert's
+  band label reads 13cm too. Builds clean; not yet checked on air.
+- Side note, same session: a new Mac also needs the shared-memory sysctl
+  (README step 5) — the MacBook stopped with "Unable to create shared memory
+  segment" until it was set.
+
 ### 2026-10-09 — RUMlog routing checked; bridge turned on in two profiles (settings only)
 
 MSHV's FLEX VITA49 profile sent JTTY QSOs to RUMlog as mode "JTTY" (its WSJT-X "QSO Logged" message reached RUMlog

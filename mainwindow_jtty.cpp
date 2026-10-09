@@ -1030,7 +1030,8 @@ void MainWindow::jttyHeardFromLine (JttyDecodeLine & line)
 // the call itself on this band in JTTY, then worked
 void MainWindow::jttyHeardStatus (QString const& call, QColor & background, QString & status, QString & country)
 {
-  auto const band = m_config.bands ()->find (m_freqNominal);
+  auto const logFreq = Radio::qo100_uplink (m_freqNominal);   // QO-100 is logged on 13cm, not the 3cm downlink
+  auto const band = m_config.bands ()->find (logFreq);
   QString entity;
   bool worked {true}, slot {true};
   m_logBook.matchDXCC (call, entity, worked, slot);
@@ -1046,7 +1047,7 @@ void MainWindow::jttyHeardStatus (QString const& call, QColor & background, QStr
     {
       QString e2;
       bool w2 {true}, bandSlot {true};
-      m_logBook.matchDXCC (call, e2, w2, bandSlot, m_freqNominal);
+      m_logBook.matchDXCC (call, e2, w2, bandSlot, logFreq);
       if (!bandSlot)
         {
           colour = m_config.color_NewDXCCBand ();
@@ -1068,7 +1069,7 @@ void MainWindow::jttyHeardStatus (QString const& call, QColor & background, QStr
     {
       QString e4;
       bool callWorked {true}, callSlot {true};
-      m_logBook.matchCall (call, e4, callWorked, callSlot, m_freqNominal, "JTTY");
+      m_logBook.matchCall (call, e4, callWorked, callSlot, logFreq, "JTTY");
       if (!callWorked)
         {
           colour = m_config.color_NewCall ();

@@ -42,6 +42,7 @@
 
 #include "logbook/logbook.h"
 #include "logbook/adif.h"
+#include "Radio.hpp"
 
 namespace
 {
@@ -302,6 +303,7 @@ QString ClubLog::status_text () const
 void ClubLog::check_decode (LogBook & logbook, QString const& call, double dial_freq, QString const& mode)
 {
   if (call.isEmpty () || !(macos_ || telegram_) || !(alert_atno_ || alert_band_ || alert_mode_)) return;
+  dial_freq = Radio::qo100_uplink (Radio::Frequency (dial_freq));   // QO-100 is logged on 13cm, not the 3cm downlink
 
   QString country;
   bool worked {true}, worked_slot {true};
