@@ -2923,10 +2923,16 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       (or within an hour of it while running). The v0.7.3 notes describe the
       check. If a development version string is ever used, it must contain
       "dev" to keep automatic checks off.
-- [ ] **Website on v0.7.3** (vu2cpl.com card, JTDX-VU page paragraph,
-      downloads table / release link / apt command): not done in the v0.7.3
-      cycle.
-- [ ] **Stale v0.1.0 on the .170 Windows PC** (`C:\JTDX-VU-0.1.0-windows-x64`,
+- [x] **Website on v0.7.3** — DONE 2026-10-09 ~06:20 (vu2cpl.github.io
+      `c926dc3`): card sentence, page paragraph "A check for new releases,
+      %LOG and a steadier Auto CQ button (v0.7.3)", downloads table /
+      release link / apt on v0.7.3 (all eight assets answered 206 first).
+- [x] **Stale v0.1.0 on the .170 Windows PC** — REMOVED 2026-10-09 ~06:00 on
+      Manoj's "remove the old JTDX-VU from windows". Note: it was deleted
+      permanently, not recycled (over SSH the Recycle Bin call silently
+      hard-deletes); the identical zip is on the v0.1.0 release and
+      `%LOCALAPPDATA%\JTDX-VU` settings were untouched. Was:
+- [ ] (`C:\JTDX-VU-0.1.0-windows-x64`,
       found 2026-10-09, unused since 09-28): Manoj to say upgrade, remove or
       leave.
 - [x] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08)
