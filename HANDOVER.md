@@ -2915,7 +2915,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **Update check in the real app** (`e9796edb`, `0bd95894`, released in
+- [x] **Update check in the real app** — TESTED by Manoj 2026-10-09 in the
+      installed v0.7.3 ("mac expert, kst2mac, jtdx vu, mshv all tested").
+      Was: (`e9796edb`, `0bd95894`, released in
       v0.7.3, installed 2026-10-09, not yet launched): tested only in a
       scratch program built from the same class. On the next launch see Help
       > Check for Updates... say "You're up to date", the Settings > General
