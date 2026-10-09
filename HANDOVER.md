@@ -290,8 +290,9 @@ Last updated: 2026-10-10
   would be blocked, and VITA-49 needs none. VU2OY's gateway lets traffic
   toward VPN clients through only as a reply. His exact rule is unknown.
 - **MSHV has the same gap:** LZ2HV's VITA-49 start-up in `network.cpp`
-  sends `client udpport` and never any UDP to the radio. Port the fix to
-  MSHV-Mac and offer it to Christo as a diff (open).
+  sends `client udpport` and never any UDP to the radio. Ported to
+  MSHV-Mac `895f76f` and deployed 2026-10-10. Not yet run on a radio. The
+  diff for Christo is still open (see the MSHV-Mac HANDOVER).
 
 
 ### 2026-10-09 — README: "Common problems" section (docs only)
