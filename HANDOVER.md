@@ -272,6 +272,13 @@ Last updated: 2026-10-09
   82 dB, so 50 Hz hum mixed into every strong signal (copies 15-20 dB down
   at ±50/100 Hz multiples). Lowering the RX level to ~30-40 dB removed
   them. Not a decoder issue.
+- MSHV hid them anyway: it drops a repeated message at any frequency.
+  JTDX shows a repeat >45 Hz away unless **Misc > Hide FT8 dupe messages**
+  (`HideFT8Dupes`, per profile) is ticked; all four profiles on the Mac
+  mini have it off. README now says so.
+- Manoj could not find the Misc menu on the MacBook. Not confirmed, but
+  the likely cause is the notch: macOS drops app menus that do not fit
+  beside the status icons, and JTDX-VU has 11 menus. README entry added.
 
 ### 2026-10-09 — QO-100: Club Log alert and JTTY status checked the 3cm downlink, not 13cm (for the next release)
 
