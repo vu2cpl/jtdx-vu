@@ -13,7 +13,7 @@ Last updated: 2026-10-09
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.2** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.3** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -37,15 +37,12 @@ Last updated: 2026-10-09
   false-decode crashes; v0.7.1 (2026-10-08) only corrects the About box
   credits (FT2: IU8LMC + 9H1SR / Decodium; JTTY); v0.7.2 (2026-10-08) adds
   FT4 on 70cm / 23cm, the 8m button, one-time seeding of new default rows
-  and the Auto CQ countdown on the button. Unreleased since v0.7.2: the
-  Auto CQ button keeps its width (count on a second line) and its countdown
-  runs in the first half of each minute too (`a00f05c6`, `e64be38d`;
-  installed on the Mac mini); `%LOG` in a JTTY macro logs the QSO without
-  the dialog (`6fcbe714`, installed 2026-10-08 22:41); the GitHub release
-  update check, Help > Check for Updates... plus a daily automatic check
-  that saves its time only after a success, looks again every hour while
-  running and is off for "dev" versions (`e9796edb`, `0bd95894`; built and
-  tested, NOT installed).
+  and the Auto CQ countdown on the button; v0.7.3 (2026-10-09) adds the
+  GitHub release update check (Help > Check for Updates... plus a daily
+  automatic check, hourly retry after a failure, off for "dev" versions;
+  `e9796edb`, `0bd95894`), `%LOG` in a JTTY macro (`6fcbe714`), and the
+  Auto CQ button fixes: fixed width, countdown all minute (`a00f05c6`,
+  `e64be38d`). Unreleased since v0.7.3: nothing.
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -151,6 +148,10 @@ Last updated: 2026-10-09
 - **Release v0.7.2: COMPLETE 2026-10-08** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.2,
   tag `v0.7.2` on `0edfa30a`. Cut from the MSHV-Mac session (Manoj: "cut a new
   release. both JTDX and MSHV"); see "v0.7.2 released" under What changed.
+- **Release v0.7.3: COMPLETE 2026-10-09** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.3,
+  tag `v0.7.3` on `71c7bac8`: update check, JTTY `%LOG`, Auto CQ button fixes.
+  Cut from the MSHV-Mac session on Manoj's OK; see "v0.7.3 released" under
+  What changed.
 - **Release v0.7.0: COMPLETE 2026-10-07** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.0,
   tag `v0.7.0` on **`29d8cab0`**: the FlexRadio VITA-49 rig type and panel,
   QO-100, profiles, the rig mode beside the frequency, FT2 level with MSHV
@@ -183,13 +184,13 @@ Last updated: 2026-10-09
     eight URLs answered 200.
   - Reply to Frank PH2M (`~/projects/JTDX-records/jtdx-vu-v0.7.0-reply-to-PH2M.txt`)
     sent by Manoj 2026-10-07.
-- **Installed app:** `/Applications/JTDX-VU.app` is a **local build of
-  `6fcbe714`** (labelled 0.7.2: the Auto CQ button fixes + the JTTY `%LOG`
-  macro), made with `./macos-bundle.sh`, installed 2026-10-08 22:41 on
-  Manoj's "install both" (signature valid, executable identical to
-  `build/bundle`, previous copy to the Trash; not launched — it would open
-  the FLEX VITA49 profile on the radio). Before it: the v0.7.2 release zip
-  (11:35), then a build of `e64be38d`. Local builds run on macOS 26+ only. Settings are in
+- **Installed app:** `/Applications/JTDX-VU.app` is the **v0.7.3 release**
+  (arm64 zip from GitHub, sha256 OK, `ditto`), installed 2026-10-09 05:46:
+  reports 0.7.3, `codesign --verify --deep --strict` OK, executable and whole
+  bundle identical to the release. JTDX-VU was not running, so it was not
+  relaunched. The previous copy (local build of `6fcbe714`, labelled 0.7.2)
+  is in the Trash as `JTDX-VU.app-prev-20261009-054607`. The release zip
+  runs on macOS 14+; local builds run on macOS 26+ only. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
 - **Release v0.3.0: COMPLETE 2026-09-29** — all four builds attached — JTTY + FT2 + separate
@@ -263,6 +264,48 @@ Last updated: 2026-10-09
 
 ## What changed
 
+### 2026-10-09 — v0.7.3 released: update check, JTTY `%LOG`, Auto CQ button fixes
+
+- https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.3, annotated tag on
+  `71c7bac8` ("Version 0.7.3": `Versions.cmake` 0.7.2 → 0.7.3; README title
+  and title-bar example 0.7.3, "since the next release" → "since v0.7.3",
+  `%LOG` marked since v0.7.3). Cut from the MSHV-Mac session on Manoj's OK
+  (2026-10-09: next patch version, GitHub release, install everywhere it is
+  installed). No Fortran changed since v0.7.2, so no 132-column check needed.
+- Contents since v0.7.2: the GitHub release update check (`e9796edb`,
+  `0bd95894`), `%LOG` in a JTTY macro (`6fcbe714`), the Auto CQ button's
+  fixed width and all-minute countdown (`a00f05c6`, `e64be38d`), the README
+  title fix.
+- Notes from the v0.7.2 template: what's new (the update check: what it asks
+  GitHub, the one anonymous request, the Settings > General tick, Help > Check
+  for Updates..., "v0.7.3 is the first version with the check"), the
+  "AetherSDR users" paragraph, downloads / install with 0.7.3 names, credits
+  unchanged. Release created right after the tag push, so CI attached to it.
+- CI macOS 37860936587 (arm64 32 min; Intel 12 min on the restored keg cache) and Windows
+  37860936572 (17 min) green. Pi .deb on meridianpi5 (rsync of `git ls-files`
+  at `71c7bac8`, `cmake ..`, `nice make -j3`, `cpack -G DEB`): Package
+  jtdx-vu, Version 0.7.3, arm64, Conflicts: jtdx, `apt-get install -s` clean,
+  an 8 s offscreen `--test-mode` start OK (no jtdxjt9 left; `~/.qttest`,
+  `/tmp/JTDX-VU - test*`, the log and shm 32801 removed), uploaded by hand
+  with its `.sha256`.
+- All eight files downloaded anonymously (200), every checksum OK; both macOS
+  apps report 0.7.3 with the right arch and pass `codesign --verify --deep
+  --strict`; the arm64 zip has 0 AppleDouble entries; Windows `jtdx.exe`
+  carries 0.7.3 and the releases/latest URL. sha256:
+  - `JTDX-VU-0.7.3-macos-arm64.zip` `bd02bb6efd6bdb1d18a9b26758b680417584eabd8a04e1c72600b6b18a11be96`
+  - `JTDX-VU-0.7.3-macos-x86_64.zip` `db32bb597fc5e4c0511faf56e33cca011087cc4dcb29e0fa3d9cc085fc2eb7ff`
+  - `JTDX-VU-0.7.3-windows-x64.zip` `ebb1bc961923aa061230e0feda846a3372dc205f65a61ed30c7c4cb3ae4a04dd`
+  - `jtdx-vu-0.7.3-linux-arm64.deb` `43f8f643a6439f76e6fc7d1edad2b16fafd6ec88f1d96bb838681ffa415374c4`
+- Installed on the Mac mini from the arm64 release zip (see Current state);
+  JTDX-VU was not running, so no quit / relaunch.
+- Other hosts: meridianpi5 is a build host only (`dpkg -l jtdx-vu` and `jtdx`:
+  none), nothing installed. The .170 Windows PC has a v0.1.0 zip extracted at
+  `C:\JTDX-VU-0.1.0-windows-x64` (2026-09-28, its data folder
+  `%LOCALAPPDATA%\JTDX-VU` last written the same day, not running) that no
+  release since has upgraded; left alone - Manoj decides whether it stays.
+- Website (vu2cpl.com card / project page / downloads table) NOT updated in
+  this cycle; still on v0.7.2.
+
 ### 2026-10-09 — Update check: time saved only on success, hourly re-check, no automatic check on dev builds
 
 Manoj's decisions on `e9796edb` (given in the MSHV-Mac session).
@@ -330,7 +373,7 @@ Manoj's decisions on `e9796edb` (given in the MSHV-Mac session).
 - **Not exercised:** the real app (not launched): the hourly timer and the
   dev skip were tested in the scratch only.
 
-### 2026-10-08 — Update check against GitHub releases (for the next release)
+### 2026-10-08 — Update check against GitHub releases (for the next release, v0.7.3)
 
 Manoj: every app of his gets an in-app check against its GitHub releases in
 its next release - no Sparkle, no extra servers, the same behaviour
@@ -393,7 +436,7 @@ everywhere (spec approved by him; done from the MSHV-Mac session).
   Settings checkbox and the 10 s timer were checked in the build (strings,
   `ui_Configuration.h`), not in a running app.
 
-### 2026-10-08 — JTTY: `%LOG` in a macro logs the QSO without the dialog (for the next release)
+### 2026-10-08 — JTTY: `%LOG` in a macro logs the QSO without the dialog (for the next release, v0.7.3)
 
 Manoj (in the MSHV-Mac session, for MSHV's JTTY, `6adc6e3` there): "can you
 add a log qso in macro to enable auto logging?", then "add in jtdx vu also".
@@ -431,7 +474,7 @@ add a log qso in macro to enable auto logging?", then "add in jtdx vu also".
   none). **Installed
   22:41** (`./macos-bundle.sh`, previous copy to the Trash, not launched).
 
-### 2026-10-08 — Auto CQ button: keeps its width, and counts down in the first half of the minute too (for the next release)
+### 2026-10-08 — Auto CQ button: keeps its width, and counts down in the first half of the minute too (for the next release, v0.7.3)
 
 Manoj: "width of autocq button should not change". In v0.7.2 the button
 was sized to its text (AnsB4's Preferred policy, max 80 px against Monitor's
@@ -2872,15 +2915,20 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **Update check in the real app** (`e9796edb`, `0bd95894`, unreleased):
-      tested only in a scratch program built from the same class. On the
-      next install (or the next release's checks) see Help > Check for
-      Updates... say "You're up to date", the Settings > General tick, and -
-      with a newer release out - the dialog ~10 s after start (or within an
-      hour of it while running). Release notes for the next release: mention
-      the check (daily, hourly retry when offline, Help menu any time) and
-      the one request to api.github.com. If a development version string is
-      ever used, it must contain "dev" to keep automatic checks off.
+- [ ] **Update check in the real app** (`e9796edb`, `0bd95894`, released in
+      v0.7.3, installed 2026-10-09, not yet launched): tested only in a
+      scratch program built from the same class. On the next launch see Help
+      > Check for Updates... say "You're up to date", the Settings > General
+      tick, and - once a newer release is out - the dialog ~10 s after start
+      (or within an hour of it while running). The v0.7.3 notes describe the
+      check. If a development version string is ever used, it must contain
+      "dev" to keep automatic checks off.
+- [ ] **Website on v0.7.3** (vu2cpl.com card, JTDX-VU page paragraph,
+      downloads table / release link / apt command): not done in the v0.7.3
+      cycle.
+- [ ] **Stale v0.1.0 on the .170 Windows PC** (`C:\JTDX-VU-0.1.0-windows-x64`,
+      found 2026-10-09, unused since 09-28): Manoj to say upgrade, remove or
+      leave.
 - [x] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08)
   — lifted the same morning ("cut a new release"); **RELEASED 2026-10-08**
   with the corrected FT2 credit in the notes.
