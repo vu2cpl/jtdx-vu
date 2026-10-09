@@ -261,7 +261,9 @@ or Pi 5 is recommended.
   stands out. Orange while connecting, red ERR on a rig control failure
   (click it to reset, as before). Works in light and dark style.
 - **FlexRadio over VITA-49, no SmartSDR needed** (since v0.7.0). Rig *FlexRadio VITA-49 Slice A..H* with the radio's
-  address (port 4992) in the CAT port field talks SmartSDR straight to a
+  address (e.g. `192.168.1.20:4992`) in the **FlexRadio:** field of
+  Settings > Radio — or press **Discover** beside it to find radios on the
+  LAN (not over a VPN or between VLANs) — talks SmartSDR straight to a
   FLEX-6000/8000: it takes or creates a slice, tunes it, sets DIGU and keys
   it, and with *Use TCI / VITA-49 Audio* ticked the receive audio comes in
   as a DAX stream over VITA-49 and the transmit audio goes out the same way,

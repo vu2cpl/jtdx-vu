@@ -264,6 +264,33 @@ Last updated: 2026-10-10
 
 ## What changed
 
+### 2026-10-10 — FlexRadio address: "FlexRadio:" label, Discover button, clearer error (trial, for the next release)
+
+- **Report:** KK4CDK (Miguel, FLEX-6700, Windows) via the vu2cpl.com contact
+  form: "Flex: no connection to localhost:4992". He could not find where the
+  radio's IP goes. It goes in the CAT box that is labelled "TCI Server:"
+  (stored as `CATTCIPort`; he had edited `CATNetworkPort`), and a blank box
+  meant localhost. His trace also showed `audio 0`: VITA-49 Audio was not
+  ticked. Manoj replies himself; a draft was given in the session.
+- **Changes:** for a FlexRadio VITA-49 rig the box is now labelled
+  **FlexRadio:** with a `192.168.1.20:4992` placeholder, and a **Discover**
+  button beside it (`Configuration::impl::flex_discover`) listens 3 s on
+  UDP 4992 (ShareAddress) for the radio's discovery broadcast (28-byte
+  header + `key=value` text: model, nickname, callsign, ip, port,
+  available/licensed clients), fills the box with every radio heard, picks
+  the first and lists them. The connect error now says where to set the
+  address.
+- **Tested:** the receive-and-parse loop, copied verbatim into a standalone Qt
+  program, against Manoj's 6600's real broadcast (captured on ubersdr, which
+  is on the radio's subnet, and replayed to localhost) found
+  `FLEX-6600 "6600" VU2CPL - 192.168.1.148:4992, 2 of 2 clients free`. The
+  dialog itself was **not** clicked through (screen locked); this Mac is on
+  another VLAN, so a real Discover from it finds nothing. Trial zip on the
+  Desktop for Manoj to test.
+- **Open from the same report:** "Show US State" (JTDX 2.2.160-rc10 feature,
+  `state_data.bin` / `grid_data.bin`). JTDX-VU is based on 2.2.159; first check
+  whether 160's source is published. Manoj has not decided.
+
 ### 2026-10-10 — FlexRadio VITA-49 over a VPN: open the UDP return path (trial, for the next release)
 
 - **Symptom (Manoj):** from the Mac over a WireGuard VPN into VU2OY's

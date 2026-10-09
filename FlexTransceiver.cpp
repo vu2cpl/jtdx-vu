@@ -445,7 +445,7 @@ bool FlexTransceiver::start_session ()
   socket_->connectToHost (host_, port_);
   QElapsedTimer t; t.start ();
   while (!connected_ && error_.isEmpty () && t.elapsed () < 4000) wait_ms (50);
-  if (!connected_) {if (error_.isEmpty ()) error_ = tr ("Flex: no connection to %1:%2").arg (host_).arg (port_); return false;}
+  if (!connected_) {if (error_.isEmpty ()) error_ = tr ("Flex: no connection to %1:%2 - set the radio's address (or press Discover) beside FlexRadio: in Settings > Radio").arg (host_).arg (port_); return false;}
   t.restart ();
   while (!handle_ && connected_ && t.elapsed () < 3000) wait_ms (50);
   if (!handle_) {error_ = tr ("Flex: the radio sent no client handle"); return false;}

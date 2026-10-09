@@ -169,6 +169,9 @@
 #include <QScreen>
 #include <QStyle>
 #include <QSerialPortInfo>
+#include <QUdpSocket>
+#include <QHBoxLayout>
+#include <QElapsedTimer>
 #include <QScopedPointer>
 #include <QDebug>
 #include <QtGui>
@@ -422,6 +425,7 @@ private:
   TransceiverFactory::ParameterPack gather_rig_data ();
   void enumerate_rigs ();
   void set_rig_invariants ();
+  void flex_discover ();
   bool validate ();
   void message_box_critical (QString const& reason, QString const& detail = QString ());
   void fill_port_combo_box (QComboBox *);
@@ -669,6 +673,7 @@ private:
   QColor color_NewDXCCMode_dark_;
   QColor next_color_NewDXCCMode_dark_;
   QPushButton * pbNewDXCCMode_ {nullptr};
+  QPushButton * flex_discover_button_ {nullptr};   // JTDX-VU: finds FlexRadios on the LAN
   QLabel * labNewDXCCMode_ {nullptr};     // preview on the CQ colour
   QLabel * labNewMcDXCCMode_ {nullptr};   // preview on the My Call colour
   void style_pbNewDXCCMode ();
@@ -1436,6 +1441,23 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
   , default_audio_output_device_selected_ {false}
 {
   ui_->setupUi (this);
+  {
+    // JTDX-VU: a Discover button beside the CAT port box, shown for the
+    // FlexRadio VITA-49 rigs only (see set_rig_invariants)
+    auto * box = new QWidget;
+    auto * row = new QHBoxLayout {box};
+    row->setContentsMargins (0, 0, 0, 0);
+    ui_->formLayout->removeWidget (ui_->CAT_port_combo_box);
+    row->addWidget (ui_->CAT_port_combo_box, 1);
+    flex_discover_button_ = new QPushButton {tr ("Discover")};
+    flex_discover_button_->setToolTip (tr ("Listen for 3 s for FlexRadios announcing themselves on this network\n"
+                                           "and fill in the address. Works on the radio's own LAN only,\n"
+                                           "not over a VPN or between VLANs - type the address there."));
+    flex_discover_button_->setVisible (false);
+    row->addWidget (flex_discover_button_);
+    ui_->formLayout->setWidget (0, QFormLayout::FieldRole, box);
+    connect (flex_discover_button_, &QPushButton::clicked, this, [this] {flex_discover ();});
+  }
   {
     // JTDX-VU: third DXCC colour - "New DXCC on Mode" (MSHV's new mode:
     // not worked in this mode on any band), added below the colour list
@@ -3002,6 +3024,71 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Region", QVariant::fromValue (region_));  
 }
 
+// JTDX-VU: a FlexRadio broadcasts a VITA-49 discovery packet to UDP 4992
+// about once a second: a 28-byte header, then "key=value" text (model=,
+// nickname=, callsign=, ip=, port=, available_clients=...). Listen for 3 s
+// and offer every radio heard. Broadcasts stay on the radio's own subnet.
+void Configuration::impl::flex_discover ()
+{
+  QUdpSocket socket;
+  if (!socket.bind (QHostAddress {QHostAddress::AnyIPv4}, 4992, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint))
+    {
+      JTDXMessageBox::warning_message (this, tr ("FlexRadio discovery"), tr ("Could not listen on UDP port 4992: %1").arg (socket.errorString ()));
+      return;
+    }
+  flex_discover_button_->setEnabled (false);
+  QApplication::setOverrideCursor (Qt::WaitCursor);
+  QMap<QString, QString> found;   // "ip:port" -> description
+  QElapsedTimer t;
+  t.start ();
+  while (t.elapsed () < 3000)
+    {
+      if (!socket.waitForReadyRead (200)) {QCoreApplication::processEvents (); continue;}
+      while (socket.hasPendingDatagrams ())
+        {
+          QByteArray data (int (socket.pendingDatagramSize ()), '\0');
+          socket.readDatagram (data.data (), data.size ());
+          int const at = data.indexOf ("discovery_protocol_version=");
+          if (at < 0) continue;
+          QString const text = QString::fromLatin1 (data.mid (at)).section (QChar ('\0'), 0, 0);
+          QMap<QString, QString> kv;
+          for (auto const& field : text.split (' ', QString::SkipEmptyParts))
+            {
+              int const eq = field.indexOf ('=');
+              if (eq > 0) kv[field.left (eq)] = field.mid (eq + 1);
+            }
+          if (kv.value ("ip").isEmpty ()) continue;
+          QString const address = kv.value ("ip") + ':' + (kv.value ("port").isEmpty () ? QString {"4992"} : kv.value ("port"));
+          found[address] = QString {"%1 \"%2\" %3 - %4, %5 of %6 clients free"}
+            .arg (kv.value ("model"), kv.value ("nickname"), kv.value ("callsign"), address,
+                  kv.value ("available_clients", "?"), kv.value ("licensed_clients", "?"));
+        }
+    }
+  QApplication::restoreOverrideCursor ();
+  flex_discover_button_->setEnabled (true);
+  if (found.isEmpty ())
+    {
+      JTDXMessageBox::information_message (this, tr ("FlexRadio discovery"),
+                                       tr ("No FlexRadio heard on this network in 3 s.\n\n"
+                                           "Discovery only reaches the radio's own LAN, not a VPN or another VLAN. "
+                                           "Type the radio's IP address instead, e.g. 192.168.1.20:4992."));
+      return;
+    }
+  QString const current = ui_->CAT_port_combo_box->currentText ();
+  ui_->CAT_port_combo_box->clear ();
+  for (auto it = found.cbegin (); it != found.cend (); ++it)
+    {
+      ui_->CAT_port_combo_box->addItem (it.key ());
+      ui_->CAT_port_combo_box->setItemData (ui_->CAT_port_combo_box->count () - 1, it.value (), Qt::ToolTipRole);
+    }
+  ui_->CAT_port_combo_box->setCurrentText (found.contains (current) ? current : found.firstKey ());
+  QStringList lines;
+  for (auto const& d : found) lines << d;
+  JTDXMessageBox::information_message (this, tr ("FlexRadio discovery"),
+                                   tr ("Found:\n%1\n\nSelected %2. Press Test CAT to check it.")
+                                   .arg (lines.join ('\n'), ui_->CAT_port_combo_box->currentText ()));
+}
+
 void Configuration::impl::set_rig_invariants ()
 {
   auto const& rig = ui_->rig_combo_box->currentText ();
@@ -3146,6 +3233,15 @@ void Configuration::impl::set_rig_invariants ()
               ui_->CAT_port_combo_box->setEnabled (false);
               break;
             }
+        }
+      // JTDX-VU: the TCI-type box holds the radio's address for a FlexRadio
+      bool const flex = rig.startsWith ("FlexRadio VITA");
+      flex_discover_button_->setVisible (flex);
+      if (TransceiverFactory::Capabilities::tci == port_type)
+        {
+          ui_->CAT_port_label->setText (flex ? tr ("FlexRadio:") : tr ("TCI Server:"));
+          if (auto * edit = ui_->CAT_port_combo_box->lineEdit ())
+            edit->setPlaceholderText (flex ? tr ("radio IP address, e.g. 192.168.1.20:4992") : QString {});
         }
       ui_->CAT_serial_port_parameters_group_box->setEnabled (is_serial_CAT);
       ui_->force_DTR_combo_box->setEnabled (is_serial_CAT
