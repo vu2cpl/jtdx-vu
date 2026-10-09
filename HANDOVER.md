@@ -283,10 +283,10 @@ Last updated: 2026-10-10
 - **Tested:** the receive-and-parse loop, copied verbatim into a standalone Qt
   program, against Manoj's 6600's real broadcast (captured on ubersdr, which
   is on the radio's subnet, and replayed to localhost) found
-  `FLEX-6600 "6600" VU2CPL - 192.168.1.148:4992, 2 of 2 clients free`. The
-  dialog itself was **not** clicked through (screen locked); this Mac is on
-  another VLAN, so a real Discover from it finds nothing. Trial zip on the
-  Desktop for Manoj to test.
+  `FLEX-6600 "6600" VU2CPL - 192.168.1.148:4992, 2 of 2 clients free`.
+  Manoj ran the trial over the VPN: Discover showed the "No FlexRadio heard"
+  dialog, as it should, since broadcasts do not cross a VPN. A Discover that
+  finds a radio, run from the radio's own subnet, is still untested in the app.
 - **Open from the same report:** "Show US State" (JTDX 2.2.160-rc10 feature,
   `state_data.bin` / `grid_data.bin`). JTDX-VU is based on 2.2.159; first check
   whether 160's source is published. Manoj has not decided.
