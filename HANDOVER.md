@@ -272,6 +272,8 @@ Last updated: 2026-10-10
   The TCI-style auto-reconnect then restarted it every ~15 s, about 30 times in
   10 minutes, re-tuning each time (his relay clicks). Cause: almost certainly
   Windows Firewall; the `udp_register` fix (733aa9aa) should get through it.
+  **Confirmed:** after the firewall advice Miguel reported his first QSO
+  completed and logged (2026-10-10), on v0.7.3, before any trial reached him.
 - **Frequency fight:** at every connect two requests went out 38 ms apart,
   14.074 then 14.100. On coming online, `switch_mode` snapped the radio's
   default 14.100 to the FT8 frequency 14.074, then the deferred "start on the
