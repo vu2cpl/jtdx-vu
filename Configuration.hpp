@@ -178,6 +178,7 @@ public:
   bool useDarkStyle () const;
   bool countryName () const;
   bool countryPrefix () const;
+  bool usState () const;   // JTDX-VU: Show US State
   bool callNotif () const;
   bool gridNotif () const;
   bool otherMessagesMarker () const;

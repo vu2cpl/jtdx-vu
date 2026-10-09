@@ -260,6 +260,17 @@ or Pi 5 is recommended.
   Settings > Radio, yellow when not - a radio left in LSB after a band change
   stands out. Orange while connecting, red ERR on a rig control failure
   (click it to reset, as before). Works in light and dark style.
+- **Show US State** (Settings > General, beside Show DXCC names). U.S.A.
+  stations show as `U.S.A.:FL`. The grid in the message is used first, and a
+  square that covers several states lists them, largest share first
+  (`U.S.A.:KY-IN-OH`). Without a grid, the callsign's state comes from the
+  FCC licence database. That is the licence address, so a portable or moved
+  station can show its home state. Both tables are built into the app from
+  public-domain data: US Census state boundaries
+  (`tools/build_us_grid_states.py`) and the FCC's weekly amateur dump
+  (`tools/build_us_call_states.py`, the same rules as DXCA's WAS lookup). A
+  newer `us_call_states.txt` in the log directory overrides the built-in one.
+  Asked for by KK4CDK (Miguel), after the option in JTDX 2.2.160.
 - **FlexRadio over VITA-49, no SmartSDR needed** (since v0.7.0). Rig *FlexRadio VITA-49 Slice A..H* with the radio's
   address (e.g. `192.168.1.20:4992`) in the **FlexRadio:** field of
   Settings > Radio — or press **Discover** beside it to find radios on the

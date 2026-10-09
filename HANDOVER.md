@@ -264,6 +264,37 @@ Last updated: 2026-10-10
 
 ## What changed
 
+### 2026-10-10 — Show US State (trial, for the next release)
+
+- **Asked for by** KK4CDK (Miguel). JTDX 2.2.160-rc10 has it, but 2.2.160 is
+  a closed beta whose source is not published (the official repo and every
+  public fork stop at 159), so it was built new from public data. Manoj
+  chose: the decoded grid first, then the callsign lookup.
+- **Grid -> states:** `tools/build_us_grid_states.py` (shapely + pyshp, US
+  Census `cb_2023_us_state_500k`) gives `us_grid_states.txt`: 750 squares,
+  states with at least 2 % of the square's US land, largest first. AK
+  across 180 (RO6x) and HI are in. DC is counted as MD. Spot checks: EM78
+  KY IN OH (as 2.2.160's own example), EL95 FL, FN31 CT NY, FN20 PA NJ.
+- **Call -> state:** `tools/build_us_call_states.py` distils the FCC
+  `l_amat.zip` with DXCA's rules (active HD only, 50 states, DC as MD),
+  giving `us_call_states.txt`: 816,130 calls, 7.9 MB, sorted, from the
+  2026-10-10 dump. Fetch it with plain curl: data.fcc.gov refuses gzip
+  Accept-Encoding.
+- **App:** both files are Qt resources (TOP_LEVEL_RESOURCES). A newer
+  `us_call_states.txt` in the data directory overrides the built-in one.
+  `logbook/usstates.{h,cpp}` (`UsStates::find (call, grid)`) loads on first
+  use, keeps the grid table in a hash and binary-searches the call table in
+  place. `displaytext.cpp` appends `:ST` to the country when the entity
+  prefix is `K`. Setting `ShowUSState` (Settings > General > Display, row 3
+  col 2), off by default, enabled only with Show DXCC names.
+- **Tested:** `UsStates` in a standalone harness. KK4CDK EL95/none -> FL,
+  K1JT FN20 -> PA-NJ (grid first; he is in NJ), K1JT none -> NJ, W1AW/4 EM78 ->
+  KY-IN-OH, N0AX RR73 -> MO, `<W6YX>` -> CA, unknown -> none, the first table
+  row (AA0A) found. **Not yet seen in the running app's decode window.**
+  Trial zip on the Desktop.
+- **Refresh:** re-run both scripts before a release (the grid table rarely
+  changes) and commit the text files.
+
 ### 2026-10-10 — FlexRadio address: "FlexRadio:" label, Discover button, clearer error (trial, for the next release)
 
 - **Report:** KK4CDK (Miguel, FLEX-6700, Windows) via the vu2cpl.com contact
@@ -287,9 +318,8 @@ Last updated: 2026-10-10
   Manoj ran the trial over the VPN: Discover showed the "No FlexRadio heard"
   dialog, as it should, since broadcasts do not cross a VPN. A Discover that
   finds a radio, run from the radio's own subnet, is still untested in the app.
-- **Open from the same report:** "Show US State" (JTDX 2.2.160-rc10 feature,
-  `state_data.bin` / `grid_data.bin`). JTDX-VU is based on 2.2.159; first check
-  whether 160's source is published. Manoj has not decided.
+- **From the same report:** "Show US State" was built the same day; see
+  its entry above.
 
 ### 2026-10-10 — FlexRadio VITA-49 over a VPN: open the UDP return path (trial, for the next release)
 

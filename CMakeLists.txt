@@ -224,6 +224,7 @@ set (jt9_CXXSRCS
 set (wsjtx_CXXSRCS
   logbook/adif.cpp
   logbook/countrydat.cpp
+  logbook/usstates.cpp
   logbook/logbook.cpp
   qsohistory.cpp
   psk_reporter.cpp
@@ -635,6 +636,8 @@ set (message_aggregator_STYLESHEETS
 
 set (TOP_LEVEL_RESOURCES
   cty.dat
+  us_grid_states.txt
+  us_call_states.txt
   lotw-user-activity.csv
   icons/Darwin/jtdx.iconset/icon_128x128.png
   contrib/decpasses.png

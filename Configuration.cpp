@@ -808,6 +808,7 @@ private:
   bool useDarkStyle_;
   bool countryName_;
   bool countryPrefix_;
+  bool usState_;   // JTDX-VU: Show US State
   bool callNotif_;
   bool gridNotif_;
   bool otherMessagesMarker_;
@@ -1067,6 +1068,7 @@ bool Configuration::insert_blank () const {return m_->insert_blank_;}
 bool Configuration::useDarkStyle () const {return m_->useDarkStyle_;}
 bool Configuration::countryName () const {return m_->countryName_;}
 bool Configuration::countryPrefix () const {return m_->countryPrefix_;}
+bool Configuration::usState () const {return m_->usState_;}
 bool Configuration::callNotif () const {return m_->callNotif_;}
 bool Configuration::gridNotif () const {return m_->gridNotif_;}
 bool Configuration::otherMessagesMarker () const {return m_->otherMessagesMarker_;}
@@ -1623,6 +1625,8 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
   // Dependent checkboxes 
   ui_->countryPrefix_check_box->setChecked(countryName_ && countryPrefix_);
   ui_->countryPrefix_check_box->setEnabled(countryName_);
+  ui_->usState_check_box->setChecked(countryName_ && usState_);
+  ui_->usState_check_box->setEnabled(countryName_);
   ui_->gridNotif_check_box->setChecked(callNotif_ && gridNotif_);
   ui_->gridNotif_check_box->setEnabled(callNotif_);
   ui_->blueMarker_check_box->setChecked(redMarker_ && blueMarker_);
@@ -2182,6 +2186,7 @@ Radio::convert_dark("#fafbfe",useDarkStyle_),Radio::convert_dark("#dcdef1",useDa
   ui_->useDarkStyle_check_box->setChecked (useDarkStyle_);
   ui_->countryName_check_box->setChecked (countryName_);
   ui_->countryPrefix_check_box->setChecked (countryName_ && countryPrefix_);
+  ui_->usState_check_box->setChecked (countryName_ && usState_);
   ui_->callNotif_check_box->setChecked (callNotif_);
   ui_->gridNotif_check_box->setChecked (gridNotif_ && callNotif_);
   ui_->otherMessagesMarker_check_box->setChecked (otherMessagesMarker_);
@@ -2661,6 +2666,7 @@ void Configuration::impl::read_settings ()
   insert_blank_ = settings_->value ("InsertBlank", false).toBool ();
   countryName_ = settings_->value ("countryName", true).toBool ();
   countryPrefix_ = settings_->value ("countryPrefix", false).toBool ();
+  usState_ = settings_->value ("ShowUSState", false).toBool ();
 
   if(settings_->value ("callsignLogFiltering").toString()=="false" || settings_->value ("callsignLogFiltering").toString()=="true")
     callNotif_ = settings_->value ("callsignLogFiltering").toBool ();
@@ -2945,6 +2951,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("UseDarkStyle", useDarkStyle_);
   settings_->setValue ("countryName", countryName_);
   settings_->setValue ("countryPrefix", countryPrefix_);
+  settings_->setValue ("ShowUSState", usState_);
   settings_->setValue ("callsignLogFiltering", callNotif_);
   settings_->setValue ("gridLogFiltering", gridNotif_);
   settings_->setValue ("OtherStandardMessagesMarker", otherMessagesMarker_);
@@ -3665,6 +3672,7 @@ void Configuration::impl::accept ()
   tunetimer_= ui_->tune_timer_spin_box->value ();
   countryName_ = ui_->countryName_check_box->isChecked ();
   countryPrefix_ = ui_->countryPrefix_check_box->isChecked ();
+  usState_ = ui_->usState_check_box->isChecked ();
   callNotif_ = ui_->callNotif_check_box->isChecked ();
   gridNotif_ = ui_->gridNotif_check_box->isChecked ();
   otherMessagesMarker_ = ui_->otherMessagesMarker_check_box->isChecked ();
@@ -3877,6 +3885,8 @@ void Configuration::impl::on_countryName_check_box_clicked(bool checked)
 {
   ui_->countryPrefix_check_box->setChecked(checked && countryPrefix_);
   ui_->countryPrefix_check_box->setEnabled(checked);
+  ui_->usState_check_box->setChecked(checked && usState_);
+  ui_->usState_check_box->setEnabled(checked);
 }
 
 void Configuration::impl::on_callNotif_check_box_clicked(bool checked)

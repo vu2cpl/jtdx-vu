@@ -76,6 +76,7 @@ private:
     bool useDarkStyle_;
     bool displayCountryName_;
     bool displayCountryPrefix_;
+    bool displayUSState_ {false};   // JTDX-VU: Show US State
     bool displayNewCQZ_;
     bool displayNewCQZBand_;
     bool displayNewCQZBandMode_;

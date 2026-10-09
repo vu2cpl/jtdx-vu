@@ -1,4 +1,5 @@
 #include "displaytext.h"
+#include "logbook/usstates.h"
 
 #include <QtGlobal>
 #include <functional>
@@ -33,6 +34,7 @@ void DisplayText::setConfiguration(Configuration const * config)
   useDarkStyle_ = config->useDarkStyle();
   displayCountryName_ = config->countryName();
   displayCountryPrefix_ = config->countryPrefix();
+  displayUSState_ = config->usState();
   displayNewCQZ_ = config->newCQZ();
   displayNewCQZBand_ = config->newCQZBand();
   displayNewCQZBandMode_ = config->newCQZBandMode();
@@ -905,6 +907,13 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
             } else {
                 // do some obvious abbreviations, don't care if we using just prefixes here, not big deal to run some replace's
                 cntry = items[2];
+            }
+            // JTDX-VU: Show US State - U.S.A.:FL, from the grid in the
+            // message first, else the call's FCC licence state
+            if (displayUSState_ && items[1] == "K") {
+                static UsStates usStates;
+                QString const st = usStates.find(checkCall, grid);
+                if (!st.isEmpty()) cntry += ":" + st;
             }
         }
         if (!bwantedCall && !bwantedPrefix && !bwantedGrid && !bwantedCountry) {

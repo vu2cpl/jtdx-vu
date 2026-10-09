@@ -387,6 +387,16 @@
               </property>
              </widget>
             </item>
+            <item row="3" column="2">
+             <widget class="QCheckBox" name="usState_check_box">
+              <property name="toolTip">
+               <string>For U.S.A. stations add the state: from the grid in the message when there is one (several states when the grid square covers more than one), otherwise from the callsign's FCC licence address.</string>
+              </property>
+              <property name="text">
+               <string>Show US &amp;State</string>
+              </property>
+             </widget>
+            </item>
             <item row="2" column="1">
              <widget class="QCheckBox" name="TX_messages_check_box">
               <property name="enabled">
