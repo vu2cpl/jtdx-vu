@@ -41,6 +41,7 @@ namespace
   char const * const flex_name_prefix {"FlexRadio VITA-49 Slice "};
   int const flex_slices {8};                   // A .. H, as MSHV offers
   quint16 const flex_api_port {4992};
+  quint16 const flex_udp_port {4993};           // the radio sends its VITA-49 from here
   quint16 const flex_vita_port {4991};         // the radio's inbound VITA port
   int const flex_rate {24000};                 // DAX, both ways
   int const flex_frames_per_packet {128};      // 5.33 ms
@@ -222,6 +223,22 @@ int FlexTransceiver::send (QString const& cmd)
 QString FlexTransceiver::handle_hex () const
 {
   return QString ("client_handle=0x%1").arg (handle_, 8, 16, QChar ('0')).toLower ();
+}
+
+// The radio sends its VITA-49 (DAX audio, meters) to us unasked, which a
+// stateful firewall or NAT between us drops: seen over a WireGuard VPN into
+// VU2OY's network, where TCP control worked but no UDP arrived. A packet from
+// our UDP socket to the radio's 4993 opens the return path - SmartSDR's
+// SmartLink "udp_register". Sent at connect and every 5 s to keep it open;
+// on a plain LAN the radio just ignores it.
+void FlexTransceiver::udp_register ()
+{
+  if (!audio_ || !socket_ || !handle_) return;
+  QHostAddress const radio = socket_->peerAddress ();
+  if (radio.isNull ()) return;
+  audio_->writeDatagram (QString ("client udp_register handle=0x%1").arg (handle_, 8, 16, QChar ('0')).toLatin1 (),
+                         radio, flex_udp_port);
+  last_udp_register_ms_ = QDateTime::currentMSecsSinceEpoch ();
 }
 
 void FlexTransceiver::on_connected ()
@@ -449,6 +466,7 @@ bool FlexTransceiver::start_session ()
     }
   seq = send ("client udpport " + QString::number (audio_->localPort ()));
   if (!wait_reply (seq, 3000) || replies_[seq].first != 0) {error_ = tr ("Flex: client udpport refused"); return false;}
+  udp_register ();
   seq = send ("info");
   wait_reply (seq, 2000);
   wait_ms (1200);                                 // let the slice status arrive
@@ -741,6 +759,7 @@ void FlexTransceiver::do_ptt (bool on)
 void FlexTransceiver::do_poll ()
 {
   if (!connected_ && error_.isEmpty ()) error_ = tr ("Flex connection lost");
+  if (ready_ && connected_ && QDateTime::currentMSecsSinceEpoch () - last_udp_register_ms_ > 5000) udp_register ();
   // audio watchdog: connected with DAX on but nothing heard for 10 s
   if (tci_audio_ && ready_ && connected_ && error_.isEmpty () && rx_stream_)
     {

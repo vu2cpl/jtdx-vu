@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-09
+Last updated: 2026-10-10
 
 ## Current state
 
@@ -263,6 +263,27 @@ Last updated: 2026-10-09
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-10 — FlexRadio VITA-49 over a VPN: open the UDP return path (trial, for the next release)
+
+- **Symptom (Manoj):** from the Mac over a WireGuard VPN into VU2OY's
+  network (radio 192.168.220.42, Mac 10.7.159.2 on utun10), the VITA-49
+  profile connected and showed the frequency but had no audio and no waterfall.
+  It kept dropping too: the 10 s "no audio from the radio" watchdog reconnects.
+- **Proved with a read-only probe** (non-GUI client: `client udpport` +
+  `sub meter all`, count UDP for 12 s): Manoj's own radio on the LAN sent
+  347 meter packets from 192.168.1.148:4993; VU2OY's radio sent **0**. Same probe
+  sending `client udp_register handle=0x...` from the UDP socket to the radio's
+  4993 first: **316** packets arrived. So VU2OY's network drops radio-initiated
+  UDP to VPN clients (probably a stateful firewall; his gateway looks like
+  UniFi, judging by the WireGuard address range); TCP control is client-initiated, so it passed.
+- **Fix:** `FlexTransceiver::udp_register ()` sends that datagram from the
+  audio socket to the radio's 4993 right after `client udpport`, and again
+  every 5 s from `do_poll`. The radio ignores it on a plain LAN.
+- Builds. Trial zip `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip`. **Not
+  yet tested** on VU2OY's radio or re-checked on the LAN; the
+  `tools/flex_selftest.sh` run needs `tools/ft2_autotest.sh` signals first
+  and was skipped.
 
 ### 2026-10-09 — README: "Common problems" section (docs only)
 

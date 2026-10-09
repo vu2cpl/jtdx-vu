@@ -92,6 +92,7 @@ private:
   int owned_slice () const;
   bool slice_exists (int n) const;
   QString handle_hex () const;
+  void udp_register ();
   bool start_session ();                         // the whole start-up, or error_
   void release (bool tell_radio);
   QString map_mode (MODE) const;
@@ -162,6 +163,7 @@ private:
   bool PTT_;
   bool busy_;
   qint64 last_rx_audio_ms_ {0};
+  qint64 last_udp_register_ms_ {0};
 
   // ---- RX decimation into the decoder
   JTDXDateTime * m_jtdxtime;
