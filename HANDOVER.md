@@ -3145,7 +3145,7 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       permanently, not recycled (over SSH the Recycle Bin call silently
       hard-deletes); the identical zip is on the v0.1.0 release and
       `%LOCALAPPDATA%\JTDX-VU` settings were untouched. Was:
-- [ ] (`C:\JTDX-VU-0.1.0-windows-x64`,
+      (`C:\JTDX-VU-0.1.0-windows-x64`,
       found 2026-10-09, unused since 09-28): Manoj to say upgrade, remove or
       leave.
 - [x] **v0.7.2: hold until a few more features are in** (Manoj, 2026-10-08)
