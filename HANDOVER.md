@@ -13,7 +13,7 @@ Last updated: 2026-10-10
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.3** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.4** (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -42,7 +42,11 @@ Last updated: 2026-10-10
   automatic check, hourly retry after a failure, off for "dev" versions;
   `e9796edb`, `0bd95894`), `%LOG` in a JTTY macro (`6fcbe714`), and the
   Auto CQ button fixes: fixed width, countdown all minute (`a00f05c6`,
-  `e64be38d`). Unreleased since v0.7.3: nothing.
+  `e64be38d`); v0.7.4 (2026-10-10) adds the Flex `udp_register` (audio
+  through a firewall / NAT / VPN), the no-audio reconnect stop, one frequency
+  at connect, a clickable ERR box, the "FlexRadio:" box with Discover, Show
+  US State, and the QO-100 13cm Club Log / JTTY lookups. Unreleased since
+  v0.7.4: nothing.
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -264,7 +268,48 @@ Last updated: 2026-10-10
 
 ## What changed
 
-### 2026-10-10 — Flex: no-audio reconnect loop stopped, connect-time frequency fight fixed, ERR box stays clickable (trial, for the next release)
+### 2026-10-10 — v0.7.4 released: Flex through firewall/VPN, Discover, Show US State, QO-100 13cm alerts
+
+- https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.4, annotated tag on
+  `7ea63474` ("Version 0.7.4": `Versions.cmake` 0.7.3 → 0.7.4; README title
+  and title-bar example; Show US State, Discover and the firewall/VPN audio
+  fix marked "since v0.7.4"). Cut on Manoj's "yes. release" after he ran the
+  Flex VITA-49 profile on the Mac mini, which is on a different VLAN from the
+  radio: connected with the typed address, audio and waterfall OK - so the
+  `udp_register` change is fine on his own radio too. Discover found nothing
+  there, as expected across subnets; Discover on the radio's own subnet is
+  still untested in the app. No Fortran changed since v0.7.3.
+- Contents since v0.7.3: `deeb1bbc` (QO-100 13cm lookups), `733aa9aa`
+  (udp_register), `28b09e21` ("FlexRadio:" + Discover), `1782dc05` (Show US
+  State), `5987d1e1` (no-audio stop, one frequency, ERR), README Common
+  problems. Notes from the v0.7.3 template; Windows step 4 now mentions the
+  Flex's UDP audio; credits add the US Census / FCC data and DXCA's WAS rules.
+- CI macOS 38022453930 and Windows 38022453920 green. Pi .deb on meridianpi5
+  (rsync of `git ls-files` at `7ea63474`, `cmake ..`, `nice make -j3`, `cpack -G
+  DEB`): jtdx-vu 0.7.4 arm64, Conflicts: jtdx, `apt-get install -s` clean, an
+  8 s offscreen `--test-mode` start OK (no jtdxjt9 left; shm 65595, `~/.qttest`,
+  `/tmp/JTDX-VU - test*` removed), uploaded by hand with its `.sha256`. It is
+  2.3 MB bigger than 0.7.3 (the built-in state tables).
+- All eight files downloaded anonymously (200), every checksum OK; both macOS
+  apps report 0.7.4 with the right arch and pass `codesign --verify --deep
+  --strict`; 0 AppleDouble entries; Windows `jtdx.exe` carries 0.7.4 and the
+  releases/latest URL. sha256:
+  - `JTDX-VU-0.7.4-macos-arm64.zip` `19914559c04bae796dd42ea78cc72373675c82be2f51f44e825f097dd38cbe59`
+  - `JTDX-VU-0.7.4-macos-x86_64.zip` `0079249f82cf3a6c300b6c3868c0a96bdbb089a35f5a8279d4b7246924f8eeb5`
+  - `JTDX-VU-0.7.4-windows-x64.zip` `d9ae1dad0fb8c06c867bef64282d0dbbac5bc4243ec6b97bfbe2164f6e829d10`
+  - `jtdx-vu-0.7.4-linux-arm64.deb` `1cbf54c3b519093a6694a160559a5e7751c9bddd1b7d9e54d52841dcf48f44fc`
+- Installed on the Mac mini from the arm64 release zip (JTDX-VU was not
+  running; the 0.7.3 app went to the Trash; executable identical to the
+  release, signature verifies). The MacBook still runs the trial build.
+- Website (vu2cpl.github.io `bdf2104`): card sentence, page paragraph
+  "FlexRadio through a firewall or VPN, Discover and US states (v0.7.4)",
+  downloads / release link / apt on v0.7.4; tested-so-far now says the update
+  check is confirmed in the installed app and KK4CDK has logged Flex QSOs on
+  Windows. Pushed after all eight assets answered.
+- Users on v0.7.3 get the in-app update notice for this release (first
+  release since the check went in).
+
+### 2026-10-10 — Flex: no-audio reconnect loop stopped, connect-time frequency fight fixed, ERR box stays clickable (released in v0.7.4)
 
 - **From KK4CDK's flex_trace.txt** (FLEX-6700, Windows, same LAN, v0.7.3):
   every connect created the DAX RX stream to his PC (`ip=192.168.1.72`,
@@ -297,7 +342,7 @@ Last updated: 2026-10-10
   not tested (screen locked). The "polluted remembered 14.100" case from his
   trace was reasoned about, not reproduced.
 
-### 2026-10-10 — Show US State (trial, for the next release)
+### 2026-10-10 — Show US State (released in v0.7.4)
 
 - **Asked for by** KK4CDK (Miguel). JTDX 2.2.160-rc10 has it, but 2.2.160 is
   a closed beta whose source is not published (the official repo and every
@@ -328,7 +373,7 @@ Last updated: 2026-10-10
 - **Refresh:** re-run both scripts before a release (the grid table rarely
   changes) and commit the text files.
 
-### 2026-10-10 — FlexRadio address: "FlexRadio:" label, Discover button, clearer error (trial, for the next release)
+### 2026-10-10 — FlexRadio address: "FlexRadio:" label, Discover button, clearer error (released in v0.7.4)
 
 - **Report:** KK4CDK (Miguel, FLEX-6700, Windows) via the vu2cpl.com contact
   form: "Flex: no connection to localhost:4992". He could not find where the
@@ -354,7 +399,7 @@ Last updated: 2026-10-10
 - **From the same report:** "Show US State" was built the same day; see
   its entry above.
 
-### 2026-10-10 — FlexRadio VITA-49 over a VPN: open the UDP return path (trial, for the next release)
+### 2026-10-10 — FlexRadio VITA-49 over a VPN: open the UDP return path (released in v0.7.4)
 
 - **Symptom (Manoj):** from the Mac over a WireGuard VPN into VU2OY's
   network (radio 192.168.220.42, Mac 10.7.159.2 on utun10), the VITA-49
@@ -372,7 +417,8 @@ Last updated: 2026-10-10
   every 5 s from `do_poll`. The radio ignores it on a plain LAN.
 - Builds. Trial zip `~/Desktop/jdxvu/test/JTDX-VU-trial-arm64.zip`.
   **Confirmed working on VU2OY's radio over the VPN** (Manoj, 2026-10-10).
-  Not yet re-checked on Manoj's own radio on the LAN; `tools/flex_selftest.sh`
+  Re-checked on Manoj's own radio from the Mac mini (another VLAN) before
+  v0.7.4: audio and waterfall OK. `tools/flex_selftest.sh`
   needs `tools/ft2_autotest.sh` signals first and was skipped.
 - Why Manoj's own site never needed it: on his UniFi the Internal -> VPN
   direction is left at Allow (vlan-setup MIGRATION-PLAN "VPN design"), so the
@@ -401,7 +447,7 @@ Last updated: 2026-10-10
   bar). A README guess that the MacBook notch hid Misc was wrong and has
   been removed; the README now says "in the menu bar, not in Settings".
 
-### 2026-10-09 — QO-100: Club Log alert and JTTY status checked the 3cm downlink, not 13cm (for the next release)
+### 2026-10-09 — QO-100: Club Log alert and JTTY status checked the 3cm downlink, not 13cm (released in v0.7.4)
 
 - **Symptom (Manoj, new MacBook install):** YL2KF on QO-100 FT8 alerted as
   "New band" on 3cm, though the 2024-11-09 QSO is in Club Log as BAND 13CM
@@ -3114,6 +3160,12 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [x] **FT2 credit** (2026-10-08): wording fixed everywhere incl. the v0.7.0
   release notes; reuse it in future release notes. Martino IU8LMC replied
   with thanks (2026-10-08) - no further names asked for.
+- [ ] **Discover on the radio's own subnet** (v0.7.4): only proven by the
+      parse loop in a scratch program against the 6600's captured broadcast;
+      the Mac mini and the MacBook-over-VPN are both on other subnets. Try it
+      from a machine on 192.168.1.x (or ubersdr-side) when convenient.
+- [ ] **Red ERR box click against the real radio** (v0.7.4): tested only
+      against `tools/fake_flex.py`.
 - [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07: connect,
       receive and DAX streams work on the radio; the band-change failure found
       there is fixed but not yet re-tried on the radio). Check: `client gui` with SmartSDR
