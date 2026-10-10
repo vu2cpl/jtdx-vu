@@ -268,6 +268,45 @@ Last updated: 2026-10-10
 
 ## What changed
 
+### 2026-10-10 — Decoder speed measured: Mac mini vs Pi 5, threads, `-fbounds-check` (no code change)
+
+Manoj asked whether a Rust rewrite would make JTDX-VU faster; measured first.
+New `tools/decode_bench.cpp` drives a real `jtdxjt9` through the same shared
+memory and `.lock` handshake as MainWindow with recorded 15 s FT8 .wav files
+(Manoj's old WSJT-X `save/`, 2,500 files) at his profile settings (depth 3,
+FT8 cycles 3, sensitivity 2, AGCc, hint) and times each decode
+(`DECODE_BENCH_SHOW=1` prints the messages to compare builds). Gotcha: after
+a decode, jtdxjt9 polls for the new `.lock` only every 100 ms; remove it again
+sooner and the decoder never sees it and hangs, so the harness waits 300 ms.
+
+- **Mac mini M4 Pro, installed 0.7.4, 60 files (busy 2020 periods, up to ~50
+  decodes):** auto threads (12 procs → 9) mean 489 ms, p95 797, max 931; 1
+  thread 1,678 / 3,223 / 3,483; 4 → 699 mean; 8 → 503; 12 → 468. No
+  problem: decodes are done ~1 s after the period ends.
+- **Pi 5 (meridianpi5), 0.7.4 build, same files:** auto (4 cores → 3) mean
+  3,203 ms, p95 6,005, max 7,594; 1 thread max 13,522; 2 → 3,913 mean;
+  **4 threads mean 2,771, p95 4,854, max 5,219**. No throttling (57.6 °C,
+  0x0). Decoding starts ~14.1 s into the period, so on a busy band the Pi's
+  decodes land 3-7 s into the next one - after the reply slot has begun.
+  Decode > FT8 decoding > FT8 threads = 4 is the user-side fix (leaves no core
+  spare for the GUI/audio; not yet tried in the running app on a Pi).
+- **Profile (`sample`, Mac, auto threads):** of the decoder's busy samples
+  ~53% are OSD (`osd174_91` + `fetchit91` + `nextpat91`, the depth-3 deep
+  decode), ~20% `sync8`, ~9% BP + tanh, ~4% FFTW. Algorithm-bound, not
+  language-bound: a Rust port would not change this.
+- **`-fbounds-check` in Release Fortran flags** (CMakeLists.txt gfortran
+  block, inherited from upstream's initial commit): an A/B of two otherwise
+  identical local builds. Mac: 1 thread 1,661 → 1,256 ms (−24%), auto 491 →
+  398 ms (−20%). Pi: auto 3,203 → 3,003 (−6%), 4 threads 2,771 → 2,588 (−7%),
+  max 5,219 → 4,895. Decodes: over 300 more files single-threaded (repeatable),
+  3 of 3,444 messages differ (2 only with the checks, 1 only without) -
+  floating-point reordering on borderline candidates, smaller than the
+  run-to-run spread of one build with threads (1,529 vs 1,531). Trade-off:
+  without the checks an out-of-range index corrupts memory silently instead of
+  stopping jtdxjt9 with a runtime error. Not changed; Manoj to decide.
+- Nothing installed or changed in the app. Test copies: Pi `~/bench`
+  (harness, 60 wavs, the no-check build in `bB`).
+
 ### 2026-10-10 — v0.7.4 released: Flex through firewall/VPN, Discover, Show US State, QO-100 13cm alerts
 
 - https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.4, annotated tag on
@@ -3291,6 +3330,11 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       after this ships in JTDX-VU). MSHV has no QsoHistory; its own
       auto-answer choice needs the same DXCC > band > mode ranking.
 
+- [ ] **Decoder speed (2026-10-10 measurements):** decide (a) whether to drop
+      `-fbounds-check` from the Release Fortran flags (Mac −20%, Pi −6%,
+      decodes unchanged within noise, but out-of-range bugs no longer stop the
+      decoder), and (b) whether to recommend FT8 threads = 4 on a Pi, after a
+      try in the running app on the Pi. Pi `~/bench` can go once decided.
 - [ ] **Cache Hamlib in windows.yml.** It rebuilds from source every run
       and costs about 10 min.
 - [ ] **Windows on Manoj's PC:** Club Log, Telegram and Desktop alerts
