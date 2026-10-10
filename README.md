@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.7.3
+# JTDX-VU for VUCG community — v0.7.4
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -144,7 +144,7 @@ or Pi 5 is recommended.
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.7.3"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.7.4"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -260,7 +260,7 @@ or Pi 5 is recommended.
   Settings > Radio, yellow when not - a radio left in LSB after a band change
   stands out. Orange while connecting, red ERR on a rig control failure
   (click it to reset, as before). Works in light and dark style.
-- **Show US State** (Settings > General, beside Show DXCC names). U.S.A.
+- **Show US State** (since v0.7.4; Settings > General, beside Show DXCC names). U.S.A.
   stations show as `U.S.A.:FL`. The grid in the message is used first, and a
   square that covers several states lists them, largest share first
   (`U.S.A.:KY-IN-OH`). Without a grid, the callsign's state comes from the
@@ -273,14 +273,14 @@ or Pi 5 is recommended.
   Asked for by KK4CDK (Miguel), after the option in JTDX 2.2.160.
 - **FlexRadio over VITA-49, no SmartSDR needed** (since v0.7.0). Rig *FlexRadio VITA-49 Slice A..H* with the radio's
   address (e.g. `192.168.1.20:4992`) in the **FlexRadio:** field of
-  Settings > Radio — or press **Discover** beside it to find radios on the
+  Settings > Radio — or press **Discover** (since v0.7.4) beside it to find radios on the
   LAN (not over a VPN or between VLANs) — talks SmartSDR straight to a
   FLEX-6000/8000: it takes or creates a slice, tunes it, sets DIGU and keys
   it, and with *Use TCI / VITA-49 Audio* ticked the receive audio comes in
   as a DAX stream over VITA-49 and the transmit audio goes out the same way,
   so no DAX driver, virtual sound card or TCI bridge sits in the path. The
   radio sends that audio to the computer over UDP. JTDX-VU first sends the
-  radio a packet, so the audio gets back through a firewall, NAT or VPN. If
+  radio a packet, so the audio gets back through a firewall, NAT or VPN (since v0.7.4). If
   no audio arrives on two connects in a row, it stops reconnecting and says
   why (usually the firewall), and clicking the red ERR box reconnects. One
   API session, so the radio's relays click once per over. Ported from the
