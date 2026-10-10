@@ -3268,7 +3268,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       live 20-QSO result 106/107, 47/61, 8/11 at -14/-15/-16 dB (JTDX-VU /
       MSHV). Remaining: the on-air check with real recordings, and the -15 dB
       AP7 difference, which may be run-to-run variation (MSHV alone 43-66).
-- [ ] **Decision pending (Manoj thinking it over, 2026-10-04): simplify to
+- [x] **DECIDED 2026-10-10: not doing it.** Manoj: JTDX users are used to the
+      Notifications settings, so JTDX-VU keeps them; the simple, personalised
+      DXCC model stays in the private MSHV-Mac build. Was: **simplify to
       MSHV's DXCC model.** MSHV-Mac private build: one checkbox "DXCC: show
       new entity / band / mode only" above the decodes; one Club Log status
       (ATNO / need band / need mode / none) drives colour, filter and alerts;
@@ -3279,7 +3281,6 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       `DisplayText::wanted()`, the same test as AutoSeq wanted-first; drop
       worked-B4 "Don't show". Keep CQ/MyCall/Tx colours, markers, beeps,
       worked-B4 colour/strike, and the Wanted call/prefix/country lists.
-      Do nothing until he says go.
 - [ ] **AutoSeq queue + current-decode rule + JTTY heard** (unreleased,
       2026-10-03): try right-click Queue in the GUI and on air; check
       the JTTY calls-heard list on live traffic.
