@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-22
+Last updated: 2026-10-29
 
 ## Current state
 
@@ -4305,6 +4305,16 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       India crossband (Misc menu, needs Split), Background highlight off on Tx lines
       and the marker cell, Ignore CALL, no repeat logging, TCI reconnect / refused
       frequency fixes. Release when Manoj says.
+- [ ] **Issue #8 (WB4TOM, FLEX-8400 + RF2K-S): TX1 never keys the amp** in VITA-49
+      mode (v0.7.5, Windows, SmartSDR 4.3.16 not running). RF goes out; SmartSDR MOX
+      keys TX1 fine and TX1 is ticked on every band. His "works in WSJT-X /
+      JTDX-improved" is through SmartSDR CAT + DAX, so SmartSDR was the GUI client
+      there; in his JTDX-VU test JTDX-VU was the GUI client itself (`client gui`).
+      Asked him (2026-10-29) for one FT8 Tx with SmartSDR open (JTDX-VU joins as a
+      non-GUI client) and `flex_trace.txt` from both runs (File > Open log
+      directory; it's under hidden %LOCALAPPDATA%\JTDX-VU, which is why he couldn't
+      find it). Trace logs every radio line incl. `sub tx all`, so interlock state at
+      key-up should be there. Cause unknown until the trace arrives.
 - [ ] **Flex copies 3-4 in VITA-49 mode have no TX audio** on a real FLEX-6700
       (KK4CDK trace: own dax_tx stream stays tx=0). rc6 warns ("no TX audio"). Ideas
       not built: copy 3 sends on copy 1's stream id (unknown if the radio accepts it),
