@@ -241,7 +241,10 @@ or Pi 5 is recommended.
   someone else (Settings > Sequencing "Halt TX if operator I called
   answered to other operator", or with your Tx within his guard band), so
   nothing called him when he finished; that halt now applies only to
-  stations AutoSeq picked. If you don't want to keep calling, the
+  stations AutoSeq picked. Likewise the Settings > Sequencing answer
+  counters ("answer CQ" / "answer in call" tries) no longer drop a
+  double-clicked DX and switch to CQ when he answers someone else or
+  the tries run out: he is called until the Tx watchdog stops you. If you don't want to keep calling, the
   right-click extras wait for you: right-click his decode > Queue CALL, or
   right-click Halt Tx > Halt and queue CALL when already calling (asked
   for by KK4CDK).

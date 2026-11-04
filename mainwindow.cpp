@@ -4027,6 +4027,10 @@ void MainWindow::process_Auto()
   int tx = ui->TxFreqSpinBox->value ();
   QStringList StrStatus = {"NONE","RFIN","RCQ","SCQ","RCALL","SCALL","RREPORT","SREPORT","RRREPORT","SRREPORT","RRR","SRR","RRR73","SRR73","R73","S73","FIN"};
   bool const singleshot = singleshot_now ();  // JTDX-VU: taken before the DX call is cleared
+  // JTDX-VU: a DX picked by double-click is called until the Tx watchdog,
+  // as in WSJT-X and MSHV: the answer counters (tries, or "answered someone
+  // else") drop only AutoSeq's own picks, and the drop sent CQ
+  bool const picked = !m_dblClickCall.isEmpty () && Radio::base_callsign (m_dblClickCall) == Radio::base_callsign (hisCall);
   if (!hisCall.isEmpty ()) {
     if (m_houndMode) count = -1; //marker for changing status to FIN when status is RRR73
     m_status = m_qsoHistory.autoseq(hisCall,grid,rpt,rx,tx,time,count,prio,mode);
@@ -4060,7 +4064,7 @@ void MainWindow::process_Auto()
       hisCall = m_hisCall;
       grid = m_hisGrid;
       m_status = QsoHistory::NONE;
-    } else if ((m_status == QsoHistory::RCQ || m_status == QsoHistory::SCALL || (m_status == QsoHistory::SREPORT && m_skipTx1 && !m_houndMode)) && m_config.answerCQCount() &&
+    } else if ((m_status == QsoHistory::RCQ || m_status == QsoHistory::SCALL || (m_status == QsoHistory::SREPORT && m_skipTx1 && !m_houndMode)) && !picked && m_config.answerCQCount() &&
         ((prio > 4 && prio < 17) || prio < 2 || m_strictdirCQ) && (m_config.nAnswerCQCounter() <= count || m_reply_other)) {
       clearDX (" cleared, RCQ/SCALL/SREPORT count reached");
       if (m_reply_other)
@@ -4075,7 +4079,7 @@ void MainWindow::process_Auto()
       m_status = QsoHistory::NONE;
       if (singleshot)
         counters = false;
-    } else if ((m_status == QsoHistory::RCALL || (m_status == QsoHistory::SREPORT && !m_skipTx1)) && m_config.answerInCallCount() && 
+    } else if ((m_status == QsoHistory::RCALL || (m_status == QsoHistory::SREPORT && !m_skipTx1)) && !picked && m_config.answerInCallCount() && 
         (m_config.nAnswerInCallCounter() <= count || m_reply_other)) {
       clearDX (" cleared, RCALL/SREPORT count reached");
       m_qsoHistory.calllist(hisCall,rpt.toInt(),time);

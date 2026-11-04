@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-29
+Last updated: 2026-11-04
 
 ## Current state
 
@@ -282,6 +282,20 @@ Last updated: 2026-10-29
   `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-11-04 — Double-clicked DX no longer dropped to CQ when he works others (for the next build)
+
+Manoj, calling 6W/IK2HKT on 10m (TCI FLEX HF, 12:04-12:06 UTC): every over
+started `6W/IK2HKT VU2CPL -17` and within a second switched to `CQ VU2CPL MK83`
+(ALL.TXT "Retransmitting"). Cause: stock JTDX `process_Auto` drops the DX when
+Settings > Sequencing "answer CQ" / "answer in call" counters are on (on in all
+his profiles, 3 tries) and the tries are used up **or** the DX sent a message
+to someone else (`m_reply_other`); with nobody else to answer it falls through
+to `on_txb6_clicked()` = CQ. The 2026-10-20 KK4CDK fix exempted double-click
+picks only from the `readFromStdout` halt, not from this drop. Now
+`process_Auto` skips both drops when the DX is `m_dblClickCall` (base call), so
+a picked DX is called until the Tx watchdog, as in WSJT-X/MSHV; AutoSeq's own
+picks keep the counters. Builds; not tried on air.
 
 ### 2026-10-22 — 0.7.6-rc7: Flex key-up miss no longer QSYs to 14.100 and calls CQ there; a dead session no longer holds the radio keyed
 
