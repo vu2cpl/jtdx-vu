@@ -1,6 +1,6 @@
 # JTDX-VU version (what the operator sees: title, About, Info.plist, PSK Reporter,
 # the zip names). Test builds before a release are X.Y.Z-rcN; the release is X.Y.Z.
-set (JTDXVU_VERSION 0.7.6-rc7)
+set (JTDXVU_VERSION 0.7.6-rc8)
 
 # Version number components (upstream JTDX base, left as released)
 set (WSJTX_VERSION_MAJOR 2)

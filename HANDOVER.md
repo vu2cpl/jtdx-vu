@@ -13,9 +13,9 @@ Last updated: 2026-11-04
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.5** released 2026-10-17; **`Versions.cmake` is now 0.7.6-rc7**
-  (local test build 2026-10-22: rc6 plus the Flex key-up / reconnect fix; rc6 is the
-  last GitHub pre-release and is installed on the Mac mini). rc1-rc7 are
+- **Version:** JTDX-VU **0.7.5** released 2026-10-17; **`Versions.cmake` is now 0.7.6-rc8**
+  (local build installed on the Mac mini 2026-11-04: rc7 plus the double-clicked DX
+  no longer dropped to CQ; rc6 is the last GitHub pre-release). rc1-rc8 are
   unreleased work for v0.7.6 (see "What changed" 2026-10-18 .. 2026-10-22); Manoj calls the release.
   Previous line, kept for history: JTDX-VU **0.7.5** (released 2026-10-17) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
@@ -282,6 +282,17 @@ Last updated: 2026-11-04
   `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-11-04 — 0.7.6-rc8: rc7 plus the double-clicked DX fix; local build with a space in its path (local test build)
+
+Manoj: "build rc8 and install". `Versions.cmake` rc7 -> rc8. Built on
+`/Volumes/HUB NVME/claude-scratch/JTDX/build` (Ninja), bundled, installed to
+`/Applications/JTDX-VU.app` (rc7 app kept at `.../claude-scratch/JTDX/prev-JTDX-VU.app`),
+relaunched with `-r "TCI FLEX HF"`. No CI zips. A build tree whose path has a
+space did not build: `add_resources` in `CMakeLists.txt` ran `file(TO_NATIVE_PATH)`,
+which on Unix writes `HUB\ NVME` into `jtdx.qrc`, and rcc then wanted
+`/Volumes/HUB/ NVME/.../jtdx_en_US.qm`. Now plain paths except on Windows. A
+symlinked build dir is no way round it (moc writes `../../../X.hpp` includes).
 
 ### 2026-11-04 — Double-clicked DX no longer dropped to CQ when he works others (for the next build)
 
