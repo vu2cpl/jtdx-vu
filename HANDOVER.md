@@ -286,7 +286,7 @@ Last updated: 2026-11-04
 ### 2026-11-04 — 0.7.6-rc8: rc7 plus the double-clicked DX fix; local build with a space in its path (local test build)
 
 Manoj: "build rc8 and install". `Versions.cmake` rc7 -> rc8. Built on
-`/Volumes/HUB NVME/claude-scratch/JTDX/build` (Ninja), bundled, installed to
+`/Volumes/HUB_NVME/claude-scratch/JTDX/build (disk since renamed from "HUB NVME")` (Ninja), bundled, installed to
 `/Applications/JTDX-VU.app` (rc7 app kept at `.../claude-scratch/JTDX/prev-JTDX-VU.app`),
 relaunched with `-r "TCI FLEX HF"`. No CI zips. A build tree whose path has a
 space did not build: `add_resources` in `CMakeLists.txt` ran `file(TO_NATIVE_PATH)`,
