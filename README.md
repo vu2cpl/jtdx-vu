@@ -212,8 +212,9 @@ or Pi 5 is recommended.
   the usual JTDX order. A wanted station is picked even when AnsB4 /
   CallB4 are off; with none heard, nothing changes.
 - **Queue a station for AutoSeq** (since v0.6.0). Right-click a decode
-  in either pane > **Queue CALL**. AutoSeq calls it the next time it is
-  decoded (its CQ, or the end of its QSO), ahead of wanted stations and
+  in either pane > **Call CALL now** (named Queue CALL before the next
+  release). AutoSeq calls it the next time it is
+  decoded, ahead of wanted stations and
   callers, in queue order, and takes it off the queue once logged. The
   queue shows above the Rx Frequency pane while it has calls; right-click
   there (or the decode again) to remove one, or clear it. A queued QSO
@@ -222,11 +223,16 @@ or Pi 5 is recommended.
   it was off (and moves your Tx period to the opposite one from where the
   station was heard), so the queue works while you are only listening.
   It still picks only between QSOs, with the DX Call box empty.
+  Since the next release any decode of him starts the calling, even
+  while he works someone else (it used to wait for his CQ or the end of
+  his QSO), and he is then called until the Tx watchdog, as a
+  double-click pick is.
   **Right-click Halt Tx > Halt and queue CALL** (since v0.7.5)
   does it in one go for a busy station: Tx stops, the DX call is cleared
   and the station is queued, so AutoSeq calls it again when it sends CQ or
   RR73/73 to someone else (the latter needs Settings > Notifications
-  "RR73/73" ticked).
+  "RR73/73" ticked). Such a station waits like this (shown in italics in
+  the queue) instead of being called on any decode.
 - **160m crossband with India** (since the next release): **Misc >
   Crossband 160m operation with India**, beside stock JTDX's Japan and
   Korea options. On FT8, a station outside India on dial **1.808**
@@ -244,10 +250,11 @@ or Pi 5 is recommended.
   stations AutoSeq picked. Likewise the Settings > Sequencing answer
   counters ("answer CQ" / "answer in call" tries) no longer drop a
   double-clicked DX and switch to CQ when he answers someone else or
-  the tries run out: he is called until the Tx watchdog stops you. If you don't want to keep calling, the
-  right-click extras wait for you: right-click his decode > Queue CALL, or
-  right-click Halt Tx > Halt and queue CALL when already calling (asked
-  for by KK4CDK).
+  the tries run out: he is called until the Tx watchdog stops you. If you
+  don't want to keep calling, right-click Halt Tx > Halt and queue CALL:
+  Tx stops and he is called again when he sends CQ or RR73/73 (asked for
+  by KK4CDK). Right-click his decode > Call CALL now does not wait: it
+  calls him as soon as he is decoded.
 - **Ignore a station** (since the next release). Right-click a decode >
   **Ignore CALL (never answer)**: AutoSeq never answers or calls it, for
   a caller who keeps calling after the QSO is logged. Ignoring the station

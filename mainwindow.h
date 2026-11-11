@@ -608,6 +608,8 @@ private:
   bool m_callPrioCQ;
   bool m_callFirst73;
   QString m_dblClickCall;       // JTDX-VU: DX call picked by double-click: keep calling it even while it works others
+  QHash<QString, QString> m_queueHeard;   // JTDX-VU: queued base call -> his decode line, this decode
+  QSet<QString> m_queueWait;     // JTDX-VU: base calls queued by Halt and queue: wait for his CQ or RR73/73
   bool m_maxDistance;
   bool m_answerWorkedB4;
   bool m_callWorkedB4;
@@ -902,6 +904,7 @@ private:
   void ignoreToggle (QString const& call);   // JTDX-VU
   void queueChanged ();
   bool queued (QString const& call) const;
+  void queuePickHeard ();
   void band_change_reset ();  // JTDX-VU: Auto CQ off on a new band (AnsB4 / 1 QSO stay)
   bool nonstop_active () const;  // JTDX-VU: Non-stop on and not in Hound mode
   bool watchdog_counts (qint64 sec) const;  // JTDX-VU: does the Tx watchdog count the minute ending at 'sec'

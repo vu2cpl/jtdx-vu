@@ -3680,6 +3680,7 @@ void MainWindow::decode()                                       //decode()
   m_reply_me = false;
   m_reply_other = false;
   m_reply_CQ73 = false;
+  m_queueHeard.clear ();
   ui->DecodeButton->setChecked (true);
   if(!m_manualDecode) { m_processAuto_done = false; m_callFirst73 = false; }
   m_used_freq = 0;
@@ -3876,22 +3877,25 @@ bool MainWindow::nonstop_continue ()
 }
 
 // ---- JTDX-VU: AutoSeq queue -----------------------------------------------
-// Right-click a decode > "Queue CALL": AutoSeq calls it the next time it is
-// decoded (its CQ, or the end of its QSO), ahead of everything else, in queue
-// order.  Off the queue when logged; right-click the list to remove.
+// Right-click a decode > "Call CALL now": AutoSeq calls it the next time it is
+// decoded (any message, in QSO with others or not; see queuePickHeard), ahead
+// of everything else, in queue order.  Off the queue when logged; right-click
+// the list to remove.
 void MainWindow::queueSetupUi ()
 {
   m_queueBox = new QWidget;
   auto * box = new QVBoxLayout {m_queueBox};
   box->setContentsMargins (0, 0, 0, 0);
   box->setSpacing (1);
-  m_queueLabel = new QLabel {tr ("Queue (called when next decoded)")};
+  m_queueLabel = new QLabel {tr ("Queue (called as soon as decoded)")};
   box->addWidget (m_queueLabel);
   m_queueList = new QListWidget;
   m_queueList->setMaximumHeight (fontMetrics ().height () * 4 + 6);
   m_queueList->setToolTip (tr ("Right-click a decode to queue or unqueue a station.\n"
                                "AutoSeq calls the first queued station that is decoded, before anyone else,\n"
-                               "and switches Enable Tx on if it is off.\n"
+                               "whatever he is sending, and switches Enable Tx on if it is off.\n"
+                               "Stations queued by right-click Halt Tx > Halt and queue (shown in italics)\n"
+                               "wait instead: called when they send CQ or RR73/73.\n"
                                "Right-click here to remove a call or clear the queue."));
   m_queueList->setContextMenuPolicy (Qt::CustomContextMenu);
   box->addWidget (m_queueList);
@@ -3945,6 +3949,8 @@ void MainWindow::queueSetupUi ()
           haltTx ("halted, " + call + " queued ");
           clearDX (" cleared, " + call + " queued");
           if (!m_queue.contains (call)) queueToggle (call);
+          m_queueWait.insert (Radio::base_callsign (call));   // wait until he is free
+          queueChanged ();
         });
       a->setEnabled (!call.isEmpty () && m_mode != "JTTY");
       a->setToolTip (tr ("Stop calling, clear the DX call and queue the station:\n"
@@ -3960,6 +3966,31 @@ bool MainWindow::queued (QString const& call) const
   auto const base = Radio::base_callsign (call);
   for (auto const& c : m_queue) if (Radio::base_callsign (c) == base) return true;
   return false;
+}
+
+// JTDX-VU: at the end of a decode, with no QSO going, the first queued station
+// heard (any message; not one put there by Halt and queue) is picked as a double-click would pick him, and Enable Tx
+// goes on: no CQ from him or other input needed.  As a pick he is then called
+// until the Tx watchdog, whoever he works meanwhile.
+void MainWindow::queuePickHeard ()
+{
+  if (m_queueHeard.isEmpty ()) return;
+  auto const heard = m_queueHeard;
+  m_queueHeard.clear ();
+  if (!m_autoseq || m_houndMode || m_mode == "JTTY" || !m_hisCall.isEmpty ()) return;
+  for (auto const& c : m_queue) {
+    auto const base = Radio::base_callsign (c);
+    if (!heard.contains (base) || m_queueWait.contains (base)) continue;   // Halt and queue: he waits
+    auto const line = heard.value (base);
+    processMessage (line, line.size (), false, false);
+    if (Radio::base_callsign (m_hisCall) != base) return;   // not taken
+    m_dblClickCall = m_hisCall;
+    m_cqRunQso = true;            // a queued station counts as our own run (CNS carries on)
+    if (!m_enableTx) ui->enableTxButton->click ();
+    showStatusMessage (tr ("%1 (queued) heard: calling him").arg (m_hisCall), 15000);
+    if (m_config.write_decoded_debug ()) writeToALLTXT ("Queue: " + m_hisCall + " heard, picked");
+    return;
+  }
 }
 
 void MainWindow::queueToggle (QString const& call)
@@ -4000,8 +4031,19 @@ void MainWindow::queueChanged ()
     pane->queue_ = jtty ? nullptr : &m_queue;
     pane->ignored_ = jtty ? nullptr : &m_ignored;
   }
+  // JTDX-VU: a Halt-and-queue wait ends when the station leaves the queue
+  for (auto it = m_queueWait.begin (); it != m_queueWait.end ();)
+    if (queued (*it)) ++it; else it = m_queueWait.erase (it);
   m_queueList->clear ();
   m_queueList->addItems (m_queue);
+  for (int i = 0; i < m_queueList->count (); ++i)
+    if (m_queueWait.contains (Radio::base_callsign (m_queueList->item (i)->text ()))) {
+      auto * item = m_queueList->item (i);
+      auto f = item->font ();
+      f.setItalic (true);
+      item->setFont (f);
+      item->setToolTip (tr ("Halt and queue: called when he sends CQ or RR73/73"));
+    }
   m_ignoreList->clear ();
   m_ignoreList->addItems (m_ignored);
   m_ignoreLabel->setVisible (!m_ignored.isEmpty ());
@@ -4296,6 +4338,7 @@ void MainWindow::readFromStdout()                             //readFromStdout
       int indxncand=t.indexOf("<ncand>")+7; m_ncand=t.mid(indxncand,5).toInt();
       int indxdt=t.indexOf("<avexdt>")+8; QString avexdt = t.mid(indxdt,6).trimmed();
 //  printf("%s(%0.1f) Timing decode stop, %d candidates\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),m_ncand);
+      if (!m_manualDecode) queuePickHeard ();   // JTDX-VU: ahead of AutoSeq's own picks
       if (m_autoseq && !m_processAuto_done && !m_manualDecode) { m_processAuto_done = true; process_Auto(); }
       m_okToPost=true;
       m_RxLog=0;
@@ -4436,6 +4479,9 @@ void MainWindow::readFromStdout()                             //readFromStdout
       if (!decodedtext.isDebug () && !deCall.isEmpty () && Radio::base_callsign (deCall) != m_baseCall)
         m_clubLog->check_decode (m_logBook, deCall, m_freqNominal, m_mode);  // JTDX-VU needed-DXCC alert
       if (!m_hisCall.isEmpty() && !deCall.isEmpty() && Radio::base_callsign (m_hisCall) == Radio::base_callsign (deCall)) ui->RxFreqSpinBox->setValue (decodedtext.frequencyOffset());
+      // JTDX-VU: a queued station heard, whatever he sends (not to us: AutoSeq answers that)
+      if (!decodedtext.isDebug () && !mycallinmsg && !deCall.isEmpty () && queued (deCall))
+        m_queueHeard.insert (Radio::base_callsign (deCall), decodedtext.string ());
       if (!deCall.isEmpty() && !m_reply_me && Radio::base_callsign (deCall) == Radio::base_callsign (m_hisCall)) {
           if (mycallinmsg) {
              m_reply_me = true;

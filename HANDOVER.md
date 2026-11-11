@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-11-04
+Last updated: 2026-11-11
 
 ## Current state
 
@@ -13,9 +13,10 @@ Last updated: 2026-11-04
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.5** released 2026-10-17; **`Versions.cmake` is now 0.7.6-rc8**
-  (local build installed on the Mac mini 2026-11-04: rc7 plus the double-clicked DX
-  no longer dropped to CQ; rc6 is the last GitHub pre-release). rc1-rc8 are
+- **Version:** JTDX-VU **0.7.5** released 2026-10-17; **`Versions.cmake` is now 0.7.6-rc9**
+  (local build installed on the Mac mini 2026-11-11: rc8 plus the queue calling on any
+  decode; rc8 added the double-clicked DX no longer dropped to CQ; rc6 is the last
+  GitHub pre-release). rc1-rc9 are
   unreleased work for v0.7.6 (see "What changed" 2026-10-18 .. 2026-10-22); Manoj calls the release.
   Previous line, kept for history: JTDX-VU **0.7.5** (released 2026-10-17) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
@@ -282,6 +283,28 @@ Last updated: 2026-11-04
   `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-11-11 — 0.7.6-rc9: a queued station is called on any decode; "Call CALL now" (local test build)
+
+rc8 on air, 2026-11-11 12:04-12:07 UTC on 10m: a double-clicked 6W/IV3FSG was
+called every over while he worked others, no CQ (the rc8 fix works). Then Manoj
+queued him and nothing went out until he switched Enable Tx and Auto CQ on:
+the queue only fired inside `QsoHistory::autoseq` on his CQ (RCQ) or RR73/73
+(RFIN); his messages to others enter the history with status NONE, which the
+engine cannot pick. Manoj: "when a call is queued, and that call is decoded, it
+should start answering without any other inputs." Now `readFromStdout` notes
+each line sent by a queued station that is not to us (`m_queueHeard`), and at
+decode end, before `process_Auto`, `queuePickHeard` picks the first queued one
+heard if the DX Call box is empty: `processMessage` on his line (as a
+double-click: period, report, Tx1/Tx2), `m_dblClickCall` set (so called until
+the watchdog), `m_cqRunQso`, Enable Tx on. Stations queued by right-click Halt
+Tx > Halt and queue go in `m_queueWait` and still wait for CQ or RR73/73
+(italic in the queue list), so the two actions don't undo each other (Manoj
+asked how to get both right; this was the proposal). Menu "Queue CALL (call when
+next decoded)" renamed "Call CALL now" at Manoj's suggestion; list label "Queue
+(called as soon as decoded)". Disk renamed `/Volumes/HUB_NVME`: the old build
+tree had to be reconfigured. Built and installed (rc8 app kept at
+`/Volumes/HUB_NVME/claude-scratch/JTDX/prev-JTDX-VU.app`); not tried on air.
 
 ### 2026-11-04 — 0.7.6-rc8: rc7 plus the double-clicked DX fix; local build with a space in its path (local test build)
 

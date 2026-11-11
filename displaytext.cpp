@@ -166,7 +166,7 @@ void DisplayText::contextMenuEvent (QContextMenuEvent * e)
       QString const call = meta->call;
       bool const in = queue_->contains (call);
       auto * first = menu->actions ().value (0);
-      auto * act = new QAction {in ? tr ("Remove %1 from queue").arg (call) : tr ("Queue %1 (call when next decoded)").arg (call), menu.data ()};
+      auto * act = new QAction {in ? tr ("Remove %1 from queue").arg (call) : tr ("Call %1 now").arg (call), menu.data ()};
       connect (act, &QAction::triggered, this, [this, call] {emit queueToggled (call);});
       menu->insertAction (first, act);
       if (ignored_)
