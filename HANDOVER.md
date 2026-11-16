@@ -296,8 +296,27 @@ arm64 there, so **Apple Silicon zips need macOS 15 Sequoia from v0.7.6** (Intel
 already did); README table and release notes say so. The v0.7.6 arm64 zip
 came from a workflow_dispatch run on the branch (same code as the tag, only
 the workflow and docs differ), downloaded and uploaded by hand. No issues closed by it (#8
-closed 2026-11-14 without a fix). Website (vu2cpl.com downloads table) still
-to update to v0.7.6.
+closed 2026-11-14 without a fix). Tag v0.7.6 on 8f2850cb, published as latest
+2026-11-17.
+- CI: Windows and Intel from the tag run (43880533976 / 43880533766). arm64 from
+  workflow_dispatch run 43910483034 on `ecb687c0` (macos-15; the first dispatch
+  43902848455 was never picked up, GitHub arm64 capacity). Two `gh run watch`
+  loops in parallel used up the 5000/h API quota once: poll every 5 min instead.
+- Pi .deb on meridianpi5 (rsync of `git ls-files` at the tag, `cmake ..`,
+  `nice make -j3`, `cpack -G DEB`): 0.7.6 arm64, Conflicts: jtdx,
+  `apt-get install -s` clean, 8 s offscreen `--test-mode` start OK, test shm removed.
+- Mac zips notarised (arm64 5caf1973-5efe-4adf-9665-3157bb9ac591, x86_64
+  d2fc1a8b-f7bf-41c2-94aa-31abe04c53a7, Accepted, stapled) after Manoj re-stored the
+  vanished MSHV-NOTARY profile. All eight files re-downloaded from the draft:
+  checksums OK, Mac apps 0.7.6, right arch, "Notarized Developer ID", no AppleDouble
+  entries; Windows jtdx.exe 0.7.6 with libusb + Hamlib DLLs. After publishing, all
+  eight URLs answered 206 anonymously; `releases/latest` = v0.7.6. sha256:
+  - `JTDX-VU-0.7.6-macos-arm64.zip` `aab932e26c908d8509dc380f0c98df6aa0dc9d393c95d3956405c3ab6052f12e`
+  - `JTDX-VU-0.7.6-macos-x86_64.zip` `78374d29d565949f4d464a775b65a6e0dffccc148d9aa1808b823644594fbe9a`
+  - `JTDX-VU-0.7.6-windows-x64.zip` `369ffc069457758aaf9ac14a40e5735814c4c20c9aa5ea52608766e19d13b9f2`
+  - `jtdx-vu-0.7.6-linux-arm64.deb` `a00350f863fe5e33e783e040bc6100207b99eda9e0be1ef986aaf7d42b738ff5`
+- Website (vu2cpl.github.io `d549dd9`): card sentence, page paragraph, queue
+  bullet, downloads table on v0.7.6, arm64 row "macOS 15+".
 
 ### 2026-11-16 — Decode right-click "Queue CALL (wait for his CQ)" (in v0.7.6)
 
@@ -4380,7 +4399,6 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **After v0.7.6 (2026-11-16):** still to try on air: India crossband (Misc
       menu, needs Split), Ignore CALL, no repeat logging, the Flex key-up fix on the
       FLEX-6600 (watch `flex_trace.txt` for "xmit 1 not confirmed"), both queue items.
-      Update the vu2cpl.com downloads table to v0.7.6.
 - [x] **Issue #8 (WB4TOM, FLEX-8400 + RF2K-S): TX1 never keys the amp** in VITA-49
       mode (v0.7.5, Windows). **Closed 2026-11-14, no trace supplied.** His last
       report: with SmartSDR up, band and antenna changes reach the RF2K-S (so CAT
