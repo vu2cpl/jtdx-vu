@@ -901,6 +901,7 @@ private:
   int watchdog_minutes () const;  // JTDX-VU: the Auto CQ time limit while Non-stop, else Settings
   void queueSetupUi ();        // JTDX-VU: the AutoSeq queue list by the Rx pane
   void queueToggle (QString const& call);
+  void queueWaitFor (QString const& call);
   void ignoreToggle (QString const& call);   // JTDX-VU
   void queueChanged ();
   bool queued (QString const& call) const;

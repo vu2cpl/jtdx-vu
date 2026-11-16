@@ -284,6 +284,20 @@ Last updated: 2026-11-16
 
 ## What changed
 
+### 2026-11-16 — Decode right-click "Queue CALL (wait for his CQ)" (for the next build)
+
+Manoj: "where is the queue option now? it's only with halt?" Since rc9 the
+decode right-click item "Call CALL now" calls on any decode, so the old
+wait-for-CQ queue was reachable only through right-click Halt Tx > Halt and
+queue, i.e. only for a station already being called. The decode menu now
+also offers **Queue CALL (wait for his CQ)** (only when he is not queued):
+`DisplayText::queueWaitRequested` -> new `MainWindow::queueWaitFor`, which
+puts him on `m_queue` and in `m_queueWait` (italic, called on his CQ or
+RR73/73). Halt and queue now calls `queueWaitFor` too. Queue list tooltip
+and the italic item tooltip reworded. Built on
+`/Volumes/HUB_NVME/claude-scratch/JTDX/build`; not installed, not tried on
+air; no version bump (Manoj is cutting a release).
+
 ### 2026-11-11 — 0.7.6-rc9: a queued station is called on any decode; "Call CALL now" (local test build)
 
 rc8 on air, 2026-11-11 12:04-12:07 UTC on 10m: a double-clicked 6W/IV3FSG was

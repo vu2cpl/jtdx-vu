@@ -3894,7 +3894,8 @@ void MainWindow::queueSetupUi ()
   m_queueList->setToolTip (tr ("Right-click a decode to queue or unqueue a station.\n"
                                "AutoSeq calls the first queued station that is decoded, before anyone else,\n"
                                "whatever he is sending, and switches Enable Tx on if it is off.\n"
-                               "Stations queued by right-click Halt Tx > Halt and queue (shown in italics)\n"
+                               "Stations queued with \"wait for his CQ\", or by right-click Halt Tx > Halt and queue\n"
+                               "(shown in italics)\n"
                                "wait instead: called when they send CQ or RR73/73.\n"
                                "Right-click here to remove a call or clear the queue."));
   m_queueList->setContextMenuPolicy (Qt::CustomContextMenu);
@@ -3938,6 +3939,7 @@ void MainWindow::queueSetupUi ()
   for (auto * pane : {ui->decodedTextBrowser, ui->decodedTextBrowser2})
     {
       connect (pane, &DisplayText::queueToggled, this, &MainWindow::queueToggle);
+      connect (pane, &DisplayText::queueWaitRequested, this, &MainWindow::queueWaitFor);
       connect (pane, &DisplayText::ignoreToggled, this, &MainWindow::ignoreToggle);
     }
   // right-click Halt Tx: stop calling a busy station and let the queue call it when it is free
@@ -3948,9 +3950,7 @@ void MainWindow::queueSetupUi ()
       auto * a = menu.addAction (call.isEmpty () ? tr ("Halt and queue (no DX call)") : tr ("Halt and queue %1").arg (call), this, [this, call] {
           haltTx ("halted, " + call + " queued ");
           clearDX (" cleared, " + call + " queued");
-          if (!m_queue.contains (call)) queueToggle (call);
-          m_queueWait.insert (Radio::base_callsign (call));   // wait until he is free
-          queueChanged ();
+          queueWaitFor (call);
         });
       a->setEnabled (!call.isEmpty () && m_mode != "JTTY");
       a->setToolTip (tr ("Stop calling, clear the DX call and queue the station:\n"
@@ -4003,6 +4003,18 @@ void MainWindow::queueToggle (QString const& call)
                                  : tr ("%1 queued - switch AutoSeq on to have it called").arg (call), 10000);
 }
 
+// JTDX-VU: queue a station to be called only when he is free: his CQ or
+// RR73/73 (right-click a decode > Queue CALL (wait for his CQ), and Halt and
+// queue).  Shown in italics; queuePickHeard leaves him alone.
+void MainWindow::queueWaitFor (QString const& call)
+{
+  if (!m_queue.contains (call)) m_queue << call;
+  m_queueWait.insert (Radio::base_callsign (call));
+  queueChanged ();
+  showStatusMessage (m_autoseq ? tr ("%1 queued: called when he sends CQ or RR73/73").arg (call)
+                               : tr ("%1 queued - switch AutoSeq on to have it called").arg (call), 10000);
+}
+
 void MainWindow::ignoreToggle (QString const& call)
 {
   if (m_ignored.contains (call)) m_ignored.removeAll (call);
@@ -4042,7 +4054,7 @@ void MainWindow::queueChanged ()
       auto f = item->font ();
       f.setItalic (true);
       item->setFont (f);
-      item->setToolTip (tr ("Halt and queue: called when he sends CQ or RR73/73"));
+      item->setToolTip (tr ("Waiting: called when he sends CQ or RR73/73"));
     }
   m_ignoreList->clear ();
   m_ignoreList->addItems (m_ignored);

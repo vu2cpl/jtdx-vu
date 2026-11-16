@@ -39,6 +39,7 @@ signals:
     void selectCallsign(bool alt, bool ctrl);
     void leftClickReleased();     // JTDX-VU: JTTY picks a call on a single click
     void queueToggled (QString const& call);   // JTDX-VU: right-click > Queue / Unqueue
+    void queueWaitRequested (QString const& call);   // JTDX-VU: right-click > Queue, wait for his CQ
     void ignoreToggled (QString const& call);  // JTDX-VU: right-click > Ignore / Stop ignoring
 
 public slots:

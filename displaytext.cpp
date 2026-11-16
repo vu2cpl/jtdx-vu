@@ -155,7 +155,8 @@ void DisplayText::mouseDoubleClickEvent(QMouseEvent *e)
 }
 
 // JTDX-VU: right-click a decode to queue its station for AutoSeq (called
-// the next time it is decoded), or take it off the queue; or to ignore it
+// the next time it is decoded, or only when he sends CQ or RR73/73), or take
+// it off the queue; or to ignore it
 // (AutoSeq never answers it)
 void DisplayText::contextMenuEvent (QContextMenuEvent * e)
 {
@@ -169,6 +170,12 @@ void DisplayText::contextMenuEvent (QContextMenuEvent * e)
       auto * act = new QAction {in ? tr ("Remove %1 from queue").arg (call) : tr ("Call %1 now").arg (call), menu.data ()};
       connect (act, &QAction::triggered, this, [this, call] {emit queueToggled (call);});
       menu->insertAction (first, act);
+      if (!in)
+        {
+          auto * wa = new QAction {tr ("Queue %1 (wait for his CQ)").arg (call), menu.data ()};
+          connect (wa, &QAction::triggered, this, [this, call] {emit queueWaitRequested (call);});
+          menu->insertAction (first, wa);
+        }
       if (ignored_)
         {
           bool const ign = ignored_->contains (call);

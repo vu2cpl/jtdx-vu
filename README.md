@@ -233,6 +233,8 @@ or Pi 5 is recommended.
   RR73/73 to someone else (the latter needs Settings > Notifications
   "RR73/73" ticked). Such a station waits like this (shown in italics in
   the queue) instead of being called on any decode.
+  To queue a station that way without calling him first, right-click
+  his decode > **Queue CALL (wait for his CQ)** (since the next release).
 - **160m crossband with India** (since the next release): **Misc >
   Crossband 160m operation with India**, beside stock JTDX's Japan and
   Korea options. On FT8, a station outside India on dial **1.808**
@@ -254,7 +256,7 @@ or Pi 5 is recommended.
   don't want to keep calling, right-click Halt Tx > Halt and queue CALL:
   Tx stops and he is called again when he sends CQ or RR73/73 (asked for
   by KK4CDK). Right-click his decode > Call CALL now does not wait: it
-  calls him as soon as he is decoded.
+  calls him as soon as he is decoded; Queue CALL (wait for his CQ) does.
 - **Ignore a station** (since the next release). Right-click a decode >
   **Ignore CALL (never answer)**: AutoSeq never answers or calls it, for
   a caller who keeps calling after the QSO is logged. Ignoring the station
