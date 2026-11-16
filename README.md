@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.7.5
+# JTDX-VU for VUCG community — v0.7.6
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -148,7 +148,7 @@ or Pi 5 is recommended.
   Reporter ID all say JTDX-VU. PSK Reporter gets just "JTDX-VU v0.7.6"
   (no rig name, rc suffix or build id), so every copy is counted as
   one program. The title bar reads just "JTDX-VU for
-  VUCG V0.7.5"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.7.6"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -201,7 +201,7 @@ or Pi 5 is recommended.
   and beep on one line, plus "Already worked", "Messages and markers" and a
   live preview. **Background highlight** (since v0.6.0) off keeps the
   decode pane's background plain and puts the highlight colour on the text;
-  since the next build that also covers your own Tx lines, QSY lines and
+  since v0.7.6 that also covers your own Tx lines, QSY lines and
   the marker cell before the country (red for your call, blue for your QSO
   partner, the "new" colour on other stations' messages).
 - **AutoSeq goes for what your log needs first** (since v0.6.0). Always
@@ -212,8 +212,7 @@ or Pi 5 is recommended.
   the usual JTDX order. A wanted station is picked even when AnsB4 /
   CallB4 are off; with none heard, nothing changes.
 - **Queue a station for AutoSeq** (since v0.6.0). Right-click a decode
-  in either pane > **Call CALL now** (named Queue CALL before the next
-  release). AutoSeq calls it the next time it is
+  in either pane > **Call CALL now** (named Queue CALL up to v0.7.5). AutoSeq calls it the next time it is
   decoded, ahead of wanted stations and
   callers, in queue order, and takes it off the queue once logged. The
   queue shows above the Rx Frequency pane while it has calls; right-click
@@ -223,7 +222,7 @@ or Pi 5 is recommended.
   it was off (and moves your Tx period to the opposite one from where the
   station was heard), so the queue works while you are only listening.
   It still picks only between QSOs, with the DX Call box empty.
-  Since the next release any decode of him starts the calling, even
+  Since v0.7.6 any decode of him starts the calling, even
   while he works someone else (it used to wait for his CQ or the end of
   his QSO), and he is then called until the Tx watchdog, as a
   double-click pick is.
@@ -234,8 +233,8 @@ or Pi 5 is recommended.
   "RR73/73" ticked). Such a station waits like this (shown in italics in
   the queue) instead of being called on any decode.
   To queue a station that way without calling him first, right-click
-  his decode > **Queue CALL (wait for his CQ)** (since the next release).
-- **160m crossband with India** (since the next release): **Misc >
+  his decode > **Queue CALL (wait for his CQ)** (since v0.7.6).
+- **160m crossband with India** (since v0.7.6): **Misc >
   Crossband 160m operation with India**, beside stock JTDX's Japan and
   Korea options. On FT8, a station outside India on dial **1.808**
   transmits on **1.840**, and an Indian station (VU, VU4, VU7) on dial
@@ -243,7 +242,7 @@ or Pi 5 is recommended.
   operation (Rig or Fake It). 1.808 FT8 is in the default frequency list;
   an existing profile needs it added in Settings > Frequencies, or type
   1.808 in the band box.
-- **Double-click keeps calling a busy station** (since the next release).
+- **Double-click keeps calling a busy station** (since v0.7.6).
   A station you double-click is called whether or not he is still in a QSO,
   as in WSJT-X and MSHV. JTDX used to halt Tx as soon as he answered
   someone else (Settings > Sequencing "Halt TX if operator I called
@@ -257,18 +256,18 @@ or Pi 5 is recommended.
   Tx stops and he is called again when he sends CQ or RR73/73 (asked for
   by KK4CDK). Right-click his decode > Call CALL now does not wait: it
   calls him as soon as he is decoded; Queue CALL (wait for his CQ) does.
-- **Ignore a station** (since the next release). Right-click a decode >
+- **Ignore a station** (since v0.7.6). Right-click a decode >
   **Ignore CALL (never answer)**: AutoSeq never answers or calls it, for
   a caller who keeps calling after the QSO is logged. Ignoring the station
   being worked halts Tx and clears the DX call. The list shows under the
   queue, is kept per profile, and right-click there (or the decode again)
   removes a call. Stock JTDX's hidden version (Ctrl/Cmd + right-click
   Clear DX) still works but lasts only until restart and shows nowhere.
-- **No repeat logging** (since the next release). A caller who missed your
+- **No repeat logging** (since v0.7.6). A caller who missed your
   RR73 keeps sending R+report, and each RR73 sent back used to log the QSO
   again. Automatic logging now skips the same call, band and mode within
   10 minutes; the Log QSO button still logs.
-- **LoTW user marks work again** (since the next release, after JTDX
+- **LoTW user marks work again** (since v0.7.6, after JTDX
   2.2.160). JTDX puts `•` before the country of a station that uploads to
   Logbook of the World (`°` when the decode was also hinted, which alone is
   `*`). The list bundled with JTDX 2.2.159 ends in February 2022, and only
@@ -415,7 +414,7 @@ or Pi 5 is recommended.
   **Only the first two copies can transmit:** on a real FLEX-6700 the third
   and fourth copies receive and key PTT, but the radio takes no transmit
   audio from them (their DAX TX stream stays `tx=0`), so they would go out
-  silent; since the next build they say so on the status bar instead
+  silent; since v0.7.6 they say so on the status bar instead
   ("the radio gives this copy no transmit audio"). To transmit from four
   copies, run them all through SmartSDR and DAX with your usual CAT and DAX
   sound devices, as stock JTDX does (DAX mixes the copies onto one station),
@@ -430,8 +429,8 @@ or Pi 5 is recommended.
   the Rig Control Error box; once the SDR program is back it shows "TCI
   reconnected" and carries on. Other rig types behave as before.
   Up to v0.7.6-rc1, a drop in the middle of an over left every later over
-  silent (PTT keyed, no TX audio) until JTDX-VU was restarted; fixed for the
-  next build.
+  silent (PTT keyed, no TX audio) until JTDX-VU was restarted; fixed in
+  v0.7.6.
   With TCI audio on, JTDX-VU also watches the receive audio: if none
   arrives for 10 s (Tx aside), it asks for it again once, then says
   "no audio from the SDR program - restart it" and keeps retrying until
@@ -446,7 +445,7 @@ or Pi 5 is recommended.
   (AetherSDR with an IC-705's dial lock on), JTDX-VU carries on at that
   frequency instead of dropping the link mid-over with "TCI failed set
   rxfreq"; with Split = Fake It that used to happen on every over (fixed
-  for the next build). Unlock the dial (Aether's slice lock button sets the
+  in v0.7.6). Unlock the dial (Aether's slice lock button sets the
   IC-705's) for Fake It to work.
 - **Call Non-Stop:** the **Auto CQ** button in the right-hand button
   column, directly under Monitor in every mode (since v0.5.3), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ

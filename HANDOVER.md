@@ -13,11 +13,8 @@ Last updated: 2026-11-16
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.5** released 2026-10-17; **`Versions.cmake` is now 0.7.6-rc9**
-  (local build installed on the Mac mini 2026-11-11: rc8 plus the queue calling on any
-  decode; rc8 added the double-clicked DX no longer dropped to CQ; rc6 is the last
-  GitHub pre-release). rc1-rc9 are
-  unreleased work for v0.7.6 (see "What changed" 2026-10-18 .. 2026-10-22); Manoj calls the release.
+- **Version:** JTDX-VU **0.7.6** released 2026-11-16 (`Versions.cmake` 0.7.6; rc1-rc9
+  plus the wait-for-CQ queue item). Previous release 0.7.5 (2026-10-17).
   Previous line, kept for history: JTDX-VU **0.7.5** (released 2026-10-17) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
@@ -284,7 +281,18 @@ Last updated: 2026-11-16
 
 ## What changed
 
-### 2026-11-16 — Decode right-click "Queue CALL (wait for his CQ)" (for the next build)
+### 2026-11-16 — v0.7.6 released
+
+Manoj: "works, cut the release". `Versions.cmake` 0.7.6-rc9 -> 0.7.6; README
+"since the next release / build" relabelled "since v0.7.6", title v0.7.6.
+Content: rc1-rc9 (entries 2026-10-18 .. 2026-11-11) plus the decode
+right-click "Queue CALL (wait for his CQ)". Same recipe as v0.7.5: draft
+release first, tag -> CI attaches macOS/Windows zips, Pi .deb on meridianpi5,
+Mac zips notarised, then published as latest. No issues closed by it (#8
+closed 2026-11-14 without a fix). Website (vu2cpl.com downloads table) still
+to update to v0.7.6.
+
+### 2026-11-16 — Decode right-click "Queue CALL (wait for his CQ)" (in v0.7.6)
 
 Manoj: "where is the queue option now? it's only with halt?" Since rc9 the
 decode right-click item "Call CALL now" calls on any decode, so the old
@@ -4362,14 +4370,10 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **v0.7.6 (2026-10-22):** rc7 (local) adds the Flex key-up / 14.100 fix - try it
-      on the FLEX-6600 (watch `flex_trace.txt` for "xmit 1 not confirmed", "previous
-      session ... closed it"); rc6 is the last pre-release. The Flex stalls stopped?
-      (Mac mini back on its Trusted port 4 since 2026-10-21 22:25 UTC.) Waiting on KK4CDK to
-      try rc5/rc6 (double-click keeps calling, LoTW Fetch Now). Manoj to try on air:
-      India crossband (Misc menu, needs Split), Background highlight off on Tx lines
-      and the marker cell, Ignore CALL, no repeat logging, TCI reconnect / refused
-      frequency fixes. Release when Manoj says.
+- [ ] **After v0.7.6 (2026-11-16):** still to try on air: India crossband (Misc
+      menu, needs Split), Ignore CALL, no repeat logging, the Flex key-up fix on the
+      FLEX-6600 (watch `flex_trace.txt` for "xmit 1 not confirmed"), both queue items.
+      Update the vu2cpl.com downloads table to v0.7.6.
 - [x] **Issue #8 (WB4TOM, FLEX-8400 + RF2K-S): TX1 never keys the amp** in VITA-49
       mode (v0.7.5, Windows). **Closed 2026-11-14, no trace supplied.** His last
       report: with SmartSDR up, band and antenna changes reach the RF2K-S (so CAT
