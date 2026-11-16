@@ -1,5 +1,5 @@
-# JTDX-VU macOS builds: Apple Silicon (macos-14 runner, so it runs on
-# macOS 14+) and Intel (macos-15-intel). Each is a self-contained,
+# JTDX-VU macOS builds: Apple Silicon (macos-15 runner, so it runs on
+# macOS 15+; GitHub retired macos-14 in 2026-11) and Intel (macos-15-intel). Each is a self-contained,
 # ad-hoc signed JTDX-VU.app from macos-bundle.sh, zipped with ditto.
 # Runs on demand or on a v* tag; on a tag the zips go to that release.
 # Release zips are then re-signed with the Developer ID, notarised and
@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-14
+          - runner: macos-15
             arch: arm64
           - runner: macos-15-intel
             arch: x86_64

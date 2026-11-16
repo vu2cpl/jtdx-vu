@@ -27,7 +27,7 @@ Get builds from [Releases](https://github.com/vu2cpl/jtdx-vu/releases):
 
 | Platform | File | Runs on |
 |---|---|---|
-| macOS, Apple Silicon | `JTDX-VU-<ver>-macos-arm64.zip` | macOS 14 Sonoma or later |
+| macOS, Apple Silicon | `JTDX-VU-<ver>-macos-arm64.zip` | macOS 15 Sequoia or later (v0.7.5 and earlier: macOS 14) |
 | macOS, Intel | `JTDX-VU-<ver>-macos-x86_64.zip` | macOS 15 Sequoia or later |
 | Windows x64 | `JTDX-VU-<ver>-windows-x64.zip` | Windows 10 / 11, 64-bit |
 | Raspberry Pi / Linux arm64 | `jtdx-vu-<ver>-linux-arm64.deb` | Raspberry Pi OS / Debian 12 (bookworm), 64-bit |

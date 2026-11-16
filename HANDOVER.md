@@ -288,7 +288,14 @@ Manoj: "works, cut the release". `Versions.cmake` 0.7.6-rc9 -> 0.7.6; README
 Content: rc1-rc9 (entries 2026-10-18 .. 2026-11-11) plus the decode
 right-click "Queue CALL (wait for his CQ)". Same recipe as v0.7.5: draft
 release first, tag -> CI attaches macOS/Windows zips, Pi .deb on meridianpi5,
-Mac zips notarised, then published as latest. No issues closed by it (#8
+Mac zips notarised, then published as latest.
+**CI: GitHub retired the `macos-14` runner** ("The configuration
+'macos-14-arm64-us-default' is not supported": the arm64 job was cancelled
+after 1 s on the v0.7.6 tag). Manoj chose `macos-15`: `macos.yml` now builds
+arm64 there, so **Apple Silicon zips need macOS 15 Sequoia from v0.7.6** (Intel
+already did); README table and release notes say so. The v0.7.6 arm64 zip
+came from a workflow_dispatch run on the branch (same code as the tag, only
+the workflow and docs differ), downloaded and uploaded by hand. No issues closed by it (#8
 closed 2026-11-14 without a fix). Website (vu2cpl.com downloads table) still
 to update to v0.7.6.
 
