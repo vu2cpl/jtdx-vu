@@ -295,8 +295,11 @@ also offers **Queue CALL (wait for his CQ)** (only when he is not queued):
 puts him on `m_queue` and in `m_queueWait` (italic, called on his CQ or
 RR73/73). Halt and queue now calls `queueWaitFor` too. Queue list tooltip
 and the italic item tooltip reworded. Built on
-`/Volumes/HUB_NVME/claude-scratch/JTDX/build`; not installed, not tried on
-air; no version bump (Manoj is cutting a release).
+`/Volumes/HUB_NVME/claude-scratch/JTDX/build`, bundled and installed to
+`/Applications/JTDX-VU.app` 2026-11-16 (still reports 0.7.6-rc9; previous app kept
+at `.../claude-scratch/JTDX/prev-JTDX-VU.app`), relaunched with `-r "Aether QO-100"`.
+Not tried on air; no version bump (Manoj is cutting a release). On quit (SIGTERM)
+`jtdxjt9` was left running and had to be killed before the relaunch.
 
 ### 2026-11-11 — 0.7.6-rc9: a queued station is called on any decode; "Call CALL now" (local test build)
 
