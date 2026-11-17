@@ -331,7 +331,7 @@ alert is wrong"*.
   `./macos-bundle.sh`, codesign OK, `ditto` to `/Applications/JTDX-VU.app`
   by same-volume renames (rx-hub's four `rxhub-jt9d` helpers run
   `jtdxjt9` out of the app and kept running); previous app (the 15:49 build
-  with the TCI wait) kept at `.../claude-scratch/JTDX/prev-JTDX-VU.app`.
+  with the TCI wait) kept at `.../claude-scratch/JTDX/prev-JTDX-VU.app` (moved away since).
   JTDX-VU had already been quit; relaunched with `-r "Smartsdr TCI"`,
   `jtdxjt9` up. Not yet seen on air. **That install was a mistake and was
   replaced the same evening** by a 0.7.7-rc1 build: the app in
