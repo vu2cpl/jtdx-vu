@@ -304,6 +304,12 @@ Manoj could not connect JTDX-VU to **SmartSDR for Mac** (27.0.19, TCI server on
   starting state (it connects normally once SmartSDR is up).
 - **Noted, not traced:** on this profile the dial read 24.931999 MHz (SmartSDR
   reports the frequency 1 Hz low).
+- **SmartSDR for Mac gotcha (same day):** with its own *Radio > DAX Streaming >
+  Enable DAX RX Streaming* ticked for the slice's DAX channel, SmartSDR answers
+  `audio_start:0;` with `audio_stop:0;`, and JTDX-VU shows "TCI Audio could not
+  be switched on - reconnecting every 5 s". Untick it (and "Enable DAX
+  Streaming on App startup") and TCI audio starts at once. Manoj's profiles:
+  "Smartsdr TCI" on port 40001 (SmartSDR), "TCI FLEX HF" on 50001 (AetherSDR).
 - Not in a build yet; no version change.
 
 ### 2026-11-16 — v0.7.6 released
