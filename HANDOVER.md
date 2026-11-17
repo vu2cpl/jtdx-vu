@@ -315,8 +315,14 @@ alert is wrong"*.
   (`ADIF::add`) feeds the group. On Manoj's real Club Log copy (Smartsdr
   TCI cache, confirmed only): Cameroon FT8 was new, is now covered; FT8
   "New mode" across his 318 confirmed entities drops from 25 to 14. App built
-  clean on `/Volumes/HUB_NVME/claude-scratch/JTDX/build`; not installed,
-  not tried on air. No version change.
+  clean on `/Volumes/HUB_NVME/claude-scratch/JTDX/build`. No version change.
+- **Installed** on Manoj's "install it now", 2026-11-17 20:09 IST:
+  `./macos-bundle.sh`, codesign OK, `ditto` to `/Applications/JTDX-VU.app`
+  by same-volume renames (rx-hub's four `rxhub-jt9d` helpers run
+  `jtdxjt9` out of the app and kept running); previous app (the 15:49 build
+  with the TCI wait) kept at `.../claude-scratch/JTDX/prev-JTDX-VU.app`.
+  JTDX-VU had already been quit; relaunched with `-r "Smartsdr TCI"`,
+  `jtdxjt9` up. Not yet seen on air.
 
 ### 2026-11-17 — TCI: wait for an SDR program that is still starting (for the next build)
 
