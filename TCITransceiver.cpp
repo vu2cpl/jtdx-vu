@@ -414,6 +414,15 @@ int TCITransceiver::do_start (JTDXDateTime * jtdxtime)
       mysleep2(500);
       busy_split_ = false;
   }
+  // JTDX-VU: an SDR program that is still starting (SmartSDR for Mac, just
+  // connected to its radio) greets us with "stop; ready;" and says "start;"
+  // a few seconds later. Wait for that rather than fail at once with
+  // "TCI SDR is not switched on". Not when we are to switch it on ourselves.
+  if (!rig_power_) {
+    for (int i = 0; i < 20 && error_.isEmpty() && inConnected && !_power_ && !stop_aborting (); ++i) {
+      mysleep1 (500);
+    }
+  }
   // JTDX-VU: some SDR programs (AetherSDR) leave our receiver out of the
   // connect-time state; ask for its VFO A rather than poll with no frequency
   if (error_.isEmpty() && rx_frequency_.isEmpty()) {

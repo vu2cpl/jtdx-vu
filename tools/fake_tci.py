@@ -10,6 +10,7 @@
 # FAKE_TRX_DELAY=0.35 delays the trx (PTT) echo as AetherSDR does - the Fake It
 # split runaway needs it.
 # FAKE_NO_VFO=1 leaves vfo:0,0 out of the start-up burst (AetherSDR, issue #1).
+# FAKE_START_DELAY=6 says "stop;" first and "start;" 6 s later (SmartSDR for Mac).
 # While trx is on it sends TxChrono and logs "TX over ... peak=" per over;
 # a file <log file>.drop drops the client (it should reconnect).
 import socket, hashlib, base64, threading, time, sys, struct, os
@@ -190,9 +191,23 @@ def serve(c):
     # FAKE_NO_VFO=1 leaves our receiver's vfo out of the burst, as AetherSDR does
     # when its slice is on another receiver index (jtdx-vu issue #1)
     vfo = "" if os.environ.get("FAKE_NO_VFO") else "vfo:0,0,%s;" % state["vfo:0,0"]
-    c.sendall(frame("protocol:fake,1.5;device:FakeSDR;receive_only:false;trx_count:2;channels_count:2;"
-                    "%smodulation:0,%s;split_enable:0,false;drive:50;start;ready;"
-                    % (vfo, state["modulation:0"])))
+    # FAKE_START_DELAY=6 greets with "stop;ready;" and no receiver state, then
+    # says "start;" with the state that many seconds later - SmartSDR for Mac
+    # just after it has connected to its radio
+    late_start = float(os.environ.get("FAKE_START_DELAY", "0"))
+    burst = "%smodulation:0,%s;split_enable:0,false;drive:50;" % (vfo, state["modulation:0"])
+    head = "protocol:fake,1.5;device:FakeSDR;receive_only:false;trx_count:2;channels_count:2;"
+    if late_start:
+        c.sendall(frame(head + "stop;ready;"))
+        def started():
+            time.sleep(late_start)
+            try:
+                c.sendall(frame("start;" + burst))
+                log.write("%.3f late start sent\n" % time.time())
+            except OSError: pass
+        threading.Thread(target=started, daemon=True).start()
+    else:
+        c.sendall(frame(head + burst + "start;ready;"))
     alive = [False, True]
     lock = threading.Lock()
     threading.Thread(target=pusher, args=(c, alive, lock), daemon=True).start()

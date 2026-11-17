@@ -281,6 +281,31 @@ Last updated: 2026-11-17
 
 ## What changed
 
+### 2026-11-17 — TCI: wait for an SDR program that is still starting (for the next build)
+
+Manoj could not connect JTDX-VU to **SmartSDR for Mac** (27.0.19, TCI server on
+`127.0.0.1:50001`, profile "Smartsdr TCI", rig `TCI Client RX1`).
+
+- **Cause:** for a few seconds after SmartSDR connects to the radio its TCI
+  greeting is `protocol; device; ... stop; ready;` with no receiver state; it
+  says `start;` and sends the state a few seconds later. `do_start` waited
+  1.7 s, saw no `start;` and threw "TCI SDR is not switched on". Seen on the
+  live server with a hand-made WebSocket probe (once `stop; ready;` only, once
+  `stop; ready; start;` followed by the state, steady state `...start; ready;`).
+- **Fix (`TCITransceiver::do_start`):** when "rig power on" is not set and the
+  link is up without `start;`, wait up to 10 s (20 x 500 ms) for it, then carry
+  on as before (the vfo query of issue #1 follows). A program that never
+  starts still gives the old error, 10 s later.
+- **Tested:** `tools/fake_tci.py` `FAKE_START_DELAY=6` (greets `stop;ready;`,
+  sends `start;` + state 6 s later) with the new `tools/tci_latestart_test.sh`:
+  0.7.6 = 4 connects in 25 s, no `audio_start`; fixed = 1 connect,
+  `audio_start` 0.3 s after `start;`. `tools/tci_novfo_test.sh` still 1
+  connect / 1 vfo query / audio started. Not yet tried against SmartSDR in its
+  starting state (it connects normally once SmartSDR is up).
+- **Noted, not traced:** on this profile the dial read 24.931999 MHz (SmartSDR
+  reports the frequency 1 Hz low).
+- Not in a build yet; no version change.
+
 ### 2026-11-16 — v0.7.6 released
 
 Manoj: "works, cut the release". `Versions.cmake` 0.7.6-rc9 -> 0.7.6; README
