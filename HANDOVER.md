@@ -281,6 +281,43 @@ Last updated: 2026-11-17
 
 ## What changed
 
+### 2026-11-17 — DXCC "new mode" goes by CW / Phone / Data, not the mode name (for the next build)
+
+Manoj got a Telegram "🟧 New mode: TJ1GD / Cameroon · 12m · FT8" while the
+decode window showed nothing new: *"i have tj2tt rtty confirmed. so the
+alert is wrong"*.
+
+- **Cause:** every DXCC "per mode" test (the Club Log "New mode" alert, the
+  decode colour "New DXCC on Mode", AutoSeq's `wanted` rank) called
+  `LogBook::matchDXCC (..., 0, mode)`, which looks up the exact ADIF mode
+  name. MSHV, which the code says it copies, and DXCA both count the DXCC
+  award's three groups. Club Log "Confirmed only" was on in every profile,
+  so Cameroon's two TJ1GD FT8 QSOs (10M 2026-10-03, 20M 2026-11-10, both
+  unconfirmed) were skipped. The 2018 TJ2TT SSB / CW / RTTY QSOs (all card-
+  confirmed) then had no "FT8" among them.
+- **Why the window and the alert disagreed:** separate settings. The
+  "Smartsdr TCI" profile (also "TCI FLEX HF", "QO-100", "Aether QO-100",
+  default) has Notifications > DXCC "Mode" (`newDXCCBandMode`) off but
+  Club Log & Alerts > "New mode" on. Not changed; it was not the bug.
+- **Fix:** new `ADIF::dxccModeGroup` (CW / PHONE: SSB, USB, LSB, AM, FM,
+  digital voice / DATA: everything else, JTTY included; "" for no mode),
+  a `_countriesmodegroupWorked` hash filled in `_loadFile` and `add`,
+  `ADIF::matchCountryModeGroup`, and `LogBook::matchDXCCModeGroup`. The
+  alert (`clublog.cpp`), both decode-colour paths and `DisplayText::wanted`
+  use it. The exact-name `matchDXCC (..., 0, mode)` stays for the JTTY
+  screen's "New DXCC in JTTY" Calls-heard colour, which means JTTY itself.
+  Tooltips (Club Log dialog, Notifications row, "New DXCC on Mode" colour)
+  and README say "mode group (CW, Phone or Data)".
+- **Tested:** new `tools/dxcc_modegroup_test.cpp` (22 checks, build lines in
+  its header, needs a `cty.dat` path): the old exact check still says no
+  Cameroon FT8, the group check says yes; an SSB-only entity is still new
+  on FT8 and CW; FT4 via MFSK/SUBMODE covers FT8; a just-logged QSO
+  (`ADIF::add`) feeds the group. On Manoj's real Club Log copy (Smartsdr
+  TCI cache, confirmed only): Cameroon FT8 was new, is now covered; FT8
+  "New mode" across his 318 confirmed entities drops from 25 to 14. App built
+  clean on `/Volumes/HUB_NVME/claude-scratch/JTDX/build`; not installed,
+  not tried on air. No version change.
+
 ### 2026-11-17 — TCI: wait for an SDR program that is still starting (for the next build)
 
 Manoj could not connect JTDX-VU to **SmartSDR for Mac** (27.0.19, TCI server on

@@ -154,6 +154,27 @@ void LogBook::matchDXCC(/*in*/const QString call,
     }
 }
 
+void LogBook::matchDXCCModeGroup(/*in*/const QString call,
+                    /*out*/ QString &countryName,
+                    bool &WorkedBefore,
+                    bool &WorkedBeforeMode,
+                    /*in*/ const QString mode)
+{
+    if (call.isEmpty ()) return;
+    if (countryName.isEmpty ()) {
+        countryName = _countries.find(call);
+    }
+    if (!countryName.isEmpty () && countryName.left(5) != "  ,?,") {
+        QStringList items = countryName.split(',');
+        QString country = items[0]+','+items[1]+','+items[2];
+        WorkedBefore = _log.matchCountry(country, "", "");
+        WorkedBeforeMode = WorkedBefore && _log.matchCountryModeGroup(country, mode);
+    } else {
+        WorkedBefore = true;
+        WorkedBeforeMode = true;
+    }
+}
+
 void LogBook::matchGrid(/*in*/const QString gridsquare,
                     /*out*/ bool &WorkedBefore,
                     bool &WorkedBeforeBandMode,

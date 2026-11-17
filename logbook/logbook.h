@@ -44,6 +44,13 @@ public:
                       bool &WorkedBeforeBandMode,
                /*in*/ double dialFreq=0,
                       const QString mode="");
+    // JTDX-VU: DXCC "per mode" - worked this entity on any band in the same
+    // DXCC award mode group (CW / PHONE / DATA) as 'mode'
+    void matchDXCCModeGroup(/*in*/ const QString call,
+              /*out*/ QString &countryName,
+                      bool &WorkedBefore,
+                      bool &WorkedBeforeMode,
+               /*in*/ const QString mode);
     void matchGrid(/*in*/ const QString gridsquare,
               /*out*/ bool &WorkedBefore,
                       bool &WorkedBeforeBandMode,

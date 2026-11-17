@@ -532,7 +532,7 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
         bool ituzB4BandMode = true;
         bool countryB4BandMode = true;
         bool dxccBandB4 = true;   // JTDX-VU: worked on this band
-        bool dxccModeB4 = true;   // JTDX-VU: worked in this mode, any band
+        bool dxccModeB4 = true;   // JTDX-VU: worked in this mode's DXCC group (CW/Phone/Data), any band
         bool pxB4BandMode = true;
         bool callB4BandMode = true;
         bool gridB4 = true;
@@ -586,7 +586,8 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
             if (displayNewDXCC_) {
                 // JTDX-VU, as MSHV: band and mode are independent checks -
                 // "per band" = DXCC not worked on this band, "per mode" =
-                // not worked in this mode on any band (no band+mode slot)
+                // not worked in this mode's DXCC group (CW / Phone / Data) on
+                // any band, so RTTY covers FT8 (no band+mode slot)
                 logBook.matchDXCC(/*in*/ checkCall, /*out*/ countryName, countryB4 ,countryB4BandMode);
                 if (countryB4 && displayNewDXCCBand_) {
                     bool w = true;
@@ -594,7 +595,7 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
                 }
                 if (countryB4 && displayNewDXCCBandMode_) {
                     bool w = true;
-                    logBook.matchDXCC(/*in*/checkCall,/*out*/countryName,w,dxccModeB4,/*in*/0,checkMode);
+                    logBook.matchDXCCModeGroup(/*in*/checkCall,/*out*/countryName,w,dxccModeB4,/*in*/checkMode);
                 }
             }
             if (displayNewGrid_) {
@@ -1253,7 +1254,7 @@ bool DisplayText::needed (LogBook & logBook, LineMeta const& m) const
       if (known && displayNewDXCCBandMode_)
         {
           bool w = true, b = true;
-          logBook.matchDXCC (m.call, country, w, b, 0, md);
+          logBook.matchDXCCModeGroup (m.call, country, w, b, md);
           if (!b) return true;
         }
     }
@@ -1271,7 +1272,8 @@ bool DisplayText::needed (LogBook & logBook, LineMeta const& m) const
 
 // JTDX-VU: how much our log wants this station, for auto-seq (always on,
 // whatever the colour settings): 3 = new DXCC, 2 = DXCC new on this band,
-// 1 = DXCC new in this mode (any band), 0 = not wanted / unknown entity.
+// 1 = DXCC new in this mode's DXCC group (CW / Phone / Data, any band),
+// 0 = not wanted / unknown entity.
 int DisplayText::wanted (LogBook & logBook, QString const& call, double dialFreq, QString const& mode)
 {
   if (call.isEmpty ()) return 0;
@@ -1282,7 +1284,7 @@ int DisplayText::wanted (LogBook & logBook, QString const& call, double dialFreq
   if (!worked) return 3;
   logBook.matchDXCC (call, country, worked, workedSlot, dialFreq);
   if (!workedSlot) return 2;
-  logBook.matchDXCC (call, country, worked, workedSlot, 0, mode);
+  logBook.matchDXCCModeGroup (call, country, worked, workedSlot, mode);
   return workedSlot ? 0 : 1;
 }
 

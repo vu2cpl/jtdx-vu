@@ -1491,10 +1491,11 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
   }
   {
     // JTDX-VU: third DXCC colour - "New DXCC on Mode" (MSHV's new mode:
-    // not worked in this mode on any band), added below the colour list
+    // not worked in this mode's DXCC group, CW / Phone / Data, on any band),
+    // added below the colour list
     pbNewDXCCMode_ = new QPushButton {tr ("New DXCC on Mode")};
     pbNewDXCCMode_->setMinimumWidth (155);
-    pbNewDXCCMode_->setToolTip (tr ("Colour for a DXCC not yet worked in this mode on any band (\"per mode\")"));
+    pbNewDXCCMode_->setToolTip (tr ("Colour for a DXCC not yet worked in this mode group (CW, Phone or Data) on any band (\"per mode\")"));
     // give it its own row right under "New DXCC on Band" in the colour
     // grid (a layout nested inside the tab): shift the rows below down one
     std::function<QGridLayout * (QLayout *)> find_grid = [&] (QLayout * l) -> QGridLayout * {
@@ -5062,7 +5063,8 @@ void Configuration::impl::vu_notifications_page ()
       grid->addWidget (swatch (c.pbBand, [=] {return dark (*c.cBand, *c.cBandDark);},
                                c.pbSecond ? tr ("Colour when not worked on this band") : tr ("Colour when not worked on this band or in this mode")), row, 3);
       auto * second = mirror (c.secondText, c.second);
-      second->setToolTip (c.pbSecond ? tr ("Also highlight a station when you have worked its DXCC entity, but never in this mode (on any band).")
+      second->setToolTip (c.pbSecond ? tr ("Also highlight a station when you have worked its DXCC entity, but never in this mode group\n"
+                                           "(CW, Phone or Data) on any band. RTTY and FT8 are both Data.")
                                      : tr ("Also highlight a station when you have worked %1, but never in this mode.\n"
                                            "With Band ticked as well: not worked on this band in this mode.\n"
                                            "Uses the Band colour.").arg (c.what));

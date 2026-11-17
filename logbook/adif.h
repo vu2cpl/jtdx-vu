@@ -40,6 +40,9 @@ class ADIF
         bool matchCqz(const QString Cqz, const QString band="", const QString mode="");
         bool matchItuz(const QString Ituz, const QString band="", const QString mode="");
         bool matchCountry(const QString countryName, const QString band="", const QString mode="");
+        // JTDX-VU: worked this entity, on any band, in a mode of the same DXCC
+        // award group as 'mode' (see dxccModeGroup); true when 'mode' is empty
+        bool matchCountryModeGroup(const QString countryName, const QString mode);
         bool matchGrid(const QString gridsquare, const QString band="", const QString mode="");
         QList<QString> getCallList();
         int getCount(const QString mode="");
@@ -49,6 +52,10 @@ class ADIF
                                 const QString comments, const QString name, const QString strDialFreq, const QString m_myCall, const QString m_myGrid, const QString m_txPower,const bool send_to_eqsl, const QString extra = QString {});
 
         static QString bandFromFrequency(double dialFreq);
+        // JTDX-VU: the DXCC award's three mode groups, as MSHV and DXCA count
+        // them: "CW", "PHONE" (SSB/AM/FM and digital voice) or "DATA"
+        // (everything else: FT8, FT4, RTTY, PSK, JTTY ...); "" for no mode
+        static QString dxccModeGroup(QString const& mode);
 
     private:
         struct QSO
@@ -73,6 +80,7 @@ class ADIF
         QHash<QString, int> _cqzmodeWorked;
         QHash<QString, int> _ituzmodeWorked;
         QHash<QString, int> _countriesmodeWorked;
+        QHash<QString, int> _countriesmodegroupWorked;   // JTDX-VU: country + '|' + dxccModeGroup
         QHash<QString, int> _gridsmodeWorked;
         QHash<QString, int> _pxsmodeWorked;
         QHash<QString, int> _callsmodeWorked;

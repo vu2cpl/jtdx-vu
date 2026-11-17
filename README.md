@@ -468,7 +468,12 @@ or Pi 5 is recommended.
 - **No Stop button:** Monitor is the one start/stop control for
   monitoring (switching it off also ends a "Decode remaining files" run).
 - **Needed-DXCC alerts** when a decoded station is ATNO, a new band or
-  a new mode (in this mode on no band yet), as in MSHV. Alerts go to macOS notifications and/or Telegram,
+  a new mode, as in MSHV. "New mode" means no QSO with that DXCC yet, on
+  any band, in the mode's DXCC group: **CW, Phone or Data**. So a confirmed
+  RTTY QSO covers FT8 (since the next release; up to v0.7.6 it compared
+  the mode name, and called FT8 new after an RTTY QSO). The decode
+  colour "New DXCC on Mode" and AutoSeq's ranking use the same groups.
+  Alerts go to macOS notifications and/or Telegram,
   with a per-call/band cooldown (5–60 min).
   - The Club Log app password and the Telegram bot token are stored in
     the macOS Keychain (service `JTDX-VU`), never in the .ini.

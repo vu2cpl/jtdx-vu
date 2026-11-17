@@ -80,6 +80,7 @@ void ADIF::load(const QString mycall,const QString mygrid,const QString mydate)
     _cqzmodeWorked.clear();
     _ituzmodeWorked.clear();
     _countriesmodeWorked.clear();
+    _countriesmodegroupWorked.clear();
     _gridsmodeWorked.clear();
     _pxsmodeWorked.clear();
     _callsmodeWorked.clear();
@@ -166,6 +167,7 @@ void ADIF::_loadFile(const QString filename, const QString mycall, const QString
                         _countriesWorked.insert(items[0]+','+items[1]+','+items[2], _countriesWorked.value(items[0]+','+items[1]+','+items[2],0)+1);
                         _countriesbandWorked.insert(items[0]+','+items[1]+','+items[2]+q.band, _countriesWorked.value(items[0]+','+items[1]+','+items[2]+q.band,0)+1);
                         _countriesmodeWorked.insert(items[0]+','+items[1]+','+items[2]+q.mode, _countriesWorked.value(items[0]+','+items[1]+','+items[2]+q.mode,0)+1);
+                        _countriesmodegroupWorked.insert(items[0]+','+items[1]+','+items[2]+'|'+dxccModeGroup(q.mode), 1);
                         _countriesbandmodeWorked.insert(items[0]+','+items[1]+','+items[2]+q.band+q.mode, _countriesWorked.value(items[0]+','+items[1]+','+items[2]+q.band+q.mode,0)+1);
                         _cqzWorked.insert(items[3],_cqzWorked.value(items[3],0)+1);
                         _cqzbandWorked.insert(items[3]+q.band,_cqzbandWorked.value(items[3]+q.band,0)+1);
@@ -239,6 +241,7 @@ void ADIF::add(const QString call, const QString band, const QString mode, const
         _countriesWorked.insert(items[0]+','+items[1]+','+items[2], _countriesWorked.value(items[0]+','+items[1]+','+items[2],0)+1);
         _countriesbandWorked.insert(items[0]+','+items[1]+','+items[2]+q.band, _countriesWorked.value(items[0]+','+items[1]+','+items[2]+q.band,0)+1);
         _countriesmodeWorked.insert(items[0]+','+items[1]+','+items[2]+q.mode, _countriesWorked.value(items[0]+','+items[1]+','+items[2]+q.mode,0)+1);
+        _countriesmodegroupWorked.insert(items[0]+','+items[1]+','+items[2]+'|'+dxccModeGroup(q.mode), 1);
         _countriesbandmodeWorked.insert(items[0]+','+items[1]+','+items[2]+q.band+q.mode, _countriesWorked.value(items[0]+','+items[1]+','+items[2]+q.band+q.mode,0)+1);
         _cqzWorked.insert(items[3],_cqzWorked.value(items[3],0)+1);
         _cqzbandWorked.insert(items[3]+q.band,_cqzbandWorked.value(items[3]+q.band,0)+1);
@@ -332,7 +335,28 @@ bool ADIF::matchCountry(const QString countryName, const QString band, const QSt
     else if (band.isEmpty ()) return _countriesmodeWorked.value(countryName+mode,0) > 0;
     else if (mode.isEmpty ()) return _countriesbandWorked.value(countryName+band,0) > 0;
     else return _countriesbandmodeWorked.value(countryName+band+mode,0) > 0;
-}    
+}
+
+// JTDX-VU: DXCC "per mode" asks about the award's mode groups, not mode
+// names - a confirmed RTTY QSO already covers FT8 (both Digital), as MSHV
+// and DXCA have always counted it
+QString ADIF::dxccModeGroup(QString const& mode)
+{
+    auto const m = mode.trimmed ().toUpper ();
+    if (m.isEmpty ()) return {};
+    if (m == "CW") return "CW";
+    if (m == "SSB" || m == "USB" || m == "LSB" || m == "AM" || m == "FM"
+        || m == "DIGITALVOICE" || m == "DSTAR" || m == "D-STAR" || m == "DMR"
+        || m == "FUSION" || m == "C4FM" || m == "FREEDV")
+        return "PHONE";
+    return "DATA";
+}
+
+bool ADIF::matchCountryModeGroup(const QString countryName, const QString mode)
+{
+    auto const group = dxccModeGroup (mode);
+    return group.isEmpty () || _countriesmodegroupWorked.value(countryName+'|'+group,0) > 0;
+}
 
 // return true if in the log same band and mode
 bool ADIF::matchGrid(const QString gridsquare, const QString band, const QString mode)

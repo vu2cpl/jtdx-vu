@@ -327,8 +327,9 @@ void ClubLog::check_decode (LogBook & logbook, QString const& call, double dial_
         }
       else
         {
-          // MSHV's "new mode": never worked in this mode on any band
-          logbook.matchDXCC (call, country, worked, worked_slot, 0, mode);
+          // MSHV's "new mode": never worked in this mode's DXCC group
+          // (CW / Phone / Data) on any band - a confirmed RTTY QSO covers FT8
+          logbook.matchDXCCModeGroup (call, country, worked, worked_slot, mode);
           if (worked_slot || !alert_mode_) return;
           level = NewMode;
         }
@@ -467,7 +468,8 @@ void ClubLog::settings_dialog (QWidget * parent, QString const& my_callsign)
   auto band = new QCheckBox {tr ("New band")};
   band->setChecked (alert_band_);
   auto band_mode = new QCheckBox {tr ("New mode")};
-  band_mode->setToolTip (tr ("DXCC never worked in this mode on any band (as in MSHV)"));
+  band_mode->setToolTip (tr ("DXCC never worked in this mode group - CW, Phone or Data - on any band (as in MSHV).\n"
+                             "RTTY and FT8 are both Data, so a QSO in either covers the other."));
   band_mode->setChecked (alert_mode_);
   auto levels = new QHBoxLayout;
   levels->addWidget (atno);
