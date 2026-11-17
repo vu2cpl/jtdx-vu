@@ -13,7 +13,10 @@ Last updated: 2026-11-17
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.6** released 2026-11-16 (`Versions.cmake` 0.7.6; rc1-rc9
+- **Version:** `Versions.cmake` is **0.7.7-rc1** since 2026-11-17 (the TCI
+  start-up wait and the DXCC mode groups; not tagged, no release, no CI
+  zips: Manoj wants to try it first). Latest release: JTDX-VU **0.7.6**,
+  2026-11-16 (rc1-rc9
   plus the wait-for-CQ queue item). Previous release 0.7.5 (2026-10-17).
   Previous line, kept for history: JTDX-VU **0.7.5** (released 2026-10-17) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
@@ -281,7 +284,15 @@ Last updated: 2026-11-17
 
 ## What changed
 
-### 2026-11-17 — DXCC "new mode" goes by CW / Phone / Data, not the mode name (for the next build)
+### 2026-11-17 — Version 0.7.7-rc1 (not published)
+
+Manoj: "let it be 0.7.7 rc 1". `Versions.cmake` 0.7.6 -> 0.7.7-rc1. It holds
+the two changes since v0.7.6: the TCI wait for an SDR program that is still
+starting, and DXCC "new mode" by CW / Phone / Data (both below). Asked whether
+to publish a GitHub pre-release, he chose **version only for now**: no tag, no
+release, no CI zips, no Pi .deb. README title stays v0.7.6 until a release.
+
+### 2026-11-17 — DXCC "new mode" goes by CW / Phone / Data, not the mode name (0.7.7-rc1)
 
 Manoj got a Telegram "🟧 New mode: TJ1GD / Cameroon · 12m · FT8" while the
 decode window showed nothing new: *"i have tj2tt rtty confirmed. so the
@@ -322,9 +333,13 @@ alert is wrong"*.
   `jtdxjt9` out of the app and kept running); previous app (the 15:49 build
   with the TCI wait) kept at `.../claude-scratch/JTDX/prev-JTDX-VU.app`.
   JTDX-VU had already been quit; relaunched with `-r "Smartsdr TCI"`,
-  `jtdxjt9` up. Not yet seen on air.
+  `jtdxjt9` up. Not yet seen on air. **That install was a mistake and was
+  replaced the same evening** by a 0.7.7-rc1 build: the app in
+  /Applications on this Mac is not built from this tree. Before installing
+  anything over `/Applications/JTDX-VU.app`, check what is there
+  (`strings` on the binary, the build dir it came from) and ask.
 
-### 2026-11-17 — TCI: wait for an SDR program that is still starting (for the next build)
+### 2026-11-17 — TCI: wait for an SDR program that is still starting (0.7.7-rc1)
 
 Manoj could not connect JTDX-VU to **SmartSDR for Mac** (27.0.19, TCI server on
 `127.0.0.1:50001`, profile "Smartsdr TCI", rig `TCI Client RX1`).
