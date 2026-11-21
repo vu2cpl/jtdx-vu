@@ -610,6 +610,7 @@ private:
   QString m_dblClickCall;       // JTDX-VU: DX call picked by double-click: keep calling it even while it works others
   QHash<QString, QString> m_queueHeard;   // JTDX-VU: queued base call -> his decode line, this decode
   QSet<QString> m_queueWait;     // JTDX-VU: base calls queued by Halt and queue: wait for his CQ or RR73/73
+  bool m_haltKeepHistory {false}; // JTDX-VU: Halt and queue keeps his AutoSeq history (he may call back)
   bool m_maxDistance;
   bool m_answerWorkedB4;
   bool m_callWorkedB4;

@@ -232,6 +232,10 @@ or Pi 5 is recommended.
   RR73/73 to someone else (the latter needs Settings > Notifications
   "RR73/73" ticked). Such a station waits like this (shown in italics in
   the queue) instead of being called on any decode.
+  If he calls you back meanwhile, AutoSeq answers him and the QSO
+  carries on from where it stopped (fixed in 0.7.7: a halt during your
+  report used to make AutoSeq forget it, so his R-report and 73 were
+  ignored).
   To queue a station that way without calling him first, right-click
   his decode > **Queue CALL (wait for his CQ)** (since v0.7.6).
 - **160m crossband with India** (since v0.7.6): **Misc >

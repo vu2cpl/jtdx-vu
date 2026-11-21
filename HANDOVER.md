@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-11-17
+Last updated: 2026-11-21
 
 ## Current state
 
@@ -283,6 +283,28 @@ Last updated: 2026-11-17
   `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-11-21 — Halt and queue keeps the AutoSeq history (TF3JB: no auto answer, RR73 x4)
+
+On air 2026-11-21 15:41-15:45 UTC, 30m, profile TCI FLEX HF (private build,
+Skip Tx1 on): Manoj called TF3JB (`-19` x3), TF3JB worked OZ99X, Manoj used
+Halt and queue during our `-19`. TF3JB then called back `VU2CPL TF3JB R-04`;
+AutoSeq did not answer ("i had to click"). After the click, RR73 went out,
+TF3JB sent 73 at 15:44:15, and RR73 still went out three more times until
+the RR73 count limit. Cause: stock `on_stopTxButton_clicked` removes the
+DX's `m_qsoHistory` entry when Tx is halted during a report with Skip Tx1.
+With no record of our report (`stx_c` NONE), `QsoHistory::message` drops his
+RRREPORT (needs `stx_c >= SREPORT`), so nothing for AutoSeq to pick (the
+queued score never came into it), and the later R73 is dropped too (needs
+`r_rep`), so the status stayed SRR73. Replayed in a scratch harness against
+`qsohistory.cpp`: without the remove it reaches FIN, with it SRR73.
+Fix: the Halt and queue action sets `m_haltKeepHistory` around its
+`haltTx`, and the remove skips it. Plain Halt Tx is unchanged (stock).
+Built on `/Volumes/HUB_NVME/claude-scratch/JTDX/build`; not yet on air.
+Debug logging (`WriteDecodedDebugALLTXT`) was off in that profile, so the
+diagnosis is from ALL.TXT plus the code; turning it on would show halts and
+AutoSeq decisions next time. Not addressed: the 24DXUB copy of his R-04
+arrived 0.37 s into our slot, too late for it.
 
 ### 2026-11-17 — Version 0.7.7-rc1 (not published)
 

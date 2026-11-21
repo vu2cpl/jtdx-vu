@@ -3948,7 +3948,9 @@ void MainWindow::queueSetupUi ()
       QMenu menu;
       auto const call = m_hisCall;
       auto * a = menu.addAction (call.isEmpty () ? tr ("Halt and queue (no DX call)") : tr ("Halt and queue %1").arg (call), this, [this, call] {
+          m_haltKeepHistory = true;   // he may call back: his R-report must still count
           haltTx ("halted, " + call + " queued ");
+          m_haltKeepHistory = false;
           clearDX (" cleared, " + call + " queued");
           queueWaitFor (call);
         });
@@ -7830,7 +7832,9 @@ void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
   if(!m_transmitting && g_iptt==1) m_haltTrans=true;
   if (m_haltTxWritten) m_haltTxWritten=false;
   else writeHaltTxEvent("Halt Tx button clicked ");
-  if(m_transmitting && m_skipTx1 && !m_hisCall.isEmpty() && (m_ntx==2 || m_QSOProgress==REPORT)) m_qsoHistory.remove(m_hisCall);
+  // JTDX-VU: not on Halt and queue. Removing his history made AutoSeq ignore his
+  // R-report when he called back, and then his 73 (TF3JB, 2026-11-21: RR73 x4)
+  if(m_transmitting && m_skipTx1 && !m_haltKeepHistory && !m_hisCall.isEmpty() && (m_ntx==2 || m_QSOProgress==REPORT)) m_qsoHistory.remove(m_hisCall);
 // sync TX variables, RX scenario is covered in on_enableTxButton_clicked ()
   m_bTxTime=false; m_tx_when_ready=false; m_transmitting=false; m_restart=false; m_txNext=false;
 }
