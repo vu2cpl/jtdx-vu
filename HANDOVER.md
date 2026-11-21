@@ -305,6 +305,25 @@ and two decodes back answered, three back not, a latest-decode caller
 wins, an answered one not re-picked); `qsoseq_test` and
 `autoseq_ignore_test` still pass. Built on the public tree; not on air yet.
 
+**First on-air check (same evening, 16:04-16:29 UTC, 30m, 13 QSOs, debug
+log on):** DL1AA called at 16:16:45 while BG7OO was being worked and was
+answered at 16:18:00 by the new pass: QSO made. UF8C (called 16:07:15
+during RW3PL) was picked too, but Tx was off until 16:10 and he never
+answered. **Flaw found:** RA5BB called us 16:22-16:24, then worked SV1ENG,
+called CQ and called PA3BMB, and was picked at 16:28:00 as a missed caller.
+His CQ set `t.time` (every non-NONE message does) without moving the status
+off RCALL (the RCQ case needs `t.time != time`, but `t.time` was just set),
+so `missed` saw a recent RCALL. Now each QSO keeps `c_time` (his last
+RCALL / RREPORT to us) and `h_time` (last message heard from him, our Tx
+excluded); `missed` needs `h_time == c_time` and ages by `c_time`. Two more
+harness cases (RA5BB pattern; a two-time caller). Still not seen: messages
+to others that the decode pane does not feed (std_type 3 with no param, or
+filtered lines) do not update `h_time`.
+Also seen: the decode of their period often finishes 0.3-0.5 s after our
+next Tx has started, so a "Transmitting ... RR73" line is often followed
+within 0.5 s by the new message ("Retransmitting") or a halt; those are not
+extra overs.
+
 ### 2026-11-21 — Halt and queue keeps the AutoSeq history (TF3JB: no auto answer, RR73 x4)
 
 On air 2026-11-21 15:41-15:45 UTC, 30m, profile TCI FLEX HF (private build,

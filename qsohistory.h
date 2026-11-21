@@ -52,6 +52,7 @@ class QsoHistory
 	  unsigned	b_time,time;
 	  int		distance,rx,tx,count,priority;
 	  int		wanted = 0;	// JTDX-VU: 3 new DXCC, 2 new band, 1 new mode (our log)
+	  unsigned	c_time = 0, h_time = 0;	// JTDX-VU: his last call to us / last message heard from him (missed ())
 	   	
  	};
 

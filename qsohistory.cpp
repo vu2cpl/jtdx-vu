@@ -361,11 +361,14 @@ QsoHistory::Status QsoHistory::log_data(QString const& callsign, unsigned &time,
 }
 
 // JTDX-VU: called us (or sent us a report) within _ansSpan s before the
-// latest decode, never answered (nothing sent to him yet), still calling status
+// latest decode, never answered (nothing sent to him yet), nothing else heard from him since
 bool QsoHistory::missed (QSO const& q) const
 {
   if (q.stx_c != NONE || (q.status != RCALL && q.status != RREPORT)) return false;
-  unsigned const age = (max_r_time + 86400 - q.time) % 86400;
+  // his call to us is the last thing heard from him: a CQ or 73 since (which
+  // can leave the status at RCALL, RA5BB 2026-11-21) means he has moved on
+  if (q.c_time == 0 || q.h_time != q.c_time) return false;
+  unsigned const age = (max_r_time + 86400 - q.c_time) % 86400;
   return age > 0 && age <= _ansSpan;
 }
 
@@ -464,6 +467,9 @@ void QsoHistory::message(QString const& callsign, Status status, int priority, Q
           t.mode = "";
           t = _data.value(Radio::base_callsign (callsign),t);
           if (wanted >= 0) t.wanted = wanted;   // JTDX-VU
+          // JTDX-VU: anything heard from him (not our own Tx), for missed ()
+          if (status != SCALL && status != SREPORT && status != SRREPORT && status != SRR && status != SRR73 && status != S73)
+            t.h_time = time;
           if (time >= t.time || time == 0 || status >= t.status || status == RREPORT) {
             if (status > NONE) {
               t.time = time;
@@ -563,6 +569,7 @@ void QsoHistory::message(QString const& callsign, Status status, int priority, Q
                   t.continent = continent.trimmed();
                   t.mpx = mpx; 
                   t.b_time = time;
+                  t.c_time = time;   // JTDX-VU
                   t.s_rep = rep;
                   t.rx = freq;
   //                max_r_time = time;
@@ -596,6 +603,7 @@ void QsoHistory::message(QString const& callsign, Status status, int priority, Q
                       if (t.continent.isEmpty ()) t.continent = continent.trimmed();
                       if (t.mpx.isEmpty ()) t.mpx = mpx;
                       t.r_rep = param;
+                      t.c_time = time;   // JTDX-VU
                       if (old_status < SCQ || t.stx_c == NONE) t.b_time = time;
                       t.rx = freq;
       //                max_r_time = time;

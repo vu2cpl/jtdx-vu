@@ -17,4 +17,6 @@ int main(int a,char**v){QCoreApplication app{a,v};unsigned t=36000;
  {H x(61);x.cq(t);x.call("G4ABC",t+15);x.other(t+45);x.other(t+75);x.other(t+105);check(x.pick().isEmpty(),"span: three decodes back not answered");}
  {H x(61);x.cq(t);x.call("G4ABC",t+15);x.cq(t+30);x.call("F5NEW",t+45);check(x.pick()=="F5NEW","a caller in the latest decode wins");}
  {H x(61);x.cq(t);x.call("G4ABC",t+15);x.h.message("G4ABC",QsoHistory::SREPORT,0,"-10","","","",t+30,"",812,"FT8");x.other(t+45);check(x.pick().isEmpty(),"span: one we already answered is not re-picked");}
+ {H x(61);x.cq(t);x.call("RA5BB",t+15);x.cq(t+30);x.h.time(t+45);x.h.message("RA5BB",QsoHistory::RCQ,0,"KO85","","EU","UA",t+45,"-18",2205,"FT8");x.cq(t+60);x.other(t+75);check(x.pick().isEmpty(),"span: caller who called CQ since is not answered (RA5BB)");}
+ {H x(61);x.cq(t);x.call("G4ABC",t+15);x.call("G4ABC",t+45);x.cq(t+60);x.other(t+75);check(x.pick()=="G4ABC","span: caller who called twice, then stopped, answered");}
  return fails?1:0;}
