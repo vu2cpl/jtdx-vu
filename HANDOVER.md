@@ -284,6 +284,25 @@ Last updated: 2026-11-21
 
 ## What changed
 
+### 2026-11-21 — Halt and queue: the station's RR73/73 calls him, RR73/73 marker off too (ZF2OO)
+
+On air 2026-11-21 17:41 UTC, 17m, TCI FLEX HF: Manoj called ZF2OO (`-20`
+x3) while ZF2OO worked F1RCQ, then used Halt and queue. ZF2OO sent
+`WJ6R ZF2OO RR73` at 17:41:30 and AutoSeq did not call him; he went on to
+EA4EQD and Manoj had to double-click. Cause: the profile has
+`73RR73Marker=false` (Preferences… > Notifications "RR73/73"). The decode
+pane only gives another station's RR73/73 to the history as `RFIN` when that
+marker is on, so a waiting station's RR73 never reached AutoSeq. Only his CQ
+did.
+
+Fix (`displaytext.cpp`): with the marker off, a queued station's RR73/73 (a
+plain third-party line, `std_type 3`) is still given to the history as
+`RFIN`. The line keeps `std_type 3` and its colour, so the display is
+unchanged. Other stations' RR73/73 still count only with the marker on
+(stock). AutoSeq's queue loop already took `RFIN` for a queued station.
+Harness `tools/autoseq_queuefin_test.cpp` (4 cases) passes, and so do the
+missed, ignore and qsoseq harnesses.
+
 ### 2026-11-21 — AutoSeq answers callers missed in the two decodes before the latest
 
 Manoj: "auto cq - change to auto reply to not only current seq calls, but 2

@@ -229,9 +229,11 @@ or Pi 5 is recommended.
   **Right-click Halt Tx > Halt and queue CALL** (since v0.7.5)
   does it in one go for a busy station: Tx stops, the DX call is cleared
   and the station is queued, so AutoSeq calls it again when it sends CQ or
-  RR73/73 to someone else (the latter needs Settings > Notifications
-  "RR73/73" ticked). Such a station waits like this (shown in italics in
-  the queue) instead of being called on any decode.
+  RR73/73 to someone else (since 0.7.7 the RR73/73 works with the
+  Preferences… > Notifications "RR73/73" box off too; before, a queued
+  station's RR73 was missed unless it was ticked). Such a station waits
+  like this (shown in italics in the queue) instead of being called on any
+  decode.
   If he calls you back meanwhile, AutoSeq answers him and the QSO
   carries on from where it stopped (fixed in 0.7.7: a halt during your
   report used to make AutoSeq forget it, so his R-report and 73 were

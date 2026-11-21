@@ -507,9 +507,17 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
                     } else {
                         checkCall = "";
                     }
-                    if (!checkCall.isEmpty () && RR73Marker_ && (decodedText->message().contains("RR73") || decodedText->message().contains(" 73"))) {
-                        std_type = 4;
-                        txtColor = color_CQ_;
+                    // JTDX-VU: a queued station's RR73/73 to someone else always counts (Halt and
+                    // queue waits for it), even with the RR73/73 marker off; the marker keeps
+                    // deciding the colour and whether other stations' RR73/73 count
+                    // (ZF2OO, 2026-11-21: RR73 to WJ6R not picked, marker off)
+                    bool queuedFin = false;
+                    if (!checkCall.isEmpty () && !RR73Marker_ && queue_ && std_type == 3) {
+                        auto const base = Radio::base_callsign (checkCall);
+                        for (auto const& c : *queue_) if (Radio::base_callsign (c) == base) {queuedFin = true; break;}
+                    }
+                    if (!checkCall.isEmpty () && (RR73Marker_ || queuedFin) && (decodedText->message().contains("RR73") || decodedText->message().contains(" 73"))) {
+                        if (RR73Marker_) {std_type = 4; txtColor = color_CQ_;}   // queuedFin: line looks as before
                         status = QsoHistory::RFIN;
                     }
                 } else if (std_type == 0 && !hisCall.isEmpty () && qAbs(rx_frq - decodedText->frequencyOffset()) < 10 && decodedText->message().contains("73") && mystatus_ >= QsoHistory::RRR && mystatus_ != QsoHistory::FIN) { // nonstandard 73 in my rx
@@ -1060,7 +1068,7 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
         txtColor = Radio::convert_dark("#000000",useDarkStyle_);
     }
     if (show_line) {
-        if (!checkCall.isEmpty () && (std_type == 1 || std_type == 2 || std_type == 4 || (std_type == 3 && !param.isEmpty()))) {
+        if (!checkCall.isEmpty () && (std_type == 1 || std_type == 2 || std_type == 4 || (std_type == 3 && (!param.isEmpty() || status == QsoHistory::RFIN)))) {
             qsoHistory.message(checkCall,status,priority,param,tyyp,countryName.left(2),mpx,c_time,decodedText->report(),decodedText->frequencyOffset(),checkMode,
                                jt65bc ? 0 : wanted (logBook, checkCall, dialFreq, meta.mode));  // JTDX-VU: auto-seq picks wanted first
         } 
