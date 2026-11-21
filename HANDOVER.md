@@ -284,6 +284,27 @@ Last updated: 2026-11-21
 
 ## What changed
 
+### 2026-11-21 — AutoSeq answers callers missed in the two decodes before the latest
+
+Manoj: "auto cq - change to auto reply to not only current seq calls, but 2
+decode before also. missing lots who call and then stop". Since v0.6.0 the
+"current-decode rule" (his, see the v0.6.0 entry) made loops 1 and 2 of
+`QsoHistory::autoseq` (callers to our CQ) take only `tt.time == max_r_time`.
+Now those two loops run in two passes: pass 0 is unchanged; only when it
+picks nobody, pass 1 also takes `QsoHistory::missed (tt)`: status RCALL or
+RREPORT, **nothing ever sent to him** (`stx_c == NONE`, so a caller we gave
+up on after the answer counters is not re-picked), heard within
+`_ansSpan` s before the latest decode. `process_Auto` sets
+`setAnswerSpan (ceil (4 * TRperiod) + 1)` before the autoselect (61 s in
+FT8: his two previous periods). Loop 3 (others' CQs) is unchanged.
+Known limit: a caller who has since started a QSO with someone else keeps
+status RCALL (messages to others are NONE and do not update his time), so
+he can still be answered within that minute. Harness
+`tools/autoseq_missed_test.cpp` (6 cases: stock span 0 not answered, one
+and two decodes back answered, three back not, a latest-decode caller
+wins, an answered one not re-picked); `qsoseq_test` and
+`autoseq_ignore_test` still pass. Built on the public tree; not on air yet.
+
 ### 2026-11-21 — Halt and queue keeps the AutoSeq history (TF3JB: no auto answer, RR73 x4)
 
 On air 2026-11-21 15:41-15:45 UTC, 30m, profile TCI FLEX HF (private build,

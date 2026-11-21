@@ -23,6 +23,7 @@ class QsoHistory
 	void init();
 	void setQueue (QStringList const& calls);   // JTDX-VU
 	void setIgnored (QStringList const& calls); // JTDX-VU: right-click > Ignore, never autoselected
+	void setAnswerSpan (unsigned secs) {_ansSpan = secs;}   // JTDX-VU: see missed ()
 	void message(QString const& callsign, Status status, int priority, QString const& param, QString const& tyyp, QString const& continent, QString const& mpx, unsigned time, QString const& rep, int freq,  QString const& mode, int wanted = -1);
 	void rx(QString const& callsign, int freq);
 	void time(unsigned time);
@@ -71,6 +72,12 @@ class QsoHistory
 	// everything; then wanted stations (new DXCC > band > mode); then JTDX's own
 	QHash<QString, int> _queue;     // base call -> rank (higher = earlier)
 	QSet<QString> _ignored;         // JTDX-VU: base calls AutoSeq never picks
+	// JTDX-VU: a caller heard in the last _ansSpan s (Manoj: the two decodes
+	// before the latest) whom we never sent anything: AutoSeq still answers him
+	// when nobody called in the latest decode (callers who call once or twice
+	// and stop were missed)
+	unsigned _ansSpan = 0;
+	bool missed (QSO const& q) const;
 	int black (QString const& key) const {return _blackdata.value (key, 0) + (_ignored.contains (key) ? 1 : 0);}
 	bool queued (QSO const& q) const {return _queue.contains (Radio::base_callsign (q.call));}
 	int score (QSO const& q) const {

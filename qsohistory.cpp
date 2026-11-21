@@ -183,7 +183,11 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
           if (algo & 64) b_init=-1;
           else if (algo & 256) b_init=8;
           else b_init=4;
-          if (myas_active && _data.size() > 0) { //my CQ answers && _CQ.count > 0 
+          // JTDX-VU: pass 0 is stock (callers in the latest decode); pass 1 also takes
+          // callers missed in the decodes before it (missed ()), only if pass 0 found none
+          for (int pass = 0; pass < (_ansSpan ? 2 : 1); ++pass) {
+          bool const wide = pass == 1;
+          if ((myas_active || wide) && _data.size() > 0) { //my CQ answers && _CQ.count > 0 
             QSO tt,t;
             int priority = a_init;
             rep = "-60";
@@ -194,7 +198,7 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
             foreach(QString key,_data.keys()) {
               on_black=black(key);
               tt=_data[key];
-              if (on_black == 0 && tt.time == max_r_time && !tt.continent.isEmpty() && (!lastcalled || tt.time == tt.b_time) &&
+              if (on_black == 0 && (tt.time == max_r_time || (wide && missed (tt))) && !tt.continent.isEmpty() && (!lastcalled || tt.time == tt.b_time) &&
                   (tt.status == RCALL || tt.status == RREPORT || tt.status == RRREPORT || tt.status == RRR || tt.status == RRR73 || 
                     ((tt.status == RCQ || tt.status == RFIN) && (queued (tt) || (!mycall && tt.priority > 16 && tt.priority < 20))))) {
                 if (!lastcalled && tt.time == tt.b_time) priority = a_init;
@@ -234,7 +238,7 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
               return ret;    
             }
           }
-          if (myas_active && _data.size() > 0) { //my CQ answers not answered 1-st time 
+          if ((myas_active || wide) && _data.size() > 0) { //my CQ answers not answered 1-st time 
             QSO tt,t;
             int priority = a_init;
             rep = "-60";
@@ -245,7 +249,7 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
             foreach(QString key,_data.keys()) {
               on_black=black(key);
               tt=_data[key];
-              if (on_black == 0 && tt.time == max_r_time && ((tt.time - _CQ.time < 300 && tt.time >= 300) || (tt.time < 300 && tt.time - (_CQ.time - 86100) < 300))  && !tt.continent.isEmpty() && (!lastcalled || tt.time == tt.b_time) &&
+              if (on_black == 0 && (tt.time == max_r_time || (wide && missed (tt))) && ((tt.time - _CQ.time < 300 && tt.time >= 300) || (tt.time < 300 && tt.time - (_CQ.time - 86100) < 300))  && !tt.continent.isEmpty() && (!lastcalled || tt.time == tt.b_time) &&
                   (tt.status == RCALL || tt.status == RREPORT || tt.status == RRREPORT || tt.status == RRR || tt.status == RRR73 || 
                     ((tt.status == RCQ || tt.status == RFIN) && (queued (tt) || (!mycall && tt.priority > 16 && tt.priority < 20))))) {
                 if (!lastcalled && tt.time == tt.b_time) priority = a_init;
@@ -286,6 +290,7 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
             }
           }
 
+          }   // JTDX-VU: passes
           if ((algo&1 || !_queue.isEmpty ()) && myas_active && _data.size() > 0){ // their CQ answers
             QSO tt,t;
             int priority = b_init;
@@ -353,6 +358,15 @@ QsoHistory::Status QsoHistory::log_data(QString const& callsign, unsigned &time,
         srep = t.s_rep;        
         return t.status;
     } else return NONE;
+}
+
+// JTDX-VU: called us (or sent us a report) within _ansSpan s before the
+// latest decode, never answered (nothing sent to him yet), still calling status
+bool QsoHistory::missed (QSO const& q) const
+{
+  if (q.stx_c != NONE || (q.status != RCALL && q.status != RREPORT)) return false;
+  unsigned const age = (max_r_time + 86400 - q.time) % 86400;
+  return age > 0 && age <= _ansSpan;
 }
 
 void QsoHistory::time(unsigned time)

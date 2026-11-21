@@ -4179,6 +4179,9 @@ void MainWindow::process_Auto()
     else if (m_callHigherNewCall) time |= 256;
     if (m_rprtPriority) time |= 16;
     if (m_maxDistance) time |= 32;
+    // JTDX-VU: callers heard in the two decodes before the latest one, never answered,
+    // are still answered when nobody new calls (Manoj: "missing lots who call and then stop")
+    m_qsoHistory.setAnswerSpan (unsigned (std::ceil (4 * m_TRperiod)) + 1);
     m_status = m_qsoHistory.autoseq(hisCall,grid,rpt,rx,tx,time,count,prio,mode);
     if(m_config.write_decoded_debug()) {
       QString StrDirection = "";

@@ -286,7 +286,11 @@ or Pi 5 is recommended.
 - **AutoSeq calls only stations decoded right now** (since v0.6.0). JTDX
   could go back to a station that called your CQ up to 5 minutes ago and
   isn't heard any more; now every AutoSeq pick must be in the latest
-  decode period.
+  decode period. One exception (since 0.7.7): a station that called your
+  CQ in one of the **two decodes before the latest** and was never
+  answered is still answered when nobody new calls (callers who call once
+  or twice and stop were being missed). A caller in the latest decode
+  always comes first.
 - **UDP errors on the status bar** (since v0.6.0). A wrong or unreachable
   UDP server (Settings > Reporting) used to pop up a "Network Error" box on
   every send; now the status bar says "UDP host:port: ... - check Settings >
